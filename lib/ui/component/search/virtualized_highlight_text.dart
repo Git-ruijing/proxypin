@@ -118,6 +118,11 @@ class _VirtualizedHighlightTextState extends State<VirtualizedHighlightText> {
     List<T> items,
     Widget Function(int) itemBuilder,
   ) {
+    // 单 chunk 情况使用 SingleChildScrollView，Scrollable.ensureVisible 才能正常工作
+    if (items.length == 1) {
+      return _buildSingleChunkScrollable(viewHeight, itemBuilder);
+    }
+
     // 根据文本块大小动态调整缓存范围，避免过度缓存导致的内存和CPU消耗
     // 缓存范围应该是视口高度的2-3倍
     final estimatedItemHeight = 24.0; // 粗略估计单行高度（monospace）
@@ -141,6 +146,23 @@ class _VirtualizedHighlightTextState extends State<VirtualizedHighlightText> {
               child: itemBuilder(index),
             );
           },
+        ),
+      ),
+    );
+  }
+
+  Widget _buildSingleChunkScrollable(
+    double viewHeight,
+    Widget Function(int) itemBuilder,
+  ) {
+    return SizedBox(
+      width: double.infinity,
+      height: viewHeight,
+      child: SelectionArea(
+        child: SingleChildScrollView(
+          physics: Platforms.isDesktop() ? null : const BouncingScrollPhysics(),
+          controller: _trackingScroll(),
+          child: itemBuilder(0),
         ),
       ),
     );
@@ -177,7 +199,7 @@ class _VirtualizedHighlightTextState extends State<VirtualizedHighlightText> {
       return;
     }
 
-    // 如果只有一个块，尝试使用 Scrollable.ensureVisible 精确滚动到匹配位置
+    // 单 chunk 情况：使用 Scrollable.ensureVisible 精确滚动到匹配位置
     if (chunks.length == 1) {
       final key = document.matchKeys[matchIndex];
       if (key?.currentContext != null) {
@@ -191,11 +213,14 @@ class _VirtualizedHighlightTextState extends State<VirtualizedHighlightText> {
         } catch (e) {
           logger.w('Scrollable.ensureVisible failed: $e');
         }
+      } else {
+        logger.w('matchKey currentContext is null, matchIndex=$matchIndex');
       }
+      // 如果 Scrollable.ensureVisible 失败，继续尝试按行滚动（fallback）
     }
 
-    // 根据行索引找到对应的块索引
-    // 找到包含该行的块
+    // 多 chunk 情况：使用 ItemScrollController 滚动到对应 chunk
+    // 找到包含该行的块索引
     int chunkIndex = -1;
     for (var i = 0; i < chunks.length; i++) {
       final chunk = chunks[i];
