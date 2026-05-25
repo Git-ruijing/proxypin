@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_highlight/themes/atom-one-dark.dart';
 import 'package:flutter_highlight/themes/atom-one-light.dart';
 import 'package:highlight/highlight.dart' show Node, highlight;
+import 'dart:developer' as developer; // 引入原生扩展日志
+import 'package:flutter/foundation.dart'; // 引入 debugPrint
 
 import 'search_controller.dart';
 
@@ -14,9 +16,8 @@ class HighlightTextDocument {
   final List<List<HighlightSearchMatch>> lineMatches;
   final List<int> matchLineIndexes;
   final int currentMatchIndex;
-  final Map<int, GlobalKey> matchKeys;
 
-  HighlightTextDocument._({
+  const HighlightTextDocument._({
     required this.text,
     required this.rootStyle,
     required this.segments,
@@ -25,7 +26,6 @@ class HighlightTextDocument {
     required this.lineMatches,
     required this.matchLineIndexes,
     required this.currentMatchIndex,
-    required this.matchKeys,
   });
 
   factory HighlightTextDocument.create(
@@ -35,27 +35,59 @@ class HighlightTextDocument {
     TextStyle? style,
     required SearchTextController searchController,
   }) {
+    // 【定义 Logcat 的专用 TAG】
+    const String logTag = 'ProxyPinTextDebug';
+
+    // ------------------ 【日志 1】 ------------------
+    developer.log('原始文本长度: ${text.length}, 是否包含\\n: ${text.contains('\n')}', name: logTag);
+
+    String processedText = text;
+    bool isSingleLongLine = false;
+
+    // if (isSingleLongLine) {
+    //   final buffer = StringBuffer();
+    //   const int charsPerLine = 1000;
+    //   int len = text.length;
+    //   int injectCount = 0;
+
+    //   for (int i = 0; i < len; i += charsPerLine) {
+    //     int end = (i + charsPerLine < len) ? i + charsPerLine : len;
+    //     buffer.write(text.substring(i, end));
+    //     if (end < len) {
+    //       buffer.write('\n--BBA--\n');
+    //       injectCount++;
+    //     }
+    //   }
+    //   processedText = buffer.toString();
+
+    //   // ------------------ 【日志 2】 ------------------
+    //   developer.log('检测到超长单行！强插换行完成。新文本长度: ${processedText.length}, 插入\\n数量: $injectCount', name: logTag);
+    // }
+
     final rootStyle = highlightRootStyle(context, style);
-    final segments = buildHighlightBaseSegments(
-      context,
-      text,
-      language: language,
-      style: style,
-    );
-    final matches = buildSearchMatches(text, searchController);
+
+    final segments = buildHighlightBaseSegments(context, processedText, language: language, style: style);
+    developer.log('关卡 A (segments) 解析完成，总段数: ${segments.length}', name: logTag);
+
+    final matches = buildSearchMatches(processedText, searchController);
+    developer.log('搜索关键词匹配完成，找到关键词总数: ${matches.length}', name: logTag);
+
     final lines = buildHighlightDocumentLines(segments);
+
+    // ------------------ 【日志 3：最核心的硬指标】 ------------------
+    developer.log('关卡 B (lines) 行重组完成！最终生成的 lines.length = ${lines.length}', name: logTag);
+
+    if (isSingleLongLine && lines.length == 1) {
+      // 如果进入这里，说明换行符在 buildHighlightDocumentLines 里被抹除了
+      developer.log('⚠️ 警告：换行符失效！processedText 包含 \\n，但最终 lines 依旧为 1 行！', name: logTag, error: 'LineBreakFailed');
+    }
+
     final groupedMatches = _groupMatchesByLine(lines, matches);
-    final currentMatchIndex = matches.isEmpty
-        ? -1
-        : searchController.currentMatchIndex.value.clamp(0, matches.length - 1);
-    final matchLineIndexes = _buildMatchLineIndexes(
-      groupedMatches,
-      matches.length,
-    );
-    final matchKeys = <int, GlobalKey>{};
+    final currentMatchIndex = matches.isEmpty ? -1 : searchController.currentMatchIndex.value.clamp(0, matches.length - 1);
+    final matchLineIndexes = _buildMatchLineIndexes(groupedMatches, matches.length);
 
     return HighlightTextDocument._(
-      text: text,
+      text: processedText,
       rootStyle: rootStyle,
       segments: segments,
       matches: matches,
@@ -63,15 +95,21 @@ class HighlightTextDocument {
       lineMatches: groupedMatches,
       matchLineIndexes: matchLineIndexes,
       currentMatchIndex: currentMatchIndex,
-      matchKeys: matchKeys,
     );
   }
+
 
   int get totalMatchCount => matches.length;
 
   int? lineIndexForMatch(int matchIndex) {
     if (matchIndex < 0 || matchIndex >= matchLineIndexes.length) {
       return null;
+    }
+      // 【核心补丁】：如果高亮解析后发现实际只有 1 行物理行，但文本极长
+    if (lines.length == 1 && text.length > 1000) {
+      final match = matches[matchIndex];
+      const int charsPerVirtualLine = 500; // 每500个字符在逻辑上划分成“一虚拟行”
+      return (match.start / charsPerVirtualLine).floor();
     }
     return matchLineIndexes[matchIndex];
   }
@@ -83,6 +121,16 @@ class HighlightTextDocument {
       if (i != lines.length - 1) {
         spans.add(TextSpan(text: '\n', style: rootStyle));
       }
+    }
+    return spans;
+  }
+
+  // 在 highlight_text_document.dart 中添加
+  List<InlineSpan> buildSpansForAll(BuildContext context) {
+    final spans = <InlineSpan>[];
+    for (int i = 0; i < lines.length; i++) {
+      spans.addAll(buildSpansForLine(context, i));
+      if (i < lines.length - 1) spans.add(TextSpan(text: '\n'));
     }
     return spans;
   }
@@ -105,18 +153,12 @@ class HighlightTextDocument {
       var localStart = 0;
 
       while (localStart < segment.text.length) {
-        while (matchIndex < matchesForLine.length &&
-            matchesForLine[matchIndex].end <= segmentStart + localStart) {
+        while (matchIndex < matchesForLine.length && matchesForLine[matchIndex].end <= segmentStart + localStart) {
           matchIndex++;
         }
 
-        if (matchIndex >= matchesForLine.length ||
-            matchesForLine[matchIndex].start >= segmentEnd) {
-          _appendTextSpan(
-            spans,
-            segment.text.substring(localStart),
-            segment.style,
-          );
+        if (matchIndex >= matchesForLine.length || matchesForLine[matchIndex].start >= segmentEnd) {
+          _appendTextSpan(spans, segment.text.substring(localStart), segment.style);
           break;
         }
 
@@ -125,44 +167,23 @@ class HighlightTextDocument {
 
         if (match.start > absoluteStart) {
           final plainEnd = match.start - segmentStart;
-          _appendTextSpan(
-            spans,
-            segment.text.substring(localStart, plainEnd),
-            segment.style,
-          );
+          _appendTextSpan(spans, segment.text.substring(localStart, plainEnd), segment.style);
           localStart = plainEnd;
           continue;
         }
 
         final overlapEnd = match.end < segmentEnd ? match.end : segmentEnd;
-        final matchText = segment.text.substring(
-          localStart,
-          overlapEnd - segmentStart,
-        );
+        final matchText = segment.text.substring(localStart, overlapEnd - segmentStart);
         final isCurrentMatch = match.index == currentMatchIndex;
 
         // 复用样式计算，减少对象创建
         final baseStyle = segment.style ?? const TextStyle();
         final highlightedStyle = baseStyle.copyWith(
-          backgroundColor: isCurrentMatch
-              ? colorScheme.primary
-              : colorScheme.inversePrimary,
+          backgroundColor: isCurrentMatch ? colorScheme.primary : colorScheme.inversePrimary,
           color: isCurrentMatch ? colorScheme.onPrimary : baseStyle.color,
         );
 
-        if (isCurrentMatch) {
-          final key = GlobalKey();
-          matchKeys[match.index] = key;
-          spans.add(
-            WidgetSpan(
-              alignment: PlaceholderAlignment.middle,
-              baseline: TextBaseline.ideographic,
-              child: Text(matchText, key: key, style: highlightedStyle),
-            ),
-          );
-        } else {
-          _appendTextSpan(spans, matchText, highlightedStyle);
-        }
+        _appendTextSpan(spans, matchText, highlightedStyle);
 
         localStart = overlapEnd - segmentStart;
       }
@@ -175,30 +196,34 @@ class HighlightTextDocument {
 
   List<InlineSpan> _plainLineSpans(HighlightDocumentLine line) {
     if (line.segments.isEmpty) {
-      return [
-        const TextSpan(
-          text: '',
-          style: TextStyle(color: Colors.transparent),
-        ),
-      ];
+      return [const TextSpan(text: '', style: TextStyle(color: Colors.transparent))];
     }
 
-    return [
-      for (final segment in line.segments)
-        TextSpan(text: segment.text, style: segment.style),
-    ];
+    return [for (final segment in line.segments) TextSpan(text: segment.text, style: segment.style)];
   }
+}
+// 抽取成私有静态方法，利于 Dart 编译器做更激进的内存局部优化
+String _ensureLineBroken(String raw) {
+  if (raw.contains('\n') || raw.contains('\r') || raw.length <= 1000) {
+    return raw;
+  }
+
+  final buffer = StringBuffer();
+  const int charsPerLine = 1000;
+  int len = raw.length;
+  for (int i = 0; i < len; i += charsPerLine) {
+    int end = (i + charsPerLine < len) ? i + charsPerLine : len;
+    buffer.write(raw.substring(i, end));
+    if (end < len) {
+      buffer.write('\n'); // 统一强转为标准的 \n 换行，Flutter 渲染性能最好
+    }
+  }
+  return buffer.toString();
 }
 
 TextStyle highlightRootStyle(BuildContext context, [TextStyle? style]) {
-  final theme = Theme.brightnessOf(context) == Brightness.light
-      ? atomOneLightTheme
-      : atomOneDarkTheme;
-  return _stripBackground(
-        (theme['root'] ??
-                const TextStyle(fontFamily: 'monospace', fontSize: 14.5))
-            .merge(style),
-      ) ??
+  final theme = Theme.brightnessOf(context) == Brightness.light ? atomOneLightTheme : atomOneDarkTheme;
+  return _stripBackground((theme['root'] ?? const TextStyle(fontFamily: 'monospace', fontSize: 14.5)).merge(style)) ??
       const TextStyle(fontFamily: 'monospace', fontSize: 14.5);
 }
 
@@ -213,29 +238,17 @@ List<HighlightStyledSegment> buildHighlightBaseSegments(
   }
 
   try {
-    final parsed =
-        highlight.parse(text, language: language).nodes ?? const <Node>[];
-    final theme = Theme.brightnessOf(context) == Brightness.light
-        ? atomOneLightTheme
-        : atomOneDarkTheme;
+    final parsed = highlight.parse(text, language: language).nodes ?? const <Node>[];
+    final theme = Theme.brightnessOf(context) == Brightness.light ? atomOneLightTheme : atomOneDarkTheme;
 
-    List<HighlightStyledSegment> convert(
-      List<Node> nodes, [
-      TextStyle? inheritedStyle,
-    ]) {
+    List<HighlightStyledSegment> convert(List<Node> nodes, [TextStyle? inheritedStyle]) {
       final spans = <HighlightStyledSegment>[];
       for (final node in nodes) {
-        final nodeStyle = node.className == null
-            ? null
-            : _stripBackground(theme[node.className!]);
-        final mergedStyle = _stripBackground(
-          inheritedStyle?.merge(nodeStyle) ?? nodeStyle,
-        );
+        final nodeStyle = node.className == null ? null : _stripBackground(theme[node.className!]);
+        final mergedStyle = _stripBackground(inheritedStyle?.merge(nodeStyle) ?? nodeStyle);
 
         if (node.value != null) {
-          spans.add(
-            HighlightStyledSegment(text: node.value!, style: mergedStyle),
-          );
+          spans.add(HighlightStyledSegment(text: node.value!, style: mergedStyle));
           continue;
         }
 
@@ -255,10 +268,7 @@ List<HighlightStyledSegment> buildHighlightBaseSegments(
   return [HighlightStyledSegment(text: text, style: _stripBackground(style))];
 }
 
-List<HighlightSearchMatch> buildSearchMatches(
-  String text,
-  SearchTextController searchController,
-) {
+List<HighlightSearchMatch> buildSearchMatches(String text, SearchTextController searchController) {
   if (!searchController.shouldSearch()) {
     return const [];
   }
@@ -271,10 +281,7 @@ List<HighlightSearchMatch> buildSearchMatches(
   try {
     final regex = searchController.value.isRegExp
         ? RegExp(pattern, caseSensitive: searchController.value.isCaseSensitive)
-        : RegExp(
-            RegExp.escape(pattern),
-            caseSensitive: searchController.value.isCaseSensitive,
-          );
+        : RegExp(RegExp.escape(pattern), caseSensitive: searchController.value.isCaseSensitive);
 
     final matches = <HighlightSearchMatch>[];
     var index = 0;
@@ -282,9 +289,7 @@ List<HighlightSearchMatch> buildSearchMatches(
       if (match.start == match.end) {
         continue;
       }
-      matches.add(
-        HighlightSearchMatch(index: index, start: match.start, end: match.end),
-      );
+      matches.add(HighlightSearchMatch(index: index, start: match.start, end: match.end));
       index++;
     }
     return matches;
@@ -293,9 +298,9 @@ List<HighlightSearchMatch> buildSearchMatches(
   }
 }
 
-List<HighlightDocumentLine> buildHighlightDocumentLines(
-  List<HighlightStyledSegment> segments,
-) {
+
+
+List<HighlightDocumentLine> buildHighlightDocumentLines(List<HighlightStyledSegment> segments) {
   final lines = <HighlightDocumentLine>[];
   final currentSegments = <HighlightStyledSegment>[];
   var lineStart = 0;
@@ -303,14 +308,12 @@ List<HighlightDocumentLine> buildHighlightDocumentLines(
   var lineNumber = 0;
 
   void pushLine() {
-    lines.add(
-      HighlightDocumentLine(
-        index: lineNumber++,
-        start: lineStart,
-        end: offset,
-        segments: List<HighlightStyledSegment>.from(currentSegments),
-      ),
-    );
+    lines.add(HighlightDocumentLine(
+      index: lineNumber++,
+      start: lineStart,
+      end: offset,
+      segments: List<HighlightStyledSegment>.from(currentSegments),
+    ));
     currentSegments.clear();
   }
 
@@ -319,9 +322,7 @@ List<HighlightDocumentLine> buildHighlightDocumentLines(
     for (var i = 0; i < parts.length; i++) {
       final part = parts[i];
       if (part.isNotEmpty) {
-        currentSegments.add(
-          HighlightStyledSegment(text: part, style: segment.style),
-        );
+        currentSegments.add(HighlightStyledSegment(text: part, style: segment.style));
       }
       offset += part.length;
 
@@ -340,11 +341,7 @@ List<HighlightDocumentLine> buildHighlightDocumentLines(
   return lines;
 }
 
-void _appendTextSpan(
-  List<InlineSpan> spans,
-  String value,
-  TextStyle? textStyle,
-) {
+void _appendTextSpan(List<InlineSpan> spans, String value, TextStyle? textStyle) {
   if (value.isEmpty) {
     return;
   }
@@ -380,10 +377,7 @@ List<List<HighlightSearchMatch>> _groupMatchesByLine(
   return grouped;
 }
 
-List<int> _buildMatchLineIndexes(
-  List<List<HighlightSearchMatch>> groupedMatches,
-  int matchCount,
-) {
+List<int> _buildMatchLineIndexes(List<List<HighlightSearchMatch>> groupedMatches, int matchCount) {
   final indexes = List.filled(matchCount, 0);
   for (var lineIndex = 0; lineIndex < groupedMatches.length; lineIndex++) {
     for (final match in groupedMatches[lineIndex]) {
@@ -407,11 +401,7 @@ class HighlightSearchMatch {
   final int start;
   final int end;
 
-  const HighlightSearchMatch({
-    required this.index,
-    required this.start,
-    required this.end,
-  });
+  const HighlightSearchMatch({required this.index, required this.start, required this.end});
 }
 
 class HighlightDocumentLine {

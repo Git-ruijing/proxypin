@@ -592,7 +592,7 @@ class _Body extends StatefulWidget {
 }
 
 class _BodyState extends State<_Body> {
-  static const int _virtualizedThreshold = 100000;
+  static const int _virtualizedThreshold = 10000;
 
   late ViewType viewType;
   HttpMessage? message;
@@ -778,7 +778,7 @@ class _BodyState extends State<_Body> {
               scrollController: widget.scrollController,
             );
           }
-
+          FlutterToastr.show(type.title, context);
           if (type == ViewType.json) {
             return JsonViewer(
               json.decode(body),
@@ -826,9 +826,11 @@ class _BodyState extends State<_Body> {
   }) {
     final language = _languageForViewType(type, message);
     final formattedText = language != null ? _formatTextBody(type, text) : text;
+    // final showVirtualized = formattedText.length > _virtualizedThreshold || (formattedText.length > 10000 && !formattedText.contains('\n'));
     final showVirtualized = formattedText.length > _virtualizedThreshold;
+    logger.d('_buildTextBodyViewer: text.length=${formattedText.length}, threshold=$_virtualizedThreshold, showVirtualized=$showVirtualized');
     if (showVirtualized) {
-      return VirtualizedHighlightText(
+        logger.d('Using VirtualizedHighlightText');      return VirtualizedHighlightText(
         text: formattedText,
         language: language,
         contextMenuBuilder: contextMenu,
@@ -836,7 +838,7 @@ class _BodyState extends State<_Body> {
         scrollController: widget.scrollController,
       );
     }
-
+    logger.d('Using HighlightTextWidget');
     return HighlightTextWidget(
       language: language,
       text: formattedText,
