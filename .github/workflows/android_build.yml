@@ -25,6 +25,16 @@ jobs:
           channel: 'stable'
           cache: true
 
+      - name: Cache Gradle dependencies
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.gradle/caches
+            ~/.gradle/wrapper
+          key: ${{ runner.os }}-gradle-${{ hashFiles('**/*.gradle*', '**/gradle-wrapper.properties') }}
+          restore-keys: |
+            ${{ runner.os }}-gradle-
+
       - name: Get dependencies
         run: flutter pub get
 
@@ -38,11 +48,22 @@ jobs:
       # - name: Run tests
       #   run: flutter test
 
+      - name: Generate release signing key
+        run: |
+          mkdir -p android/app/keystore
+          keytool -genkey -v -keystore android/app/keystore/release-key.jks -keyalg RSA -keysize 2048 -validity 10000 -alias release -storepass android -keypass android -dname "CN=ProxyPin"
+          cat > android/key.properties << 'EOF'
+          storePassword=android
+          keyPassword=android
+          keyAlias=release
+          storeFile=app/keystore/release-key.jks
+          EOF
+
       - name: Build Android APK
-        run: flutter build apk --debug
+        run: flutter build apk --release --target-platform=android-arm64
 
       - name: Upload APK artifact
         uses: actions/upload-artifact@v4
         with:
-          name: android-debug-apk
-          path: build/app/outputs/flutter-apk/app-debug.apk
+          name: android-release-apk
+          path: build/app/outputs/flutter-apk/proxypin-android.apk
