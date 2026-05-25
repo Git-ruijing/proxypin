@@ -5,7 +5,8 @@ import 'package:get/get_rx/src/rx_types/rx_types.dart';
 import 'package:proxypin/network/util/logger.dart';
 import 'package:proxypin/ui/component/search/search_field.dart';
 
-class SearchTextController extends ValueNotifier<SearchSettings> with WidgetsBindingObserver {
+class SearchTextController extends ValueNotifier<SearchSettings>
+    with WidgetsBindingObserver {
   SearchTextController() : super(SearchSettings.empty) {
     patternController.addListener(_onPatternControllerChanged);
     WidgetsBinding.instance.addObserver(this); // 添加监听器
@@ -32,7 +33,10 @@ class SearchTextController extends ValueNotifier<SearchSettings> with WidgetsBin
   }
 
   void _onPatternControllerChanged() {
-    value = value.copyWith(pattern: patternController.text, currentMatchIndex: 0);
+    value = value.copyWith(
+      pattern: patternController.text,
+      currentMatchIndex: 0,
+    );
     if (value.pattern.isEmpty) {
       currentMatchIndex.value = 0;
       totalMatchCount.value = 0;
@@ -102,7 +106,10 @@ class SearchTextController extends ValueNotifier<SearchSettings> with WidgetsBin
     final currentHeight = screenHeight - bottomInset;
     if (overlayTop! + 50 > currentHeight) {
       // 如果被键盘遮挡
-      updateOverlayPosition(max(currentHeight - 120, 120), overlayRight!); // 移动到键��上方
+      updateOverlayPosition(
+        max(currentHeight - 120, 120),
+        overlayRight!,
+      ); // 移动到键��上方
     }
   }
 
@@ -134,7 +141,11 @@ class SearchTextController extends ValueNotifier<SearchSettings> with WidgetsBin
     _searchPopup = null;
   }
 
-  OverlayEntry _buildSearchOverlay(BuildContext context, {double? top, double? right}) {
+  OverlayEntry _buildSearchOverlay(
+    BuildContext context, {
+    double? top,
+    double? right,
+  }) {
     overlayTop = top ?? overlayTop;
     overlayRight = right ?? overlayRight;
     return OverlayEntry(
@@ -142,12 +153,17 @@ class SearchTextController extends ValueNotifier<SearchSettings> with WidgetsBin
         return Positioned(
           top: overlayTop,
           right: overlayRight,
-          child: Actions(actions: {
-            DismissIntent: CallbackAction<DismissIntent>(onInvoke: (intent) {
-              closeSearch();
-              return null;
-            }),
-          }, child: SearchField(searchController: this)),
+          child: Actions(
+            actions: {
+              DismissIntent: CallbackAction<DismissIntent>(
+                onInvoke: (intent) {
+                  closeSearch();
+                  return null;
+                },
+              ),
+            },
+            child: SearchField(searchController: this),
+          ),
         );
       },
     );
@@ -198,5 +214,9 @@ class SearchSettings {
           currentMatchIndex == other.currentMatchIndex;
 
   @override
-  int get hashCode => isCaseSensitive.hashCode ^ isRegExp.hashCode ^ pattern.hashCode ^ currentMatchIndex.hashCode;
+  int get hashCode =>
+      isCaseSensitive.hashCode ^
+      isRegExp.hashCode ^
+      pattern.hashCode ^
+      currentMatchIndex.hashCode;
 }

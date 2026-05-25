@@ -25,7 +25,12 @@ class ShareWidget extends StatelessWidget {
   final HttpRequest? request;
   final HttpResponse? response;
 
-  const ShareWidget({super.key, required this.proxyServer, this.request, this.response});
+  const ShareWidget({
+    super.key,
+    required this.proxyServer,
+    this.request,
+    this.response,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -44,60 +49,85 @@ class ShareWidget extends StatelessWidget {
                 FlutterToastr.show(localizations.emptyData, context);
                 return;
               }
-              SharePlus.instance.share(ShareParams(
+              SharePlus.instance.share(
+                ShareParams(
                   text: request!.requestUrl,
                   subject: localizations.proxyPinSoftware,
-                  sharePositionOrigin: await _sharePositionOrigin(context)));
+                  sharePositionOrigin: await _sharePositionOrigin(context),
+                ),
+              );
             },
           ),
           PopupMenuItem(
-              padding: const EdgeInsets.only(left: 10, right: 2),
-              child: Text(localizations.shareRequestResponse),
-              onTap: () async {
-                if (request == null) {
-                  FlutterToastr.show(localizations.emptyData, context);
-                  return;
-                }
-                var file = XFile.fromData(utf8.encode(copyRequest(request!, response)),
-                    name: localizations.captureDetail, mimeType: "txt");
+            padding: const EdgeInsets.only(left: 10, right: 2),
+            child: Text(localizations.shareRequestResponse),
+            onTap: () async {
+              if (request == null) {
+                FlutterToastr.show(localizations.emptyData, context);
+                return;
+              }
+              var file = XFile.fromData(
+                utf8.encode(copyRequest(request!, response)),
+                name: localizations.captureDetail,
+                mimeType: "txt",
+              );
 
-                SharePlus.instance.share(ShareParams(
-                    files: [file],
-                    fileNameOverrides: ['request.txt'],
-                    text: localizations.proxyPinSoftware,
-                    sharePositionOrigin: await _sharePositionOrigin(context)));
-              }),
+              SharePlus.instance.share(
+                ShareParams(
+                  files: [file],
+                  fileNameOverrides: ['request.txt'],
+                  text: localizations.proxyPinSoftware,
+                  sharePositionOrigin: await _sharePositionOrigin(context),
+                ),
+              );
+            },
+          ),
           PopupMenuItem(
-              padding: const EdgeInsets.only(left: 10, right: 2),
-              child: Text(localizations.shareCurl),
-              onTap: () async {
-                if (request == null) {
-                  return;
-                }
-                var text = curlRequest(request!);
-                var file = XFile.fromData(utf8.encode(text), name: "cURL.txt", mimeType: "txt");
+            padding: const EdgeInsets.only(left: 10, right: 2),
+            child: Text(localizations.shareCurl),
+            onTap: () async {
+              if (request == null) {
+                return;
+              }
+              var text = curlRequest(request!);
+              var file = XFile.fromData(
+                utf8.encode(text),
+                name: "cURL.txt",
+                mimeType: "txt",
+              );
 
-                SharePlus.instance.share(ShareParams(
-                    files: [file],
-                    fileNameOverrides: ["cURL.txt"],
-                    text: localizations.proxyPinSoftware,
-                    sharePositionOrigin: await _sharePositionOrigin(context)));
-              }),
+              SharePlus.instance.share(
+                ShareParams(
+                  files: [file],
+                  fileNameOverrides: ["cURL.txt"],
+                  text: localizations.proxyPinSoftware,
+                  sharePositionOrigin: await _sharePositionOrigin(context),
+                ),
+              );
+            },
+          ),
           PopupMenuItem(
-              padding: const EdgeInsets.only(left: 10, right: 2),
-              child: Text("${localizations.share} Fetch API"),
-              onTap: () async {
-                if (request == null) {
-                  return;
-                }
-                var text = copyAsFetch(request!);
-                SharePlus.instance
-                    .share(ShareParams(text: text, sharePositionOrigin: await _sharePositionOrigin(context)));
-              }),
+            padding: const EdgeInsets.only(left: 10, right: 2),
+            child: Text("${localizations.share} Fetch API"),
+            onTap: () async {
+              if (request == null) {
+                return;
+              }
+              var text = copyAsFetch(request!);
+              SharePlus.instance.share(
+                ShareParams(
+                  text: text,
+                  sharePositionOrigin: await _sharePositionOrigin(context),
+                ),
+              );
+            },
+          ),
           PopupMenuItem(
             enabled: QuickShareService.isRemoteConnected(proxyServer),
             padding: const EdgeInsets.only(left: 10, right: 2),
-            child: Text('${localizations.share} ${localizations.connectRemote}'),
+            child: Text(
+              '${localizations.share} ${localizations.connectRemote}',
+            ),
             onTap: () => _quickShareToRemote(context, localizations),
           ),
         ];
@@ -105,18 +135,27 @@ class ShareWidget extends StatelessWidget {
     );
   }
 
-  Future<void> _quickShareToRemote(BuildContext context, AppLocalizations localizations) async {
+  Future<void> _quickShareToRemote(
+    BuildContext context,
+    AppLocalizations localizations,
+  ) async {
     if (request == null) {
       FlutterToastr.show(localizations.emptyData, context);
       return;
     }
 
     if (!QuickShareService.isRemoteConnected(proxyServer)) {
-      FlutterToastr.show('${localizations.notConnected} ${localizations.remoteDevice}', context);
+      FlutterToastr.show(
+        '${localizations.notConnected} ${localizations.remoteDevice}',
+        context,
+      );
       return;
     }
 
-    final success = await QuickShareService.sendRequestToRemote(proxyServer!, request!);
+    final success = await QuickShareService.sendRequestToRemote(
+      proxyServer!,
+      request!,
+    );
     if (!context.mounted) {
       return;
     }
@@ -140,173 +179,225 @@ class ShareWidget extends StatelessWidget {
 class DetailMenuWidget extends StatelessWidget {
   final HttpRequest? request;
 
-  const DetailMenuWidget({
-    super.key,
-    this.request,
-  });
+  const DetailMenuWidget({super.key, this.request});
 
   @override
   Widget build(BuildContext context) {
     final localizations = AppLocalizations.of(context)!;
     return PopupMenuButton(
-        offset: const Offset(0, 30),
-        padding: const EdgeInsets.all(0),
-        itemBuilder: (context) => [
-              PopupMenuItem(
-                  child: Text(localizations.favorite),
-                  onTap: () {
-                    if (request == null) return;
+      offset: const Offset(0, 30),
+      padding: const EdgeInsets.all(0),
+      itemBuilder: (context) => [
+        PopupMenuItem(
+          child: Text(localizations.favorite),
+          onTap: () {
+            if (request == null) return;
 
-                    FavoriteStorage.addFavorite(request!);
-                    FlutterToastr.show(localizations.addSuccess, context);
-                  }),
-              PopupMenuItem(
-                  child: Text(localizations.copy),
-                  onTap: () {
-                    WidgetsBinding.instance.addPostFrameCallback((_) {
-                      if (request == null || !context.mounted) {
-                        return;
-                      }
+            FavoriteStorage.addFavorite(request!);
+            FlutterToastr.show(localizations.addSuccess, context);
+          },
+        ),
+        PopupMenuItem(
+          child: Text(localizations.copy),
+          onTap: () {
+            WidgetsBinding.instance.addPostFrameCallback((_) {
+              if (request == null || !context.mounted) {
+                return;
+              }
 
-                      showDialog(
-                          context: context,
-                          builder: (dialogContext) {
-                            return AlertDialog(
-                              title: Text(localizations.copy),
-                              content: SingleChildScrollView(
-                                child: Column(
-                                  mainAxisSize: MainAxisSize.min,
-                                  children: [
-                                    ListTile(
-                                      visualDensity: const VisualDensity(vertical: -3),
-                                      contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 2),
-                                      title: Text(localizations.copyRawRequest),
-                                      onTap: () {
-                                        Clipboard.setData(ClipboardData(text: copyRawRequest(request!)));
-                                        Navigator.of(dialogContext).pop();
-                                        FlutterToastr.show(localizations.copied, context);
-                                      },
-                                    ),
-                                    ListTile(
-                                      visualDensity: const VisualDensity(vertical: -3),
-                                      contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 2),
-                                      title: Text(localizations.copyCurl),
-                                      onTap: () {
-                                        Clipboard.setData(ClipboardData(text: curlRequest(request!)));
-                                        Navigator.of(dialogContext).pop();
-                                        FlutterToastr.show(localizations.copied, context);
-                                      },
-                                    ),
-                                    ListTile(
-                                      visualDensity: const VisualDensity(vertical: -3),
-                                      contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 2),
-                                      title: Text(localizations.copyAsPythonRequests),
-                                      onTap: () {
-                                        Clipboard.setData(ClipboardData(text: copyAsPythonRequests(request!)));
-                                        Navigator.of(dialogContext).pop();
-                                        FlutterToastr.show(localizations.copied, context);
-                                      },
-                                    ),
-                                    ListTile(
-                                      visualDensity: const VisualDensity(vertical: -3),
-                                      contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 2),
-                                      title: Text(localizations.copyAsFetch),
-                                      onTap: () {
-                                        Clipboard.setData(ClipboardData(text: copyAsFetch(request!)));
-                                        Navigator.of(dialogContext).pop();
-                                        FlutterToastr.show(localizations.copied, context);
-                                      },
-                                    ),
-
-                                  ],
+              showDialog(
+                context: context,
+                builder: (dialogContext) {
+                  return AlertDialog(
+                    title: Text(localizations.copy),
+                    content: SingleChildScrollView(
+                      child: Column(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          ListTile(
+                            visualDensity: const VisualDensity(vertical: -3),
+                            contentPadding: const EdgeInsets.symmetric(
+                              horizontal: 12,
+                              vertical: 2,
+                            ),
+                            title: Text(localizations.copyRawRequest),
+                            onTap: () {
+                              Clipboard.setData(
+                                ClipboardData(text: copyRawRequest(request!)),
+                              );
+                              Navigator.of(dialogContext).pop();
+                              FlutterToastr.show(localizations.copied, context);
+                            },
+                          ),
+                          ListTile(
+                            visualDensity: const VisualDensity(vertical: -3),
+                            contentPadding: const EdgeInsets.symmetric(
+                              horizontal: 12,
+                              vertical: 2,
+                            ),
+                            title: Text(localizations.copyCurl),
+                            onTap: () {
+                              Clipboard.setData(
+                                ClipboardData(text: curlRequest(request!)),
+                              );
+                              Navigator.of(dialogContext).pop();
+                              FlutterToastr.show(localizations.copied, context);
+                            },
+                          ),
+                          ListTile(
+                            visualDensity: const VisualDensity(vertical: -3),
+                            contentPadding: const EdgeInsets.symmetric(
+                              horizontal: 12,
+                              vertical: 2,
+                            ),
+                            title: Text(localizations.copyAsPythonRequests),
+                            onTap: () {
+                              Clipboard.setData(
+                                ClipboardData(
+                                  text: copyAsPythonRequests(request!),
                                 ),
-                              ),
-                            );
-                          });
-                    });
-                  }),
-              PopupMenuItem(
-                  child: Text(localizations.save),
-                  onTap: () {
-                    if (request == null) return;
+                              );
+                              Navigator.of(dialogContext).pop();
+                              FlutterToastr.show(localizations.copied, context);
+                            },
+                          ),
+                          ListTile(
+                            visualDensity: const VisualDensity(vertical: -3),
+                            contentPadding: const EdgeInsets.symmetric(
+                              horizontal: 12,
+                              vertical: 2,
+                            ),
+                            title: Text(localizations.copyAsFetch),
+                            onTap: () {
+                              Clipboard.setData(
+                                ClipboardData(text: copyAsFetch(request!)),
+                              );
+                              Navigator.of(dialogContext).pop();
+                              FlutterToastr.show(localizations.copied, context);
+                            },
+                          ),
+                        ],
+                      ),
+                    ),
+                  );
+                },
+              );
+            });
+          },
+        ),
+        PopupMenuItem(
+          child: Text(localizations.save),
+          onTap: () {
+            if (request == null) return;
 
-                    showDialog(
-                        context: context,
-                        builder: (menuContext) {
-                          return AlertDialog(
-                              title: Text(localizations.save),
-                              content: SingleChildScrollView(
-                                child: Column(
-                                  mainAxisSize: MainAxisSize.min,
-                                  children: <Widget>[
-                                    ListTile(
-                                      visualDensity: const VisualDensity(vertical: -3),
-                                      contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 2),
-                                      title: Text(localizations.request),
-                                      onTap: () {
-                                        Navigator.of(menuContext).pop();
-                                        WidgetsBinding.instance.addPostFrameCallback((_) {
-                                          exportRequest(request!);
-                                        });
-                                      },
-                                    ),
-                                    ListTile(
-                                      visualDensity: const VisualDensity(vertical: -3),
-                                      contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 2),
-                                      title: Text(localizations.requestBody),
-                                      onTap: () {
-                                        Navigator.of(menuContext).pop();
-                                        WidgetsBinding.instance.addPostFrameCallback((_) {
-                                          exportRequestBody(request!);
-                                        });
-                                      },
-                                    ),
-                                    ListTile(
-                                      visualDensity: const VisualDensity(vertical: -3),
-                                      contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 2),
-                                      title: Text(localizations.response),
-                                      onTap: () {
-                                        Navigator.of(menuContext).pop();
-                                        WidgetsBinding.instance.addPostFrameCallback((_) {
-                                          exportResponse(request?.response);
-                                        });
-                                      },
-                                    ),
-                                    ListTile(
-                                      visualDensity: const VisualDensity(vertical: -3),
-                                      contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 2),
-                                      title: Text(localizations.responseBody),
-                                      onTap: () {
-                                        Navigator.of(menuContext).pop();
-                                        WidgetsBinding.instance.addPostFrameCallback((_) {
-                                          exportResponseBody(request?.response);
-                                        });
-                                      },
-                                    ),
-                                  ],
-                                ),
-                              ));
-                        });
-                  }),
-              PopupMenuItem(
-                  child: Text(localizations.requestEdit),
-                  onTap: () {
-                    WidgetsBinding.instance.addPostFrameCallback((_) {
-                      Navigator.of(context).push(MaterialPageRoute(
-                          builder: (context) =>
-                              MobileRequestEditor(request: request, proxyServer: ProxyServer.current)));
-                    });
-                  }),
-              PopupMenuItem(
-                  child: Text(localizations.requestMap),
-                  onTap: () {
-                    WidgetsBinding.instance.addPostFrameCallback((_) {
-                      navigator(
-                          context, MobileRequestMapEdit(url: request?.domainPath, title: request?.hostAndPort?.host));
-                    });
-                  }),
-
-            ],
-        child: const SizedBox(height: 38, width: 38, child: Icon(Icons.more_vert, size: 28)));
+            showDialog(
+              context: context,
+              builder: (menuContext) {
+                return AlertDialog(
+                  title: Text(localizations.save),
+                  content: SingleChildScrollView(
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      children: <Widget>[
+                        ListTile(
+                          visualDensity: const VisualDensity(vertical: -3),
+                          contentPadding: const EdgeInsets.symmetric(
+                            horizontal: 12,
+                            vertical: 2,
+                          ),
+                          title: Text(localizations.request),
+                          onTap: () {
+                            Navigator.of(menuContext).pop();
+                            WidgetsBinding.instance.addPostFrameCallback((_) {
+                              exportRequest(request!);
+                            });
+                          },
+                        ),
+                        ListTile(
+                          visualDensity: const VisualDensity(vertical: -3),
+                          contentPadding: const EdgeInsets.symmetric(
+                            horizontal: 12,
+                            vertical: 2,
+                          ),
+                          title: Text(localizations.requestBody),
+                          onTap: () {
+                            Navigator.of(menuContext).pop();
+                            WidgetsBinding.instance.addPostFrameCallback((_) {
+                              exportRequestBody(request!);
+                            });
+                          },
+                        ),
+                        ListTile(
+                          visualDensity: const VisualDensity(vertical: -3),
+                          contentPadding: const EdgeInsets.symmetric(
+                            horizontal: 12,
+                            vertical: 2,
+                          ),
+                          title: Text(localizations.response),
+                          onTap: () {
+                            Navigator.of(menuContext).pop();
+                            WidgetsBinding.instance.addPostFrameCallback((_) {
+                              exportResponse(request?.response);
+                            });
+                          },
+                        ),
+                        ListTile(
+                          visualDensity: const VisualDensity(vertical: -3),
+                          contentPadding: const EdgeInsets.symmetric(
+                            horizontal: 12,
+                            vertical: 2,
+                          ),
+                          title: Text(localizations.responseBody),
+                          onTap: () {
+                            Navigator.of(menuContext).pop();
+                            WidgetsBinding.instance.addPostFrameCallback((_) {
+                              exportResponseBody(request?.response);
+                            });
+                          },
+                        ),
+                      ],
+                    ),
+                  ),
+                );
+              },
+            );
+          },
+        ),
+        PopupMenuItem(
+          child: Text(localizations.requestEdit),
+          onTap: () {
+            WidgetsBinding.instance.addPostFrameCallback((_) {
+              Navigator.of(context).push(
+                MaterialPageRoute(
+                  builder: (context) => MobileRequestEditor(
+                    request: request,
+                    proxyServer: ProxyServer.current,
+                  ),
+                ),
+              );
+            });
+          },
+        ),
+        PopupMenuItem(
+          child: Text(localizations.requestMap),
+          onTap: () {
+            WidgetsBinding.instance.addPostFrameCallback((_) {
+              navigator(
+                context,
+                MobileRequestMapEdit(
+                  url: request?.domainPath,
+                  title: request?.hostAndPort?.host,
+                ),
+              );
+            });
+          },
+        ),
+      ],
+      child: const SizedBox(
+        height: 38,
+        width: 38,
+        child: Icon(Icons.more_vert, size: 28),
+      ),
+    );
   }
 }

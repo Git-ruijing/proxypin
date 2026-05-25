@@ -4,16 +4,42 @@ import 'dart:typed_data';
 import 'package:pointycastle/export.dart';
 
 class AesUtils {
-  static Uint8List encrypt(Uint8List input,
-      {required String key, required int keyLength, required String mode, required String padding, String? iv}) {
-    return _process(input, true,
-        key: key, keyLength: keyLength, mode: mode, padding: padding, iv: iv);
+  static Uint8List encrypt(
+    Uint8List input, {
+    required String key,
+    required int keyLength,
+    required String mode,
+    required String padding,
+    String? iv,
+  }) {
+    return _process(
+      input,
+      true,
+      key: key,
+      keyLength: keyLength,
+      mode: mode,
+      padding: padding,
+      iv: iv,
+    );
   }
 
-  static Uint8List decrypt(Uint8List input,
-      {required String key, required int keyLength, required String mode, required String padding, String? iv}) {
-    var data = _process(input, false,
-        key: key, keyLength: keyLength, mode: mode, padding: padding, iv: iv);
+  static Uint8List decrypt(
+    Uint8List input, {
+    required String key,
+    required int keyLength,
+    required String mode,
+    required String padding,
+    String? iv,
+  }) {
+    var data = _process(
+      input,
+      false,
+      key: key,
+      keyLength: keyLength,
+      mode: mode,
+      padding: padding,
+      iv: iv,
+    );
     // 移除填充零字节（仅 ZeroPadding 场景）
     if (padding == 'ZeroPadding') {
       int lastNonZeroIndex = data.lastIndexWhere((byte) => byte != 0);
@@ -24,8 +50,15 @@ class AesUtils {
   }
 
   // Refactored process method (renamed to _process and split into helpers)
-  static Uint8List _process(Uint8List input, bool isEncrypt,
-      {required String key, required int keyLength, required String mode, required String padding, String? iv}) {
+  static Uint8List _process(
+    Uint8List input,
+    bool isEncrypt, {
+    required String key,
+    required int keyLength,
+    required String mode,
+    required String padding,
+    String? iv,
+  }) {
     final int keySize = keyLength ~/ 8;
 
     // Build key bytes: support 'base64:' prefix or plain text
@@ -58,11 +91,25 @@ class AesUtils {
 
     // PKCS7 path
     if (padding == 'PKCS7') {
-      return _processWithPaddedCipher(input, isEncrypt, mode, keyBytes, ivBytes, aesEngine);
+      return _processWithPaddedCipher(
+        input,
+        isEncrypt,
+        mode,
+        keyBytes,
+        ivBytes,
+        aesEngine,
+      );
     }
 
     // Raw block cipher / ZeroPadding path
-    return _processRawCipher(input, isEncrypt, mode, keyBytes, ivBytes, aesEngine);
+    return _processRawCipher(
+      input,
+      isEncrypt,
+      mode,
+      keyBytes,
+      ivBytes,
+      aesEngine,
+    );
   }
 
   // Build key bytes with required keySize length (pad/truncate handled where used)
@@ -91,23 +138,44 @@ class AesUtils {
     return tmp;
   }
 
-  static Uint8List _processWithPaddedCipher(Uint8List input, bool isEncrypt, String mode, Uint8List keyBytes,
-      Uint8List? ivBytes, AESEngine aesEngine) {
-    final BlockCipher blockCipher = (mode == 'CBC') ? CBCBlockCipher(aesEngine) : aesEngine;
+  static Uint8List _processWithPaddedCipher(
+    Uint8List input,
+    bool isEncrypt,
+    String mode,
+    Uint8List keyBytes,
+    Uint8List? ivBytes,
+    AESEngine aesEngine,
+  ) {
+    final BlockCipher blockCipher = (mode == 'CBC')
+        ? CBCBlockCipher(aesEngine)
+        : aesEngine;
     final paddedCipher = PaddedBlockCipherImpl(PKCS7Padding(), blockCipher);
 
     final params = (mode == 'CBC')
         ? PaddedBlockCipherParameters<ParametersWithIV<KeyParameter>, Null>(
-            ParametersWithIV<KeyParameter>(KeyParameter(keyBytes), ivBytes!), null)
-        : PaddedBlockCipherParameters<KeyParameter, Null>(KeyParameter(keyBytes), null);
+            ParametersWithIV<KeyParameter>(KeyParameter(keyBytes), ivBytes!),
+            null,
+          )
+        : PaddedBlockCipherParameters<KeyParameter, Null>(
+            KeyParameter(keyBytes),
+            null,
+          );
 
     paddedCipher.init(isEncrypt, params);
     return paddedCipher.process(input);
   }
 
-  static Uint8List _processRawCipher(Uint8List input, bool isEncrypt, String mode, Uint8List keyBytes,
-      Uint8List? ivBytes, AESEngine aesEngine) {
-    final BlockCipher cipher = (mode == 'CBC') ? CBCBlockCipher(aesEngine) : aesEngine;
+  static Uint8List _processRawCipher(
+    Uint8List input,
+    bool isEncrypt,
+    String mode,
+    Uint8List keyBytes,
+    Uint8List? ivBytes,
+    AESEngine aesEngine,
+  ) {
+    final BlockCipher cipher = (mode == 'CBC')
+        ? CBCBlockCipher(aesEngine)
+        : aesEngine;
 
     final CipherParameters params = (mode == 'CBC')
         ? ParametersWithIV<KeyParameter>(KeyParameter(keyBytes), ivBytes!)
@@ -116,13 +184,17 @@ class AesUtils {
     cipher.init(isEncrypt, params);
 
     if (input.length % cipher.blockSize != 0) {
-      throw ArgumentError('Input length must be multiple of block size (${cipher.blockSize}) for raw AES processing');
+      throw ArgumentError(
+        'Input length must be multiple of block size (${cipher.blockSize}) for raw AES processing',
+      );
     }
 
     final out = Uint8List(input.length);
     var offset = 0;
     while (offset < input.length) {
-      final processed = cipher.process(input.sublist(offset, offset + cipher.blockSize));
+      final processed = cipher.process(
+        input.sublist(offset, offset + cipher.blockSize),
+      );
       out.setRange(offset, offset + processed.length, processed);
       offset += cipher.blockSize;
     }
@@ -144,5 +216,4 @@ class AesUtils {
     // default: treat as plain text
     return Uint8List.fromList(utf8.encode(s));
   }
-
 }

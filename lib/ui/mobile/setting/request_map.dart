@@ -53,49 +53,76 @@ class _RequestMapPageState extends State<MobileRequestMapPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-        appBar: AppBar(
-            title: Text(localizations.requestMap, style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w500)),
-            toolbarHeight: 36,
-            centerTitle: true),
-        body: Padding(
-            padding: const EdgeInsets.all(10),
-            child: futureWidget(
-                RequestMapManager.instance,
-                loading: true,
-                (data) => Column(children: [
-                      Row(children: [
-                        Expanded(
-                            child: ListTile(
-                                title: Text("${localizations.enable} ${localizations.requestMap}"),
-                                subtitle: Text(localizations.requestMapDescribe, style: const TextStyle(fontSize: 12)),
-                                trailing: SwitchWidget(
-                                    value: data.enabled,
-                                    scale: 0.8,
-                                    onChanged: (value) {
-                                      data.enabled = value;
-                                      _refreshConfig();
-                                    }))),
-                      ]),
-                      Row(mainAxisAlignment: MainAxisAlignment.end, children: [
-                        const SizedBox(width: 10),
-                        TextButton.icon(
-                            icon: const Icon(Icons.add, size: 18), onPressed: showEdit, label: Text(localizations.add)),
-                        const SizedBox(width: 10),
-                        TextButton.icon(
-                          icon: const Icon(Icons.input_rounded, size: 18),
-                          onPressed: import,
-                          label: Text(localizations.import),
-                        ),
-                        const SizedBox(width: 10),
-                      ]),
-                      const SizedBox(height: 10),
-                      Expanded(child: RequestMapList(list: data.rules)),
-                    ]))));
+      appBar: AppBar(
+        title: Text(
+          localizations.requestMap,
+          style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w500),
+        ),
+        toolbarHeight: 36,
+        centerTitle: true,
+      ),
+      body: Padding(
+        padding: const EdgeInsets.all(10),
+        child: futureWidget(
+          RequestMapManager.instance,
+          loading: true,
+          (data) => Column(
+            children: [
+              Row(
+                children: [
+                  Expanded(
+                    child: ListTile(
+                      title: Text(
+                        "${localizations.enable} ${localizations.requestMap}",
+                      ),
+                      subtitle: Text(
+                        localizations.requestMapDescribe,
+                        style: const TextStyle(fontSize: 12),
+                      ),
+                      trailing: SwitchWidget(
+                        value: data.enabled,
+                        scale: 0.8,
+                        onChanged: (value) {
+                          data.enabled = value;
+                          _refreshConfig();
+                        },
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.end,
+                children: [
+                  const SizedBox(width: 10),
+                  TextButton.icon(
+                    icon: const Icon(Icons.add, size: 18),
+                    onPressed: showEdit,
+                    label: Text(localizations.add),
+                  ),
+                  const SizedBox(width: 10),
+                  TextButton.icon(
+                    icon: const Icon(Icons.input_rounded, size: 18),
+                    onPressed: import,
+                    label: Text(localizations.import),
+                  ),
+                  const SizedBox(width: 10),
+                ],
+              ),
+              const SizedBox(height: 10),
+              Expanded(child: RequestMapList(list: data.rules)),
+            ],
+          ),
+        ),
+      ),
+    );
   }
 
   //导入js
   Future<void> import() async {
-    FilePickerResult? result = await FilePicker.platform.pickFiles(type: FileType.any);
+    FilePickerResult? result = await FilePicker.platform.pickFiles(
+      type: FileType.any,
+    );
     if (result == null || result.files.isEmpty) {
       return;
     }
@@ -125,7 +152,10 @@ class _RequestMapPageState extends State<MobileRequestMapPage> {
 
   /// 添加脚本
   Future<void> showEdit() async {
-    Navigator.push(context, MaterialPageRoute(builder: (_) => const MobileRequestMapEdit())).then((value) {
+    Navigator.push(
+      context,
+      MaterialPageRoute(builder: (_) => const MobileRequestMapEdit()),
+    ).then((value) {
       if (value != null) {
         setState(() {});
       }
@@ -162,125 +192,192 @@ class _RequestMapListState extends State<RequestMapList> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-        persistentFooterButtons: multiple ? [globalMenu()] : null,
-        body: Container(
-            padding: const EdgeInsets.only(top: 10),
-            decoration: BoxDecoration(
-              border: Border.all(color: Colors.grey.withOpacity(0.2)),
-            ),
-            child: Scrollbar(
-                child: ListView(children: [
+      persistentFooterButtons: multiple ? [globalMenu()] : null,
+      body: Container(
+        padding: const EdgeInsets.only(top: 10),
+        decoration: BoxDecoration(
+          border: Border.all(color: Colors.grey.withOpacity(0.2)),
+        ),
+        child: Scrollbar(
+          child: ListView(
+            children: [
               Row(
                 mainAxisAlignment: MainAxisAlignment.start,
                 children: [
-                  Container(width: 130, padding: const EdgeInsets.only(left: 10), child: Text(localizations.name)),
-                  SizedBox(width: 50, child: Text(localizations.enable, textAlign: TextAlign.center)),
+                  Container(
+                    width: 130,
+                    padding: const EdgeInsets.only(left: 10),
+                    child: Text(localizations.name),
+                  ),
+                  SizedBox(
+                    width: 50,
+                    child: Text(
+                      localizations.enable,
+                      textAlign: TextAlign.center,
+                    ),
+                  ),
                   const VerticalDivider(),
                   const Expanded(child: Text("URL")),
-                  SizedBox(width: 100, child: Text(localizations.action, textAlign: TextAlign.center)),
+                  SizedBox(
+                    width: 100,
+                    child: Text(
+                      localizations.action,
+                      textAlign: TextAlign.center,
+                    ),
+                  ),
                 ],
               ),
               const Divider(thickness: 0.5),
-              Column(children: rows(widget.list))
-            ]))));
+              Column(children: rows(widget.list)),
+            ],
+          ),
+        ),
+      ),
+    );
   }
 
   List<Widget> rows(List<RequestMapRule> list) {
     var primaryColor = Theme.of(context).colorScheme.primary;
-    bool isEN = Localizations.localeOf(context) == const Locale.fromSubtags(languageCode: 'en');
+    bool isEN =
+        Localizations.localeOf(context) ==
+        const Locale.fromSubtags(languageCode: 'en');
 
     return List.generate(list.length, (index) {
       return InkWell(
-          highlightColor: Colors.transparent,
-          splashColor: Colors.transparent,
-          hoverColor: primaryColor.withOpacity(0.3),
-          onLongPress: () => showMenus(index),
-          onTap: () async {
-            if (multiple) {
-              setState(() {
-                if (!selected.add(index)) {
-                  selected.remove(index);
-                }
-              });
-              return;
-            }
-            showEdit(index);
-          },
-          child: Container(
-              color: selected.contains(index)
-                  ? primaryColor.withOpacity(0.6)
-                  : index.isEven
-                      ? Colors.grey.withOpacity(0.1)
-                      : null,
-              height: 30,
-              padding: const EdgeInsets.all(5),
-              child: Row(
-                children: [
-                  SizedBox(width: 60, child: Text(list[index].name ?? '', style: const TextStyle(fontSize: 13))),
-                  SizedBox(
-                      width: 35,
-                      child: Transform.scale(
-                          scale: 0.6,
-                          child: SwitchWidget(
-                              value: list[index].enabled,
-                              onChanged: (val) {
-                                list[index].enabled = val;
-                                _refreshConfig();
-                              }))),
-                  const SizedBox(width: 20),
-                  Expanded(
-                      child:
-                          Text(list[index].url, overflow: TextOverflow.ellipsis, style: const TextStyle(fontSize: 13))),
-                  const SizedBox(width: 3),
-                  SizedBox(
-                      width: 60,
-                      child: Text(isEN ? list[index].type.name.camelCaseToSpaced() : list[index].type.label,
-                          textAlign: TextAlign.center, style: const TextStyle(fontSize: 13))),
-                ],
-              )));
+        highlightColor: Colors.transparent,
+        splashColor: Colors.transparent,
+        hoverColor: primaryColor.withOpacity(0.3),
+        onLongPress: () => showMenus(index),
+        onTap: () async {
+          if (multiple) {
+            setState(() {
+              if (!selected.add(index)) {
+                selected.remove(index);
+              }
+            });
+            return;
+          }
+          showEdit(index);
+        },
+        child: Container(
+          color: selected.contains(index)
+              ? primaryColor.withOpacity(0.6)
+              : index.isEven
+              ? Colors.grey.withOpacity(0.1)
+              : null,
+          height: 30,
+          padding: const EdgeInsets.all(5),
+          child: Row(
+            children: [
+              SizedBox(
+                width: 60,
+                child: Text(
+                  list[index].name ?? '',
+                  style: const TextStyle(fontSize: 13),
+                ),
+              ),
+              SizedBox(
+                width: 35,
+                child: Transform.scale(
+                  scale: 0.6,
+                  child: SwitchWidget(
+                    value: list[index].enabled,
+                    onChanged: (val) {
+                      list[index].enabled = val;
+                      _refreshConfig();
+                    },
+                  ),
+                ),
+              ),
+              const SizedBox(width: 20),
+              Expanded(
+                child: Text(
+                  list[index].url,
+                  overflow: TextOverflow.ellipsis,
+                  style: const TextStyle(fontSize: 13),
+                ),
+              ),
+              const SizedBox(width: 3),
+              SizedBox(
+                width: 60,
+                child: Text(
+                  isEN
+                      ? list[index].type.name.camelCaseToSpaced()
+                      : list[index].type.label,
+                  textAlign: TextAlign.center,
+                  style: const TextStyle(fontSize: 13),
+                ),
+              ),
+            ],
+          ),
+        ),
+      );
     });
   }
 
   Stack globalMenu() {
-    return Stack(children: [
-      Container(
+    return Stack(
+      children: [
+        Container(
           height: 50,
           width: double.infinity,
           margin: const EdgeInsets.only(top: 10),
-          decoration: BoxDecoration(border: Border.all(color: Colors.grey.withOpacity(0.2)))),
-      Positioned(
+          decoration: BoxDecoration(
+            border: Border.all(color: Colors.grey.withOpacity(0.2)),
+          ),
+        ),
+        Positioned(
           top: 0,
           left: 0,
           right: 0,
           child: Center(
-              child: TextButton(
-                  onPressed: () {},
-                  child: Row(mainAxisAlignment: MainAxisAlignment.spaceBetween, children: [
-                    TextButton.icon(
-                        onPressed: () {
-                          export(selected.toList());
-                          setState(() {
-                            selected.clear();
-                            multiple = false;
-                          });
-                        },
-                        icon: const Icon(Icons.share, size: 18),
-                        label: Text(localizations.export, style: const TextStyle(fontSize: 14))),
-                    TextButton.icon(
-                        onPressed: () => remove(selected.toList()),
-                        icon: const Icon(Icons.delete, size: 18),
-                        label: Text(localizations.delete, style: const TextStyle(fontSize: 14))),
-                    TextButton.icon(
-                        onPressed: () {
-                          setState(() {
-                            multiple = false;
-                            selected.clear();
-                          });
-                        },
-                        icon: const Icon(Icons.cancel, size: 18),
-                        label: Text(localizations.cancel, style: const TextStyle(fontSize: 14))),
-                  ]))))
-    ]);
+            child: TextButton(
+              onPressed: () {},
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  TextButton.icon(
+                    onPressed: () {
+                      export(selected.toList());
+                      setState(() {
+                        selected.clear();
+                        multiple = false;
+                      });
+                    },
+                    icon: const Icon(Icons.share, size: 18),
+                    label: Text(
+                      localizations.export,
+                      style: const TextStyle(fontSize: 14),
+                    ),
+                  ),
+                  TextButton.icon(
+                    onPressed: () => remove(selected.toList()),
+                    icon: const Icon(Icons.delete, size: 18),
+                    label: Text(
+                      localizations.delete,
+                      style: const TextStyle(fontSize: 14),
+                    ),
+                  ),
+                  TextButton.icon(
+                    onPressed: () {
+                      setState(() {
+                        multiple = false;
+                        selected.clear();
+                      });
+                    },
+                    icon: const Icon(Icons.cancel, size: 18),
+                    label: Text(
+                      localizations.cancel,
+                      style: const TextStyle(fontSize: 14),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ),
+      ],
+    );
   }
 
   //点击菜单
@@ -290,37 +387,54 @@ class _RequestMapListState extends State<RequestMapList> {
     });
 
     showModalBottomSheet(
-        shape: const RoundedRectangleBorder(borderRadius: BorderRadius.vertical(top: Radius.circular(10))),
-        context: context,
-        enableDrag: true,
-        builder: (ctx) {
-          return Wrap(alignment: WrapAlignment.center, children: [
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(10)),
+      ),
+      context: context,
+      enableDrag: true,
+      builder: (ctx) {
+        return Wrap(
+          alignment: WrapAlignment.center,
+          children: [
             BottomSheetItem(
-                text: localizations.multiple,
-                onPressed: () {
-                  setState(() => multiple = true);
-                }),
-            const Divider(thickness: 0.5, height: 5),
-            BottomSheetItem(text: localizations.edit, onPressed: () => showEdit(index)),
-            const Divider(thickness: 0.5, height: 5),
-            BottomSheetItem(text: localizations.export, onPressed: () => export([index])),
-            const Divider(thickness: 0.5, height: 5),
-            BottomSheetItem(
-                text: widget.list[index].enabled ? localizations.disabled : localizations.enable,
-                onPressed: () {
-                  widget.list[index].enabled = !widget.list[index].enabled;
-                  _refreshConfig();
-                }),
+              text: localizations.multiple,
+              onPressed: () {
+                setState(() => multiple = true);
+              },
+            ),
             const Divider(thickness: 0.5, height: 5),
             BottomSheetItem(
-                text: localizations.delete,
-                onPressed: () async {
-                  var manager = await RequestMapManager.instance;
-                  await manager.deleteRule(index);
-                  _refreshConfig();
-                }),
-          ]);
-        }).then((value) {
+              text: localizations.edit,
+              onPressed: () => showEdit(index),
+            ),
+            const Divider(thickness: 0.5, height: 5),
+            BottomSheetItem(
+              text: localizations.export,
+              onPressed: () => export([index]),
+            ),
+            const Divider(thickness: 0.5, height: 5),
+            BottomSheetItem(
+              text: widget.list[index].enabled
+                  ? localizations.disabled
+                  : localizations.enable,
+              onPressed: () {
+                widget.list[index].enabled = !widget.list[index].enabled;
+                _refreshConfig();
+              },
+            ),
+            const Divider(thickness: 0.5, height: 5),
+            BottomSheetItem(
+              text: localizations.delete,
+              onPressed: () async {
+                var manager = await RequestMapManager.instance;
+                await manager.deleteRule(index);
+                _refreshConfig();
+              },
+            ),
+          ],
+        );
+      },
+    ).then((value) {
       if (multiple) {
         return;
       }
@@ -331,16 +445,24 @@ class _RequestMapListState extends State<RequestMapList> {
   }
 
   Future<void> showEdit([int? index]) async {
-    final item = index == null ? null : await (await RequestMapManager.instance).getMapItem(widget.list[index]);
+    final item = index == null
+        ? null
+        : await (await RequestMapManager.instance).getMapItem(
+            widget.list[index],
+          );
     if (!mounted) {
       return;
     }
 
     Navigator.push(
-            context,
-            MaterialPageRoute(
-                builder: (_) => MobileRequestMapEdit(rule: index == null ? null : widget.list[index], item: item)))
-        .then((value) {
+      context,
+      MaterialPageRoute(
+        builder: (_) => MobileRequestMapEdit(
+          rule: index == null ? null : widget.list[index],
+          item: item,
+        ),
+      ),
+    ).then((value) {
       if (value != null) {
         setState(() {});
       }
@@ -368,7 +490,10 @@ class _RequestMapListState extends State<RequestMapList> {
       box = context.findRenderObject() as RenderBox?;
     }
 
-    final XFile file = XFile.fromData(utf8.encode(jsonEncode(json)), mimeType: 'config');
+    final XFile file = XFile.fromData(
+      utf8.encode(jsonEncode(json)),
+      mimeType: 'config',
+    );
     ShareParams shareParams = ShareParams(
       files: [file],
       fileNameOverrides: [fileName],
@@ -387,19 +512,23 @@ class _RequestMapListState extends State<RequestMapList> {
 
   Future<void> remove(List<int> indexes) async {
     if (indexes.isEmpty) return;
-    showConfirmDialog(context, content: localizations.confirmContent, onConfirm: () async {
-      var manager = await RequestMapManager.instance;
-      for (var idx in indexes) {
-        await manager.deleteRule(idx);
-      }
+    showConfirmDialog(
+      context,
+      content: localizations.confirmContent,
+      onConfirm: () async {
+        var manager = await RequestMapManager.instance;
+        for (var idx in indexes) {
+          await manager.deleteRule(idx);
+        }
 
-      setState(() {
-        selected.clear();
-      });
-      _refreshConfig(force: true);
+        setState(() {
+          selected.clear();
+        });
+        _refreshConfig(force: true);
 
-      if (mounted) FlutterToastr.show(localizations.deleteSuccess, context);
-    });
+        if (mounted) FlutterToastr.show(localizations.deleteSuccess, context);
+      },
+    );
   }
 }
 
@@ -410,7 +539,13 @@ class MobileRequestMapEdit extends StatefulWidget {
   final String? url;
   final String? title;
 
-  const MobileRequestMapEdit({super.key, this.rule, this.item, this.url, this.title});
+  const MobileRequestMapEdit({
+    super.key,
+    this.rule,
+    this.item,
+    this.url,
+    this.title,
+  });
 
   @override
   State<StatefulWidget> createState() {
@@ -434,7 +569,13 @@ class _RequestMapEditState extends State<MobileRequestMapEdit> {
   @override
   void initState() {
     super.initState();
-    rule = widget.rule ?? RequestMapRule(url: widget.url ?? '', name: widget.title, type: RequestMapType.local);
+    rule =
+        widget.rule ??
+        RequestMapRule(
+          url: widget.url ?? '',
+          name: widget.title,
+          type: RequestMapType.local,
+        );
     mapType = rule.type;
     nameInput = TextEditingController(text: rule.name);
     urlInput = TextEditingController(text: rule.url);
@@ -451,100 +592,153 @@ class _RequestMapEditState extends State<MobileRequestMapEdit> {
   @override
   Widget build(BuildContext context) {
     GlobalKey formKey = GlobalKey<FormState>();
-    bool isEN = Localizations.localeOf(context) == const Locale.fromSubtags(languageCode: 'en');
+    bool isEN =
+        Localizations.localeOf(context) ==
+        const Locale.fromSubtags(languageCode: 'en');
 
     return Scaffold(
-        appBar: AppBar(
-            title: Row(children: [
-              Text(localizations.requestRewriteRule, style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w500)),
-            ]),
-            actions: [
-              TextButton(
-                  child: Text(localizations.save),
-                  onPressed: () async {
-                    if (!(formKey.currentState as FormState).validate()) {
-                      FlutterToastr.show(localizations.cannotBeEmpty, context, position: FlutterToastr.center);
-                      return;
-                    }
+      appBar: AppBar(
+        title: Row(
+          children: [
+            Text(
+              localizations.requestRewriteRule,
+              style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w500),
+            ),
+          ],
+        ),
+        actions: [
+          TextButton(
+            child: Text(localizations.save),
+            onPressed: () async {
+              if (!(formKey.currentState as FormState).validate()) {
+                FlutterToastr.show(
+                  localizations.cannotBeEmpty,
+                  context,
+                  position: FlutterToastr.center,
+                );
+                return;
+              }
 
-                    (formKey.currentState as FormState).save();
-                    rule.name = nameInput.text;
-                    rule.url = urlInput.text;
-                    rule.type = mapType;
-                    RequestMapItem item;
-                    if (mapType == RequestMapType.local) {
-                      item = mapLocalKey.currentState!.getRequestMapItem();
-                    } else {
-                      String? scriptCode = mapScriptKey.currentState?.getScriptCode();
-                      item = widget.item ?? RequestMapItem();
-                      item.script = scriptCode;
-                    }
+              (formKey.currentState as FormState).save();
+              rule.name = nameInput.text;
+              rule.url = urlInput.text;
+              rule.type = mapType;
+              RequestMapItem item;
+              if (mapType == RequestMapType.local) {
+                item = mapLocalKey.currentState!.getRequestMapItem();
+              } else {
+                String? scriptCode = mapScriptKey.currentState?.getScriptCode();
+                item = widget.item ?? RequestMapItem();
+                item.script = scriptCode;
+              }
 
-                    var requestMapManager = await RequestMapManager.instance;
-                    var index = requestMapManager.rules.indexOf(rule);
-                    if (index >= 0) {
-                      await requestMapManager.updateRule(rule, item);
-                    } else {
-                      await requestMapManager.addRule(rule, item);
-                    }
+              var requestMapManager = await RequestMapManager.instance;
+              var index = requestMapManager.rules.indexOf(rule);
+              if (index >= 0) {
+                await requestMapManager.updateRule(rule, item);
+              } else {
+                await requestMapManager.addRule(rule, item);
+              }
 
-                    if (mounted) {
-                      Navigator.of(this.context).pop(rule);
-                    }
-                  })
-            ]),
-        body: Container(
-          padding: const EdgeInsets.all(15),
-          child: NestedScrollView(
-            controller: scrollController,
-            headerSliverBuilder: (BuildContext context, bool innerBoxIsScrolled) {
-              return <Widget>[
-                SliverToBoxAdapter(
-                    child: Form(
-                        key: formKey,
-                        child: Column(
-                            mainAxisAlignment: MainAxisAlignment.start,
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: <Widget>[
-                              Row(children: [
-                                SizedBox(width: 55, child: Text('${localizations.enable}:')),
-                                SwitchWidget(value: rule.enabled, onChanged: (val) => rule.enabled = val, scale: 0.8)
-                              ]),
-                              const SizedBox(height: 5),
-                              textField('${localizations.name}:', nameInput, localizations.pleaseEnter),
-                              const SizedBox(height: 5),
-                              textField('URL:', urlInput, 'https://www.example.com/api/*', required: true),
-                              const SizedBox(height: 5),
-                              Row(children: [
-                                SizedBox(width: 60, child: Text('${localizations.action}:')),
-                                SizedBox(
-                                    width: 150,
-                                    height: 33,
-                                    child: DropdownButtonFormField<RequestMapType>(
-                                      onSaved: (val) => rule.type = val!,
-                                      value: mapType,
-                                      decoration: InputDecoration(
-                                          errorStyle: const TextStyle(height: 0, fontSize: 0),
-                                          contentPadding: const EdgeInsets.only(left: 7, right: 7),
-                                          focusedBorder: focusedBorder(),
-                                          border: const OutlineInputBorder()),
-                                      items: RequestMapType.values
-                                          .map((e) => DropdownMenuItem(
-                                              value: e,
-                                              child:
-                                                  Text(isEN ? e.name : e.label, style: const TextStyle(fontSize: 13))))
-                                          .toList(),
-                                      onChanged: onChangeType,
-                                    )),
-                                const SizedBox(width: 10),
-                              ]),
-                              const SizedBox(height: 10),
-                            ])))
-              ];
+              if (mounted) {
+                Navigator.of(this.context).pop(rule);
+              }
             },
-            body: mapRule(),
           ),
-        ));
+        ],
+      ),
+      body: Container(
+        padding: const EdgeInsets.all(15),
+        child: NestedScrollView(
+          controller: scrollController,
+          headerSliverBuilder: (BuildContext context, bool innerBoxIsScrolled) {
+            return <Widget>[
+              SliverToBoxAdapter(
+                child: Form(
+                  key: formKey,
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.start,
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: <Widget>[
+                      Row(
+                        children: [
+                          SizedBox(
+                            width: 55,
+                            child: Text('${localizations.enable}:'),
+                          ),
+                          SwitchWidget(
+                            value: rule.enabled,
+                            onChanged: (val) => rule.enabled = val,
+                            scale: 0.8,
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 5),
+                      textField(
+                        '${localizations.name}:',
+                        nameInput,
+                        localizations.pleaseEnter,
+                      ),
+                      const SizedBox(height: 5),
+                      textField(
+                        'URL:',
+                        urlInput,
+                        'https://www.example.com/api/*',
+                        required: true,
+                      ),
+                      const SizedBox(height: 5),
+                      Row(
+                        children: [
+                          SizedBox(
+                            width: 60,
+                            child: Text('${localizations.action}:'),
+                          ),
+                          SizedBox(
+                            width: 150,
+                            height: 33,
+                            child: DropdownButtonFormField<RequestMapType>(
+                              onSaved: (val) => rule.type = val!,
+                              value: mapType,
+                              decoration: InputDecoration(
+                                errorStyle: const TextStyle(
+                                  height: 0,
+                                  fontSize: 0,
+                                ),
+                                contentPadding: const EdgeInsets.only(
+                                  left: 7,
+                                  right: 7,
+                                ),
+                                focusedBorder: focusedBorder(),
+                                border: const OutlineInputBorder(),
+                              ),
+                              items: RequestMapType.values
+                                  .map(
+                                    (e) => DropdownMenuItem(
+                                      value: e,
+                                      child: Text(
+                                        isEN ? e.name : e.label,
+                                        style: const TextStyle(fontSize: 13),
+                                      ),
+                                    ),
+                                  )
+                                  .toList(),
+                              onChanged: onChangeType,
+                            ),
+                          ),
+                          const SizedBox(width: 10),
+                        ],
+                      ),
+                      const SizedBox(height: 10),
+                    ],
+                  ),
+                ),
+              ),
+            ];
+          },
+          body: mapRule(),
+        ),
+      ),
+    );
   }
 
   void onChangeType(RequestMapType? val) async {
@@ -558,33 +752,55 @@ class _RequestMapEditState extends State<MobileRequestMapEdit> {
       return MobileMapScript(key: mapScriptKey, script: widget.item?.script);
     }
 
-    return MobileMapLocal(scrollController: scrollController, key: mapLocalKey, item: widget.item);
+    return MobileMapLocal(
+      scrollController: scrollController,
+      key: mapLocalKey,
+      item: widget.item,
+    );
   }
 
-  Widget textField(String label, TextEditingController controller, String hint,
-      {bool required = false, FormFieldSetter<String>? onSaved}) {
-    return Row(children: [
-      SizedBox(width: 60, child: Text(label)),
-      Expanded(
+  Widget textField(
+    String label,
+    TextEditingController controller,
+    String hint, {
+    bool required = false,
+    FormFieldSetter<String>? onSaved,
+  }) {
+    return Row(
+      children: [
+        SizedBox(width: 60, child: Text(label)),
+        Expanded(
           child: TextFormField(
-        controller: controller,
-        style: const TextStyle(fontSize: 14),
-        validator: (val) => val?.isNotEmpty == true || !required ? null : "",
-        onSaved: onSaved,
-        decoration: InputDecoration(
-            hintText: hint,
-            constraints: const BoxConstraints(minHeight: 38),
-            hintStyle: TextStyle(color: Colors.grey.shade500, fontSize: 14),
-            contentPadding: const EdgeInsets.symmetric(horizontal: 8, vertical: 10),
-            errorStyle: const TextStyle(height: 0, fontSize: 0),
-            focusedBorder: focusedBorder(),
-            isDense: true,
-            border: const OutlineInputBorder()),
-      ))
-    ]);
+            controller: controller,
+            style: const TextStyle(fontSize: 14),
+            validator: (val) =>
+                val?.isNotEmpty == true || !required ? null : "",
+            onSaved: onSaved,
+            decoration: InputDecoration(
+              hintText: hint,
+              constraints: const BoxConstraints(minHeight: 38),
+              hintStyle: TextStyle(color: Colors.grey.shade500, fontSize: 14),
+              contentPadding: const EdgeInsets.symmetric(
+                horizontal: 8,
+                vertical: 10,
+              ),
+              errorStyle: const TextStyle(height: 0, fontSize: 0),
+              focusedBorder: focusedBorder(),
+              isDense: true,
+              border: const OutlineInputBorder(),
+            ),
+          ),
+        ),
+      ],
+    );
   }
 
   InputBorder focusedBorder() {
-    return OutlineInputBorder(borderSide: BorderSide(color: Theme.of(context).colorScheme.primary, width: 2));
+    return OutlineInputBorder(
+      borderSide: BorderSide(
+        color: Theme.of(context).colorScheme.primary,
+        width: 2,
+      ),
+    );
   }
 }

@@ -31,7 +31,6 @@ import 'package:proxypin/network/http/http_client.dart';
 import 'package:proxypin/network/util/logger.dart';
 import 'package:proxypin/storage/histories.dart';
 import 'package:proxypin/ui/component/history_cache_time.dart';
-import 'package:proxypin/ui/component/multi_select_controller.dart';
 import 'package:proxypin/ui/component/utils.dart';
 import 'package:proxypin/ui/component/widgets.dart';
 import 'package:proxypin/ui/mobile/request/list.dart';
@@ -49,12 +48,13 @@ class MobileHistory extends StatefulWidget {
   final ListenableList<HttpRequest> container;
   final String? autoOpenHistoryPath;
 
-  const MobileHistory(
-      {super.key,
-      required this.proxyServer,
-      required this.container,
-      required this.historyTask,
-      this.autoOpenHistoryPath});
+  const MobileHistory({
+    super.key,
+    required this.proxyServer,
+    required this.container,
+    required this.historyTask,
+    this.autoOpenHistoryPath,
+  });
 
   @override
   State<StatefulWidget> createState() {
@@ -63,20 +63,38 @@ class MobileHistory extends StatefulWidget {
 }
 
 ///重发所有请求
-void _repeatAllRequests(Iterable<HttpRequest> requests, ProxyServer proxyServer, {BuildContext? context}) async {
+void _repeatAllRequests(
+  Iterable<HttpRequest> requests,
+  ProxyServer proxyServer, {
+  BuildContext? context,
+}) async {
   var localizations = context == null ? null : AppLocalizations.of(context);
 
   for (var request in requests) {
     var httpRequest = request.copy(uri: request.requestUrl);
-    var proxyInfo = proxyServer.isRunning ? ProxyInfo.of("127.0.0.1", proxyServer.port) : null;
+    var proxyInfo = proxyServer.isRunning
+        ? ProxyInfo.of("127.0.0.1", proxyServer.port)
+        : null;
     try {
-      await HttpClients.proxyRequest(httpRequest, proxyInfo: proxyInfo, timeout: const Duration(seconds: 3));
+      await HttpClients.proxyRequest(
+        httpRequest,
+        proxyInfo: proxyInfo,
+        timeout: const Duration(seconds: 3),
+      );
       if (context != null && context.mounted) {
-        FlutterToastr.show(localizations!.reSendRequest, rootNavigator: true, context);
+        FlutterToastr.show(
+          localizations!.reSendRequest,
+          rootNavigator: true,
+          context,
+        );
       }
     } catch (e) {
       if (context != null && context.mounted) {
-        FlutterToastr.show('${localizations!.fail} $e', rootNavigator: true, context);
+        FlutterToastr.show(
+          '${localizations!.fail} $e',
+          rootNavigator: true,
+          context,
+        );
       }
     }
   }
@@ -100,7 +118,9 @@ class _MobileHistoryState extends State<MobileHistory> {
       }
     });
     storageInstance.then((storage) => storage.addListener(_historyListener));
-    WidgetsBinding.instance.addPostFrameCallback((_) => _openImportedHistoryIfNeeded());
+    WidgetsBinding.instance.addPostFrameCallback(
+      (_) => _openImportedHistoryIfNeeded(),
+    );
   }
 
   @override
@@ -146,7 +166,9 @@ class _MobileHistoryState extends State<MobileHistory> {
     return futureWidget(storageInstance, (storage) {
       List<Widget> children = [];
 
-      if (widget.container.isNotEmpty == true && !_sessionSaved && widget.historyTask.history == null) {
+      if (widget.container.isNotEmpty == true &&
+          !_sessionSaved &&
+          widget.historyTask.history == null) {
         //当前会话未保存，是否保存当前会话
         children.add(buildSaveSession(storage));
       }
@@ -158,59 +180,82 @@ class _MobileHistoryState extends State<MobileHistory> {
       }
 
       return Scaffold(
-          appBar: AppBar(
-              title: Text(localizations.history, style: const TextStyle(fontSize: 16)),
-              centerTitle: true,
-              actions: [
-                IconButton(
-                    onPressed: () => import(storage),
-                    icon: const Icon(Icons.input, size: 18),
-                    tooltip: localizations.import),
-                const SizedBox(width: 3),
-                HistoryCacheTime(configuration, onSelected: (val) {
-                  if (val == 0) {
-                    widget.container.removeListener(widget.historyTask);
-                  } else {
-                    widget.container.addListener(widget.historyTask);
-                  }
-                }),
-                const SizedBox(width: 5)
-              ]),
-          body: children.isEmpty
-              ? Center(child: Text(localizations.emptyData))
-              : ListView.separated(
-                  itemCount: children.length,
-                  itemBuilder: (context, index) => children[index],
-                  separatorBuilder: (_, index) => const Divider(thickness: 0.3, height: 0),
-                ));
+        appBar: AppBar(
+          title: Text(
+            localizations.history,
+            style: const TextStyle(fontSize: 16),
+          ),
+          centerTitle: true,
+          actions: [
+            IconButton(
+              onPressed: () => import(storage),
+              icon: const Icon(Icons.input, size: 18),
+              tooltip: localizations.import,
+            ),
+            const SizedBox(width: 3),
+            HistoryCacheTime(
+              configuration,
+              onSelected: (val) {
+                if (val == 0) {
+                  widget.container.removeListener(widget.historyTask);
+                } else {
+                  widget.container.addListener(widget.historyTask);
+                }
+              },
+            ),
+            const SizedBox(width: 5),
+          ],
+        ),
+        body: children.isEmpty
+            ? Center(child: Text(localizations.emptyData))
+            : ListView.separated(
+                itemCount: children.length,
+                itemBuilder: (context, index) => children[index],
+                separatorBuilder: (_, index) =>
+                    const Divider(thickness: 0.3, height: 0),
+              ),
+      );
     });
   }
 
   //构建保存会话
   Widget buildSaveSession(HistoryStorage storage) {
-    var name = formatDate(DateTime.now(), [mm, '-', d, ' ', HH, ':', nn, ':', ss]);
+    var name = formatDate(DateTime.now(), [
+      mm,
+      '-',
+      d,
+      ' ',
+      HH,
+      ':',
+      nn,
+      ':',
+      ss,
+    ]);
 
     return ListTile(
-        dense: true,
-        title: Text(name),
-        subtitle: Text(localizations.historyUnSave),
-        trailing: TextButton.icon(
-          icon: const Icon(Icons.save),
-          label: Text(localizations.save),
-          onPressed: () async {
-            setState(() {
-              widget.container.addListener(widget.historyTask);
-              widget.historyTask.startTask();
-              _sessionSaved = true;
-            });
-          },
-        ),
-        onTap: () {});
+      dense: true,
+      title: Text(name),
+      subtitle: Text(localizations.historyUnSave),
+      trailing: TextButton.icon(
+        icon: const Icon(Icons.save),
+        label: Text(localizations.save),
+        onPressed: () async {
+          setState(() {
+            widget.container.addListener(widget.historyTask);
+            widget.historyTask.startTask();
+            _sessionSaved = true;
+          });
+        },
+      ),
+      onTap: () {},
+    );
   }
 
   //导入har
   Future<void> import(HistoryStorage storage) async {
-    FilePickerResult? result = await FilePicker.platform.pickFiles(type: FileType.any);
+    FilePickerResult? result = await FilePicker.platform.pickFiles(
+      type: FileType.any,
+    );
     if (result == null || result.files.isEmpty) {
       return;
     }
@@ -234,73 +279,113 @@ class _MobileHistoryState extends State<MobileHistory> {
   //构建历史记录
   Widget buildItem(HistoryStorage storage, int index, HistoryItem item) {
     return GestureDetector(
-        onLongPressStart: (detail) async {
-          if (Platform.isAndroid) HapticFeedback.mediumImpact();
-          setState(() {
-            selectIndex = index;
-          });
+      onLongPressStart: (detail) async {
+        if (Platform.isAndroid) HapticFeedback.mediumImpact();
+        setState(() {
+          selectIndex = index;
+        });
 
-          final menuItems = <PopupMenuEntry>[
-            PopupMenuItem(child: Text(localizations.rename), onTap: () => renameHistory(storage, item)),
-            PopupMenuItem(
-                child: Text(localizations.share), onTap: () => export(storage, item, offset: detail.globalPosition)),
-          ];
+        final menuItems = <PopupMenuEntry>[
+          PopupMenuItem(
+            child: Text(localizations.rename),
+            onTap: () => renameHistory(storage, item),
+          ),
+          PopupMenuItem(
+            child: Text(localizations.share),
+            onTap: () => export(storage, item, offset: detail.globalPosition),
+          ),
+        ];
 
-          if (QuickShareService.isRemoteConnected(widget.proxyServer) && item.requestLength > 0) {
-            menuItems.addAll([
-              PopupMenuItem(
-                  child: Text('${localizations.send} ${localizations.remoteDevice}'),
-                  onTap: () => sendToRemote(storage, item)),
-            ]);
-          }
-
+        if (QuickShareService.isRemoteConnected(widget.proxyServer) &&
+            item.requestLength > 0) {
           menuItems.addAll([
-            const PopupMenuDivider(height: 0.3),
             PopupMenuItem(
-                child: Text(localizations.repeatAllRequests),
-                onTap: () async {
-                  var requests = (await storage.getRequests(item)).reversed;
-                  //重发所有请求
-                  _repeatAllRequests(requests.toList(), widget.proxyServer, context: mounted ? context : null);
-                }),
-            const PopupMenuDivider(height: 0.3),
-            PopupMenuItem(child: Text(localizations.delete), onTap: () => deleteHistory(storage, index))
+              child: Text(
+                '${localizations.send} ${localizations.remoteDevice}',
+              ),
+              onTap: () => sendToRemote(storage, item),
+            ),
           ]);
+        }
 
-          final popupOffset = detail.globalPosition.translate(-50, index == 0 ? -100 : 100);
-          showContextMenu(context, popupOffset, items: menuItems).whenComplete(() {
+        menuItems.addAll([
+          const PopupMenuDivider(height: 0.3),
+          PopupMenuItem(
+            child: Text(localizations.repeatAllRequests),
+            onTap: () async {
+              var requests = (await storage.getRequests(item)).reversed;
+              //重发所有请求
+              _repeatAllRequests(
+                requests.toList(),
+                widget.proxyServer,
+                context: mounted ? context : null,
+              );
+            },
+          ),
+          const PopupMenuDivider(height: 0.3),
+          PopupMenuItem(
+            child: Text(localizations.delete),
+            onTap: () => deleteHistory(storage, index),
+          ),
+        ]);
+
+        final popupOffset = detail.globalPosition.translate(
+          -50,
+          index == 0 ? -100 : 100,
+        );
+        showContextMenu(context, popupOffset, items: menuItems).whenComplete(
+          () {
             setState(() {
               selectIndex = -1;
             });
-          });
-        },
-        child: ListTile(
-          dense: true,
-          selected: selectIndex == index,
-          title: Text(item.name),
-          subtitle: Text(localizations.historySubtitle(item.requestLength, item.size)),
-          onTap: () => toRequestsView(item, storage),
-        ));
+          },
+        );
+      },
+      child: ListTile(
+        dense: true,
+        selected: selectIndex == index,
+        title: Text(item.name),
+        subtitle: Text(
+          localizations.historySubtitle(item.requestLength, item.size),
+        ),
+        onTap: () => toRequestsView(item, storage),
+      ),
+    );
   }
 
   void toRequestsView(HistoryItem item, HistoryStorage storage) {
     Navigator.of(context)
-        .push(MaterialPageRoute(
-            builder: (BuildContext context) => HistoryRecord(history: item, proxyServer: widget.proxyServer)))
+        .push(
+          MaterialPageRoute(
+            builder: (BuildContext context) =>
+                HistoryRecord(history: item, proxyServer: widget.proxyServer),
+          ),
+        )
         .then((value) async {
-      if (item != widget.historyTask.history && item.requests != null && item.requestLength != item.requests?.length) {
-        await storage.flushRequests(item, item.requests!);
-        setState(() {});
-      }
-      Future.delayed(const Duration(seconds: 60), () => item.requests = null);
-    });
+          if (item != widget.historyTask.history &&
+              item.requests != null &&
+              item.requestLength != item.requests?.length) {
+            await storage.flushRequests(item, item.requests!);
+            setState(() {});
+          }
+          Future.delayed(
+            const Duration(seconds: 60),
+            () => item.requests = null,
+          );
+        });
   }
 
   //导出har
-  Future<void> export(HistoryStorage storage, HistoryItem item, {Offset? offset}) async {
+  Future<void> export(
+    HistoryStorage storage,
+    HistoryItem item, {
+    Offset? offset,
+  }) async {
     //文件名称
     String fileName =
-        '${item.name.contains("ProxyPin") ? '' : 'ProxyPin'}${item.name}.har'.replaceAll(" ", "_").replaceAll(":", "_");
+        '${item.name.contains("ProxyPin") ? '' : 'ProxyPin'}${item.name}.har'
+            .replaceAll(" ", "_")
+            .replaceAll(":", "_");
     //获取请求
     List<HttpRequest> requests = await storage.getRequests(item);
     var json = await Har.writeJson(requests, title: item.name);
@@ -311,14 +396,23 @@ class _MobileHistoryState extends State<MobileHistory> {
       rect = Rect.fromCenter(center: offset, width: 1, height: 1);
     }
 
-    SharePlus.instance.share(ShareParams(files: [file], fileNameOverrides: [fileName], sharePositionOrigin: rect));
+    SharePlus.instance.share(
+      ShareParams(
+        files: [file],
+        fileNameOverrides: [fileName],
+        sharePositionOrigin: rect,
+      ),
+    );
     Future.delayed(const Duration(seconds: 30), () => item.requests = null);
   }
 
   Future<void> sendToRemote(HistoryStorage storage, HistoryItem item) async {
     if (!QuickShareService.isRemoteConnected(widget.proxyServer)) {
       if (mounted) {
-        FlutterToastr.show('${localizations.notConnected} ${localizations.remoteDevice}', context);
+        FlutterToastr.show(
+          '${localizations.notConnected} ${localizations.remoteDevice}',
+          context,
+        );
       }
       return;
     }
@@ -331,11 +425,16 @@ class _MobileHistoryState extends State<MobileHistory> {
       return;
     }
 
-    final result = await QuickShareService.sendHistoryToRemote(widget.proxyServer, requests, historyName: item.name);
+    final result = await QuickShareService.sendHistoryToRemote(
+      widget.proxyServer,
+      requests,
+      historyName: item.name,
+    );
     if (mounted) {
       FlutterToastr.show(
-          '${localizations.send}: ${localizations.success} ${result.success}, ${localizations.fail} ${result.failed}',
-          context);
+        '${localizations.send}: ${localizations.success} ${result.success}, ${localizations.fail} ${result.failed}',
+        context,
+      );
     }
 
     Future.delayed(const Duration(seconds: 30), () => item.requests = null);
@@ -345,58 +444,74 @@ class _MobileHistoryState extends State<MobileHistory> {
   void renameHistory(HistoryStorage storage, HistoryItem item) {
     String name = "";
     showDialog(
-        context: context,
-        builder: (context) {
-          return AlertDialog(
-            content: TextField(
-              decoration: InputDecoration(label: Text(localizations.name)),
-              onChanged: (val) => name = val,
+      context: context,
+      builder: (context) {
+        return AlertDialog(
+          content: TextField(
+            decoration: InputDecoration(label: Text(localizations.name)),
+            onChanged: (val) => name = val,
+          ),
+          actions: <Widget>[
+            TextButton(
+              onPressed: () => Navigator.pop(context),
+              child: Text(localizations.cancel),
             ),
-            actions: <Widget>[
-              TextButton(onPressed: () => Navigator.pop(context), child: Text(localizations.cancel)),
-              TextButton(
-                child: Text(localizations.save),
-                onPressed: () {
-                  if (name.isEmpty) {
-                    FlutterToastr.show(localizations.historyEmptyName, context, position: 2);
-                    return;
-                  }
-                  Navigator.of(context).pop();
-                  setState(() {
-                    item.name = name;
-                    storage.refresh();
-                  });
-                },
-              ),
-            ],
-          );
-        });
+            TextButton(
+              child: Text(localizations.save),
+              onPressed: () {
+                if (name.isEmpty) {
+                  FlutterToastr.show(
+                    localizations.historyEmptyName,
+                    context,
+                    position: 2,
+                  );
+                  return;
+                }
+                Navigator.of(context).pop();
+                setState(() {
+                  item.name = name;
+                  storage.refresh();
+                });
+              },
+            ),
+          ],
+        );
+      },
+    );
   }
 
   //删除
   void deleteHistory(HistoryStorage storage, int index) {
     showDialog(
-        context: context,
-        builder: (context) {
-          return AlertDialog(
-            title: Text(localizations.historyDeleteConfirm, style: const TextStyle(fontSize: 18)),
-            actions: [
-              TextButton(onPressed: () => Navigator.pop(context), child: Text(localizations.cancel)),
-              TextButton(
-                  onPressed: () {
-                    setState(() {
-                      if (storage.getHistory(index) == widget.historyTask.history) {
-                        widget.historyTask.cancelTask();
-                      }
-                      storage.removeHistory(index);
-                    });
-                    FlutterToastr.show(localizations.deleteSuccess, context);
-                    Navigator.pop(context);
-                  },
-                  child: Text(localizations.delete)),
-            ],
-          );
-        });
+      context: context,
+      builder: (context) {
+        return AlertDialog(
+          title: Text(
+            localizations.historyDeleteConfirm,
+            style: const TextStyle(fontSize: 18),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(context),
+              child: Text(localizations.cancel),
+            ),
+            TextButton(
+              onPressed: () {
+                setState(() {
+                  if (storage.getHistory(index) == widget.historyTask.history) {
+                    widget.historyTask.cancelTask();
+                  }
+                  storage.removeHistory(index);
+                });
+                FlutterToastr.show(localizations.deleteSuccess, context);
+                Navigator.pop(context);
+              },
+              child: Text(localizations.delete),
+            ),
+          ],
+        );
+      },
+    );
   }
 }
 
@@ -404,7 +519,11 @@ class HistoryRecord extends StatefulWidget {
   final HistoryItem history;
   final ProxyServer proxyServer;
 
-  const HistoryRecord({super.key, required this.history, required this.proxyServer});
+  const HistoryRecord({
+    super.key,
+    required this.history,
+    required this.proxyServer,
+  });
 
   @override
   State<StatefulWidget> createState() {
@@ -413,12 +532,11 @@ class HistoryRecord extends StatefulWidget {
 }
 
 class _HistoryRecordState extends State<HistoryRecord> {
-  final GlobalKey<RequestListState> requestStateKey = GlobalKey<RequestListState>();
+  GlobalKey<RequestListState> requestStateKey = GlobalKey<RequestListState>();
 
   ///搜索key
-  final GlobalKey<MobileSearchState> searchStateKey = GlobalKey<MobileSearchState>();
-
-  final MultiSelectController multiSelectController = MultiSelectController();
+  final GlobalKey<MobileSearchState> searchStateKey =
+      GlobalKey<MobileSearchState>();
 
   var searchEnabled = ValueNotifier(false);
 
@@ -427,78 +545,95 @@ class _HistoryRecordState extends State<HistoryRecord> {
   @override
   void dispose() {
     searchEnabled.dispose();
-    multiSelectController.clear();
     super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-        appBar: PreferredSize(
-            preferredSize: const Size.fromHeight(38),
-            child: AppBar(
-              title: ValueListenableBuilder(
-                  valueListenable: searchEnabled,
-                  builder: (BuildContext context, bool value, Widget? child) {
-                    return value
-                        ? MobileSearch(
-                            key: searchStateKey,
-                            onSearch: (val) => requestStateKey.currentState?.search(val),
-                            showSearch: true)
-                        : Text(localizations.historyRecordTitle(widget.history.requestLength, widget.history.name),
-                            style: const TextStyle(fontSize: 16));
-                  }),
-              actions: [
-                PopupMenuButton(
-                    offset: const Offset(0, 30),
-                    icon: const Icon(Icons.more_vert_outlined),
-                    itemBuilder: (BuildContext context) {
-                      return [
-                        PopupMenuItem(
-                            onTap: () {
-                              if (searchEnabled.value) {
-                                searchStateKey.currentState?.showSearch();
-                                return;
-                              }
-                              searchEnabled.value = true;
-                            },
-                            child: IconText(icon: const Icon(Icons.search), text: localizations.search)),
-                        PopupMenuItem(
-                            onTap: () => export(context),
-                            child: IconText(icon: const Icon(Icons.share), text: localizations.viewExport)),
-                        PopupMenuItem(
-                            height: 32,
-                            child: ListTile(
-                                dense: true,
-                                leading: const Icon(Icons.checklist_rtl_outlined),
-                                title: Text(localizations.selectAction),
-                                onTap: () async {
-                                  await Navigator.maybePop(context);
-                                  multiSelectController.toggleSelectionMode();
-                                })),
-                        PopupMenuItem(
-                            onTap: () async {
-                              var requests = requestStateKey.currentState?.currentView();
-                              if (requests == null) return;
-                              //重发所有请求
-                              _repeatAllRequests(requests.toList(), widget.proxyServer,
-                                  context: mounted ? context : null);
-                            },
-                            child: IconText(icon: const Icon(Icons.repeat), text: localizations.repeatAllRequests)),
-                      ];
-                    }),
-              ],
-            )),
-        body: futureWidget(
-          loading: true,
-          HistoryStorage.instance.then((storage) => storage.getRequests(widget.history)),
-          (data) => RequestListWidget(
-            proxyServer: widget.proxyServer,
-            list: ListenableList(data),
-            key: requestStateKey,
-            selectionController: multiSelectController,
+      appBar: PreferredSize(
+        preferredSize: const Size.fromHeight(38),
+        child: AppBar(
+          title: ValueListenableBuilder(
+            valueListenable: searchEnabled,
+            builder: (BuildContext context, bool value, Widget? child) {
+              return value
+                  ? MobileSearch(
+                      key: searchStateKey,
+                      onSearch: (val) =>
+                          requestStateKey.currentState?.search(val),
+                      showSearch: true,
+                    )
+                  : Text(
+                      localizations.historyRecordTitle(
+                        widget.history.requestLength,
+                        widget.history.name,
+                      ),
+                      style: const TextStyle(fontSize: 16),
+                    );
+            },
           ),
-        ));
+          actions: [
+            PopupMenuButton(
+              offset: const Offset(0, 30),
+              icon: const Icon(Icons.more_vert_outlined),
+              itemBuilder: (BuildContext context) {
+                return [
+                  PopupMenuItem(
+                    onTap: () {
+                      if (searchEnabled.value) {
+                        searchStateKey.currentState?.showSearch();
+                        return;
+                      }
+                      searchEnabled.value = true;
+                    },
+                    child: IconText(
+                      icon: const Icon(Icons.search),
+                      text: localizations.search,
+                    ),
+                  ),
+                  PopupMenuItem(
+                    onTap: () => export(context),
+                    child: IconText(
+                      icon: const Icon(Icons.share),
+                      text: localizations.viewExport,
+                    ),
+                  ),
+                  PopupMenuItem(
+                    onTap: () async {
+                      var requests = requestStateKey.currentState
+                          ?.currentView();
+                      if (requests == null) return;
+                      //重发所有请求
+                      _repeatAllRequests(
+                        requests.toList(),
+                        widget.proxyServer,
+                        context: mounted ? context : null,
+                      );
+                    },
+                    child: IconText(
+                      icon: const Icon(Icons.repeat),
+                      text: localizations.repeatAllRequests,
+                    ),
+                  ),
+                ];
+              },
+            ),
+          ],
+        ),
+      ),
+      body: futureWidget(
+        loading: true,
+        HistoryStorage.instance.then(
+          (storage) => storage.getRequests(widget.history),
+        ),
+        (data) => RequestListWidget(
+          proxyServer: widget.proxyServer,
+          list: ListenableList(data),
+          key: requestStateKey,
+        ),
+      ),
+    );
   }
 
   //导出har

@@ -27,16 +27,27 @@ class HttpProxyChannelHandler extends ChannelHandler<HttpRequest> {
   HttpProxyChannelHandler({this.listener, required this.interceptors});
 
   @override
-  Future<void> channelRead(ChannelContext channelContext, Channel channel, HttpRequest msg) async {
+  Future<void> channelRead(
+    ChannelContext channelContext,
+    Channel channel,
+    HttpRequest msg,
+  ) async {
     //下载证书
-    if (msg.uri == 'http://proxy.pin/ssl' || msg.requestUrl == 'http://127.0.0.1:${channel.socket.port}/ssl') {
+    if (msg.uri == 'http://proxy.pin/ssl' ||
+        msg.requestUrl == 'http://127.0.0.1:${channel.socket.port}/ssl') {
       ProxyHelper.crtDownload(channelContext, channel, msg);
       return;
     }
     //请求本服务
-    if (((await localIps()).contains(msg.hostAndPort?.host) || '127.0.0.1' == msg.hostAndPort?.host) &&
+    if (((await localIps()).contains(msg.hostAndPort?.host) ||
+            '127.0.0.1' == msg.hostAndPort?.host) &&
         msg.hostAndPort?.port == channel.socket.port) {
-      ProxyHelper.localRequest(channelContext, msg, channel, listener: listener);
+      ProxyHelper.localRequest(
+        channelContext,
+        msg,
+        channel,
+        listener: listener,
+      );
       return;
     }
 
@@ -51,9 +62,20 @@ class HttpProxyChannelHandler extends ChannelHandler<HttpRequest> {
   }
 
   @override
-  void exceptionCaught(ChannelContext channelContext, Channel channel, error, {StackTrace? trace}) {
+  void exceptionCaught(
+    ChannelContext channelContext,
+    Channel channel,
+    error, {
+    StackTrace? trace,
+  }) {
     super.exceptionCaught(channelContext, channel, error, trace: trace);
-    ProxyHelper.exceptionHandler(channelContext, channel, listener, channelContext.currentRequest, error);
+    ProxyHelper.exceptionHandler(
+      channelContext,
+      channel,
+      listener,
+      channelContext.currentRequest,
+      error,
+    );
     for (var interceptor in interceptors) {
       interceptor.onError(channelContext.currentRequest, error, trace);
     }
@@ -67,35 +89,64 @@ class HttpProxyChannelHandler extends ChannelHandler<HttpRequest> {
   }
 
   /// 转发请求
-  Future<void> forward(ChannelContext channelContext, Channel channel, HttpRequest httpRequest) async {
+  Future<void> forward(
+    ChannelContext channelContext,
+    Channel channel,
+    HttpRequest httpRequest,
+  ) async {
     // log.d("[${channel.id}] ${httpRequest.method.name} ${httpRequest.requestUrl}");
     //获取远程连接
     Channel? remoteChannel;
 
     if (channel.error != null) {
-      final tryRewriteHandler =
-          await _tryHandleRewriteResponseOnConnectFailure(channelContext, channel, httpRequest, channel.error);
+      final tryRewriteHandler = await _tryHandleRewriteResponseOnConnectFailure(
+        channelContext,
+        channel,
+        httpRequest,
+        channel.error,
+      );
       if (!tryRewriteHandler) {
-        ProxyHelper.exceptionHandler(channelContext, channel, listener, httpRequest, channel.error);
+        ProxyHelper.exceptionHandler(
+          channelContext,
+          channel,
+          listener,
+          httpRequest,
+          channel.error,
+        );
         return;
       }
     } else {
       try {
-        remoteChannel = await _getRemoteChannel(channelContext, channel, httpRequest);
+        remoteChannel = await _getRemoteChannel(
+          channelContext,
+          channel,
+          httpRequest,
+        );
       } catch (error, stackTrace) {
-        log.e("[${channel.id}] 连接异常 ${httpRequest.method.name} ${httpRequest.requestUrl}",
-            error: error, stackTrace: stackTrace);
+        log.e(
+          "[${channel.id}] 连接异常 ${httpRequest.method.name} ${httpRequest.requestUrl}",
+          error: error,
+          stackTrace: stackTrace,
+        );
         if (httpRequest.method == HttpMethod.connect) {
           channel.error = error; //记录异常
           //https代理新建connect连接请求 返回ok 会继续发起正常请求 可以获取到请求内容
           await channel.write(
-              channelContext,
-              HttpResponse(HttpStatus.ok.reason('Connection established'),
-                  protocolVersion: httpRequest.protocolVersion));
+            channelContext,
+            HttpResponse(
+              HttpStatus.ok.reason('Connection established'),
+              protocolVersion: httpRequest.protocolVersion,
+            ),
+          );
           return;
         } else {
           final tryRewriteHandler =
-              await _tryHandleRewriteResponseOnConnectFailure(channelContext, channel, httpRequest, channel.error);
+              await _tryHandleRewriteResponseOnConnectFailure(
+                channelContext,
+                channel,
+                httpRequest,
+                channel.error,
+              );
           if (!tryRewriteHandler) {
             rethrow;
           }
@@ -139,7 +190,8 @@ class HttpProxyChannelHandler extends ChannelHandler<HttpRequest> {
 
       //重定向
       var uri = request!.domainPath;
-      String? redirectUrl = await (RequestRewriteInterceptor.instance).getRedirectRule(uri);
+      String? redirectUrl = await (RequestRewriteInterceptor.instance)
+          .getRedirectRule(uri);
       if (redirectUrl?.isNotEmpty == true) {
         await redirect(channelContext, channel, request, redirectUrl!);
         return;
@@ -150,57 +202,95 @@ class HttpProxyChannelHandler extends ChannelHandler<HttpRequest> {
           request.protocolVersion == HttpMessage.http1Version &&
           request.uri.startsWith(HostAndPort.httpScheme)) {
         final requestUri = request.requestUri!;
-        request.uri = "${requestUri.path}${requestUri.hasQuery ? '?${requestUri.query}' : ''}";
+        request.uri =
+            "${requestUri.path}${requestUri.hasQuery ? '?${requestUri.query}' : ''}";
       }
       await remoteChannel?.write(channelContext, request);
     }
   }
 
   Future<bool> _tryHandleRewriteResponseOnConnectFailure(
-      ChannelContext channelContext, Channel clientChannel, HttpRequest request, dynamic error) async {
+    ChannelContext channelContext,
+    Channel clientChannel,
+    HttpRequest request,
+    dynamic error,
+  ) async {
     final manager = await RequestRewriteManager.instance;
-    final rewriteRule = manager.getRewriteRule(request.requestUrl, [RuleType.responseReplace, RuleType.responseUpdate]);
+    final rewriteRule = manager.getRewriteRule(request.requestUrl, [
+      RuleType.responseReplace,
+      RuleType.responseUpdate,
+    ]);
     if (rewriteRule == null) {
       return false;
     }
 
     final message = error.toString();
     final body = utf8.encode(message);
-    final response = HttpResponse(HttpStatus.newStatus(502, message), protocolVersion: request.protocolVersion)
-      ..request = request
-      ..body = body
-      ..headers.contentType = 'text/plain'
-      ..headers.contentLength = body.length;
+    final response =
+        HttpResponse(
+            HttpStatus.newStatus(502, message),
+            protocolVersion: request.protocolVersion,
+          )
+          ..request = request
+          ..body = body
+          ..headers.contentType = 'text/plain'
+          ..headers.contentLength = body.length;
 
     log.d(
-        "[${clientChannel.id}] tryHandleRewriteResponseOnConnectFailure for ${request.requestUrl} with rule ${rewriteRule.url} error: $error");
-    var proxyHandler = HttpResponseProxyHandler(clientChannel, interceptors, listener: listener);
+      "[${clientChannel.id}] tryHandleRewriteResponseOnConnectFailure for ${request.requestUrl} with rule ${rewriteRule.url} error: $error",
+    );
+    var proxyHandler = HttpResponseProxyHandler(
+      clientChannel,
+      interceptors,
+      listener: listener,
+    );
     await proxyHandler.channelRead(channelContext, clientChannel, response);
     return true;
   }
 
   //重定向
   Future<void> redirect(
-      ChannelContext channelContext, Channel channel, HttpRequest httpRequest, String redirectUrl) async {
-    var proxyHandler = HttpResponseProxyHandler(channel, interceptors, listener: listener);
+    ChannelContext channelContext,
+    Channel channel,
+    HttpRequest httpRequest,
+    String redirectUrl,
+  ) async {
+    var proxyHandler = HttpResponseProxyHandler(
+      channel,
+      interceptors,
+      listener: listener,
+    );
 
-    var redirectUri = UriBuild.build(redirectUrl, params: httpRequest.queries.isEmpty ? null : httpRequest.queries);
+    var redirectUri = UriBuild.build(
+      redirectUrl,
+      params: httpRequest.queries.isEmpty ? null : httpRequest.queries,
+    );
     log.d("[${channel.id}] 重定向 $redirectUri");
 
     if (redirectUri.isScheme('https')) {
-      httpRequest.uri = redirectUri.path + (redirectUri.hasQuery ? '?${redirectUri.query}' : '');
+      httpRequest.uri =
+          redirectUri.path +
+          (redirectUri.hasQuery ? '?${redirectUri.query}' : '');
     } else {
       httpRequest.uri = redirectUri.toString();
     }
-    httpRequest.headers.host = '${redirectUri.host}${redirectUri.hasPort ? ':${redirectUri.port}' : ''}';
-    var redirectChannel = await HttpClients.connect(redirectUri, proxyHandler, channelContext);
+    httpRequest.headers.host =
+        '${redirectUri.host}${redirectUri.hasPort ? ':${redirectUri.port}' : ''}';
+    var redirectChannel = await HttpClients.connect(
+      redirectUri,
+      proxyHandler,
+      channelContext,
+    );
     channelContext.serverChannel = redirectChannel;
     await redirectChannel.write(channelContext, httpRequest);
   }
 
   /// 获取远程连接
   Future<Channel> _getRemoteChannel(
-      ChannelContext channelContext, Channel clientChannel, HttpRequest httpRequest) async {
+    ChannelContext channelContext,
+    Channel clientChannel,
+    HttpRequest httpRequest,
+  ) async {
     //客户端连接 作为缓存
     Channel? remoteChannel = channelContext.serverChannel;
     if (remoteChannel != null) {
@@ -216,24 +306,44 @@ class HttpProxyChannelHandler extends ChannelHandler<HttpRequest> {
     ProxyInfo? proxyInfo = channelContext.getAttribute(AttributeKeys.proxyInfo);
 
     if (remote != null || proxyInfo != null) {
-      HostAndPort connectHost = remote ?? HostAndPort.host(proxyInfo!.host, proxyInfo.port!);
-      final proxyChannel = await connectRemote(channelContext, clientChannel, connectHost);
+      HostAndPort connectHost =
+          remote ?? HostAndPort.host(proxyInfo!.host, proxyInfo.port!);
+      final proxyChannel = await connectRemote(
+        channelContext,
+        clientChannel,
+        connectHost,
+      );
       proxyChannel.useProxy = true;
 
       //代理建立完连接判断是否是https 需要发起connect请求
       if (httpRequest.method == HttpMethod.connect) {
         //proxy Authorization
         if (proxyInfo?.isAuthenticated == true) {
-          String auth = base64Encode(utf8.encode("${proxyInfo?.username}:${proxyInfo?.password}"));
-          httpRequest.headers.set(HttpHeaders.PROXY_AUTHORIZATION, 'Basic $auth');
+          String auth = base64Encode(
+            utf8.encode("${proxyInfo?.username}:${proxyInfo?.password}"),
+          );
+          httpRequest.headers.set(
+            HttpHeaders.PROXY_AUTHORIZATION,
+            'Basic $auth',
+          );
         }
 
         await proxyChannel.write(channelContext, httpRequest);
       } else {
         if (clientChannel.isSsl) {
-          await HttpClients.connectRequest(channelContext, hostAndPort, proxyChannel, proxyInfo: proxyInfo);
-          await proxyChannel.secureSocket(channelContext,
-              host: hostAndPort.host, supportedProtocols: httpRequest.protocolVersion == "HTTP/2" ? ["h2"] : null);
+          await HttpClients.connectRequest(
+            channelContext,
+            hostAndPort,
+            proxyChannel,
+            proxyInfo: proxyInfo,
+          );
+          await proxyChannel.secureSocket(
+            channelContext,
+            host: hostAndPort.host,
+            supportedProtocols: httpRequest.protocolVersion == "HTTP/2"
+                ? ["h2"]
+                : null,
+          );
         }
       }
 
@@ -242,36 +352,64 @@ class HttpProxyChannelHandler extends ChannelHandler<HttpRequest> {
 
     HostAndPort remoteAddress = hostAndPort;
 
-    final ProxyInfo? socksProxy = channelContext.getAttribute(AttributeKeys.socks5Proxy);
+    final ProxyInfo? socksProxy = channelContext.getAttribute(
+      AttributeKeys.socks5Proxy,
+    );
     if (socksProxy != null) {
-      remoteAddress = hostAndPort.copyWith(host: socksProxy.host, port: socksProxy.port!);
+      remoteAddress = hostAndPort.copyWith(
+        host: socksProxy.host,
+        port: socksProxy.port!,
+      );
     }
 
     for (var interceptor in interceptors) {
       remoteAddress = await interceptor.preConnect(remoteAddress);
     }
 
-    final proxyChannel = await connectRemote(channelContext, clientChannel, remoteAddress);
+    final proxyChannel = await connectRemote(
+      channelContext,
+      clientChannel,
+      remoteAddress,
+    );
     if (clientChannel.isSsl) {
-      await proxyChannel.secureSocket(channelContext,
-          host: hostAndPort.host,
-          supportedProtocols: channelContext.clientChannel?.selectedProtocol == null
-              ? null
-              : [channelContext.clientChannel!.selectedProtocol!]);
+      await proxyChannel.secureSocket(
+        channelContext,
+        host: hostAndPort.host,
+        supportedProtocols:
+            channelContext.clientChannel?.selectedProtocol == null
+            ? null
+            : [channelContext.clientChannel!.selectedProtocol!],
+      );
     }
 
     //https代理新建连接请求
     if (httpRequest.method == HttpMethod.connect) {
-      await clientChannel.write(channelContext,
-          HttpResponse(HttpStatus.ok.reason('Connection established'), protocolVersion: httpRequest.protocolVersion));
+      await clientChannel.write(
+        channelContext,
+        HttpResponse(
+          HttpStatus.ok.reason('Connection established'),
+          protocolVersion: httpRequest.protocolVersion,
+        ),
+      );
     }
     return proxyChannel;
   }
 
   /// 连接远程
-  Future<Channel> connectRemote(ChannelContext channelContext, Channel clientChannel, HostAndPort connectHost) async {
-    var proxyHandler = HttpResponseProxyHandler(clientChannel, interceptors, listener: listener);
-    var proxyChannel = await channelContext.connectServerChannel(connectHost, proxyHandler);
+  Future<Channel> connectRemote(
+    ChannelContext channelContext,
+    Channel clientChannel,
+    HostAndPort connectHost,
+  ) async {
+    var proxyHandler = HttpResponseProxyHandler(
+      clientChannel,
+      interceptors,
+      listener: listener,
+    );
+    var proxyChannel = await channelContext.connectServerChannel(
+      connectHost,
+      proxyHandler,
+    );
     return proxyChannel;
   }
 }
@@ -284,15 +422,24 @@ class HttpResponseProxyHandler extends ChannelHandler<HttpResponse> {
   EventListener? listener;
   final List<Interceptor> interceptors;
 
-  HttpResponseProxyHandler(this.clientChannel, this.interceptors, {this.listener});
+  HttpResponseProxyHandler(
+    this.clientChannel,
+    this.interceptors, {
+    this.listener,
+  });
 
   @override
-  Future<void> channelRead(ChannelContext channelContext, Channel channel, HttpResponse msg) async {
+  Future<void> channelRead(
+    ChannelContext channelContext,
+    Channel channel,
+    HttpResponse msg,
+  ) async {
     var request = msg.request ?? channelContext.currentRequest;
     request?.response = msg;
 
     //域名是否过滤
-    if (HostFilter.filter(request?.hostAndPort?.host) || request?.method == HttpMethod.connect) {
+    if (HostFilter.filter(request?.hostAndPort?.host) ||
+        request?.method == HttpMethod.connect) {
       await clientChannel.write(channelContext, msg);
       return;
     }
@@ -304,7 +451,9 @@ class HttpResponseProxyHandler extends ChannelHandler<HttpResponse> {
     for (var interceptor in interceptors) {
       response = await interceptor.onResponse(request!, response!);
       if (response == null) {
-        logger.d("[${clientChannel.id}] Interceptor returned null, stopping processing");
+        logger.d(
+          "[${clientChannel.id}] Interceptor returned null, stopping processing",
+        );
         // Interceptor returned null, stopping processing
         listener?.onResponse(channelContext, msg);
         channel.close();
@@ -325,7 +474,12 @@ class HttpResponseProxyHandler extends ChannelHandler<HttpResponse> {
   }
 
   @override
-  void exceptionCaught(ChannelContext channelContext, Channel channel, error, {StackTrace? trace}) {
+  void exceptionCaught(
+    ChannelContext channelContext,
+    Channel channel,
+    error, {
+    StackTrace? trace,
+  }) {
     super.exceptionCaught(channelContext, channel, error, trace: trace);
     for (var interceptor in interceptors) {
       interceptor.onError(channelContext.currentRequest, error, trace);

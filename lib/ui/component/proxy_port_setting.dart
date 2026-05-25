@@ -9,7 +9,12 @@ class PortWidget extends StatefulWidget {
   final TextStyle? textStyle;
   final String? title;
 
-  const PortWidget({super.key, required this.proxyServer, this.textStyle, this.title});
+  const PortWidget({
+    super.key,
+    required this.proxyServer,
+    this.textStyle,
+    this.title,
+  });
 
   @override
   State<StatefulWidget> createState() {
@@ -29,7 +34,8 @@ class _PortState extends State<PortWidget> {
     textController.text = widget.proxyServer.port.toString();
     portFocus.addListener(() async {
       //失去焦点
-      if (!portFocus.hasFocus && textController.text != widget.proxyServer.port.toString()) {
+      if (!portFocus.hasFocus &&
+          textController.text != widget.proxyServer.port.toString()) {
         final port = int.tryParse(textController.text) ?? -1;
         if (port < 0 || port > 65535) {
           textController.text = widget.proxyServer.port.toString();
@@ -40,8 +46,12 @@ class _PortState extends State<PortWidget> {
         widget.proxyServer.configuration.port = port;
 
         if (widget.proxyServer.isRunning) {
-          String message = localizations.proxyPortRepeat(widget.proxyServer.port);
-          widget.proxyServer.restart().catchError((e) => FlutterToastr.show(message, context, duration: 3));
+          String message = localizations.proxyPortRepeat(
+            widget.proxyServer.port,
+          );
+          widget.proxyServer.restart().catchError(
+            (e) => FlutterToastr.show(message, context, duration: 3),
+          );
         }
         widget.proxyServer.configuration.flushConfig();
       }
@@ -57,10 +67,11 @@ class _PortState extends State<PortWidget> {
 
   @override
   Widget build(BuildContext context) {
-    return Row(children: [
-      const Padding(padding: EdgeInsets.only(left: 15)),
-      Text(widget.title ?? localizations.port, style: widget.textStyle),
-      SizedBox(
+    return Row(
+      children: [
+        const Padding(padding: EdgeInsets.only(left: 15)),
+        Text(widget.title ?? localizations.port, style: widget.textStyle),
+        SizedBox(
           width: 80,
           child: TextFormField(
             focusNode: portFocus,
@@ -70,10 +81,12 @@ class _PortState extends State<PortWidget> {
             keyboardType: TextInputType.datetime,
             inputFormatters: <TextInputFormatter>[
               LengthLimitingTextInputFormatter(5),
-              FilteringTextInputFormatter.allow(RegExp("[0-9]"))
+              FilteringTextInputFormatter.allow(RegExp("[0-9]")),
             ],
             decoration: const InputDecoration(),
-          ))
-    ]);
+          ),
+        ),
+      ],
+    );
   }
 }

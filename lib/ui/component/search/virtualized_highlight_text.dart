@@ -31,7 +31,8 @@ class VirtualizedHighlightText extends StatefulWidget {
   });
 
   @override
-  State<VirtualizedHighlightText> createState() => _VirtualizedHighlightTextState();
+  State<VirtualizedHighlightText> createState() =>
+      _VirtualizedHighlightTextState();
 }
 
 class _VirtualizedHighlightTextState extends State<VirtualizedHighlightText> {
@@ -63,7 +64,8 @@ class _VirtualizedHighlightTextState extends State<VirtualizedHighlightText> {
 
   @override
   Widget build(BuildContext context) {
-    final viewHeight = widget.height ?? max(240, MediaQuery.sizeOf(context).height - 220);
+    final viewHeight =
+        widget.height ?? max(240, MediaQuery.sizeOf(context).height - 220);
 
     return AnimatedBuilder(
       animation: widget.searchController,
@@ -74,12 +76,12 @@ class _VirtualizedHighlightTextState extends State<VirtualizedHighlightText> {
           isCaseSensitive: widget.searchController.value.isCaseSensitive,
           isRegExp: widget.searchController.value.isRegExp,
           pattern: widget.searchController.value.pattern,
-          currentMatchIndex: 0, // 忽略currentMatchIndex用于比较
+          currentMatchIndex: widget.searchController.currentMatchIndex.value,
         );
 
         final shouldRebuildDocument =
-          _cachedText != widget.text ||
-          _cachedSearchSettings != newSearchSettings;
+            _cachedText != widget.text ||
+            _cachedSearchSettings != newSearchSettings;
 
         if (shouldRebuildDocument) {
           _cachedDocument = HighlightTextDocument.create(
@@ -111,7 +113,11 @@ class _VirtualizedHighlightTextState extends State<VirtualizedHighlightText> {
     );
   }
 
-  Widget _buildList<T>(double viewHeight, List<T> items, Widget Function(int) itemBuilder) {
+  Widget _buildList<T>(
+    double viewHeight,
+    List<T> items,
+    Widget Function(int) itemBuilder,
+  ) {
     // 根据文本块大小动态调整缓存范围，避免过度缓存导致的内存和CPU消耗
     // 缓存范围应该是视口高度的2-3倍
     final estimatedItemHeight = 24.0; // 粗略估计单行高度（monospace）
@@ -171,6 +177,23 @@ class _VirtualizedHighlightTextState extends State<VirtualizedHighlightText> {
       return;
     }
 
+    // 如果只有一个块，尝试使用 Scrollable.ensureVisible 精确滚动到匹配位置
+    if (chunks.length == 1) {
+      final key = document.matchKeys[matchIndex];
+      if (key?.currentContext != null) {
+        try {
+          await Scrollable.ensureVisible(
+            key!.currentContext!,
+            duration: const Duration(milliseconds: 180),
+            alignment: 0.45,
+          );
+          return;
+        } catch (e) {
+          logger.w('Scrollable.ensureVisible failed: $e');
+        }
+      }
+    }
+
     // 根据行索引找到对应的块索引
     // 找到包含该行的块
     int chunkIndex = -1;
@@ -209,24 +232,29 @@ class _VirtualizedHighlightTextState extends State<VirtualizedHighlightText> {
       return trackingScrollController!;
     }
 
-    trackingScrollController = trackingScroll(widget.scrollController) ?? TrackingScrollController();
+    trackingScrollController =
+        trackingScroll(widget.scrollController) ?? TrackingScrollController();
     return trackingScrollController!;
   }
 
   /// 将行分组为块，每块包含指定数量的行
-  List<HighlightDocumentChunk> _buildChunks(HighlightTextDocument document, int chunkLines) {
+  List<HighlightDocumentChunk> _buildChunks(
+    HighlightTextDocument document,
+    int chunkLines,
+  ) {
     final chunks = <HighlightDocumentChunk>[];
     final allLines = document.lines;
 
     for (var i = 0; i < allLines.length; i += chunkLines) {
       final endIndex = min(i + chunkLines, allLines.length);
-      chunks.add(HighlightDocumentChunk(
-        startLineIndex: i,
-        endLineIndex: endIndex,
-      ));
+      chunks.add(
+        HighlightDocumentChunk(startLineIndex: i, endLineIndex: endIndex),
+      );
     }
 
-    return chunks.isEmpty ? [HighlightDocumentChunk(startLineIndex: 0, endLineIndex: 0)] : chunks;
+    return chunks.isEmpty
+        ? [HighlightDocumentChunk(startLineIndex: 0, endLineIndex: 0)]
+        : chunks;
   }
 
   /// 为指定块构建 InlineSpan 列表

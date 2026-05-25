@@ -11,10 +11,7 @@ const _hintText = 'Search…';
 class SearchField extends StatefulWidget {
   final SearchTextController searchController;
 
-  const SearchField({
-    super.key,
-    required this.searchController,
-  });
+  const SearchField({super.key, required this.searchController});
 
   @override
   State<SearchField> createState() => _SearchFieldState();
@@ -48,8 +45,11 @@ class _SearchFieldState extends State<SearchField> {
     final searchBox = SizedBox(
       width: searchBoxWidth,
       child: Material(
-          elevation: 1,
-          child: Row(mainAxisSize: MainAxisSize.min, mainAxisAlignment: MainAxisAlignment.end, children: [
+        elevation: 1,
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          mainAxisAlignment: MainAxisAlignment.end,
+          children: [
             SizedBox(
               width: Platforms.isDesktop() ? 260 : 220,
               child: TextField(
@@ -60,38 +60,40 @@ class _SearchFieldState extends State<SearchField> {
                   widget.searchController.moveNext();
                 },
                 decoration: InputDecoration(
-                    hintText: _hintText,
-                    border: OutlineInputBorder(),
-                    isDense: true,
-                    contentPadding: const EdgeInsets.symmetric(vertical: 4, horizontal: 8),
-                    suffixIcon: Obx(() {
-                      return ToggleButtons(
-                        constraints: const BoxConstraints(minWidth: 30, minHeight: 43),
-                        onPressed: (index) {
-                          switch (index) {
-                            case 0:
-                              widget.searchController.toggleCaseSensitivity();
-                              caseSensitive.value = !caseSensitive.value;
-                              break;
-                            case 1:
-                              widget.searchController.toggleIsRegExp();
-                              isRegExp.value = !isRegExp.value;
-                              break;
-                          }
-                        },
-                        isSelected: [
-                          caseSensitive.value,
-                          isRegExp.value,
-                        ],
-                        children: const [
-                          Text('Aa'),
-                          Text('.*'),
-                        ],
-                      );
-                    })),
+                  hintText: _hintText,
+                  border: OutlineInputBorder(),
+                  isDense: true,
+                  contentPadding: const EdgeInsets.symmetric(
+                    vertical: 4,
+                    horizontal: 8,
+                  ),
+                  suffixIcon: Obx(() {
+                    return ToggleButtons(
+                      constraints: const BoxConstraints(
+                        minWidth: 30,
+                        minHeight: 43,
+                      ),
+                      onPressed: (index) {
+                        switch (index) {
+                          case 0:
+                            widget.searchController.toggleCaseSensitivity();
+                            caseSensitive.value = !caseSensitive.value;
+                            break;
+                          case 1:
+                            widget.searchController.toggleIsRegExp();
+                            isRegExp.value = !isRegExp.value;
+                            break;
+                        }
+                      },
+                      isSelected: [caseSensitive.value, isRegExp.value],
+                      children: const [Text('Aa'), Text('.*')],
+                    );
+                  }),
+                ),
               ),
             ),
-            if (Platforms.isDesktop()) Obx(() => SizedBox(width: 85, child: _getText())),
+            if (Platforms.isDesktop())
+              Obx(() => SizedBox(width: 85, child: _getText())),
             if (Platforms.isMobile()) SizedBox(width: 10),
             InkWell(
               onTap: widget.searchController.movePrevious,
@@ -109,7 +111,9 @@ class _SearchFieldState extends State<SearchField> {
               onPressed: () => widget.searchController.closeSearch(),
             ),
             const SizedBox(width: 10),
-          ])),
+          ],
+        ),
+      ),
     );
 
     return Draggable<Offset>(
@@ -128,12 +132,19 @@ class _SearchFieldState extends State<SearchField> {
 
   Text _getText() {
     if (widget.searchController.totalMatchCount.value == 0) {
-      return Text("0 results",
-          textAlign: TextAlign.center,
-          style: TextStyle(color: widget.searchController.patternController.text.isNotEmpty ? Colors.red : null));
+      return Text(
+        "0 results",
+        textAlign: TextAlign.center,
+        style: TextStyle(
+          color: widget.searchController.patternController.text.isNotEmpty
+              ? Colors.red
+              : null,
+        ),
+      );
     }
 
-    final currentMatchIndex = widget.searchController.currentMatchIndex.value + 1;
+    final currentMatchIndex =
+        widget.searchController.currentMatchIndex.value + 1;
     final totalMatchCount = widget.searchController.totalMatchCount.value;
 
     return Text(

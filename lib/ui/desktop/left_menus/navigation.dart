@@ -28,8 +28,12 @@ class LeftNavigationBar extends StatefulWidget {
   final ProxyServer proxyServer;
   final ValueNotifier<int> selectIndex;
 
-  const LeftNavigationBar(
-      {super.key, required this.appConfiguration, required this.proxyServer, required this.selectIndex});
+  const LeftNavigationBar({
+    super.key,
+    required this.appConfiguration,
+    required this.proxyServer,
+    required this.selectIndex,
+  });
 
   @override
   State<StatefulWidget> createState() {
@@ -41,87 +45,132 @@ class _LeftNavigationBarState extends State<LeftNavigationBar> {
   AppLocalizations get localizations => AppLocalizations.of(context)!;
 
   List<NavigationRailDestination> get destinations => [
-        NavigationRailDestination(
-            padding: const EdgeInsets.only(bottom: 5),
-            icon: Icon(Icons.workspaces_outlined),
-            label: Text(localizations.requests, style: Theme.of(context).textTheme.bodySmall)),
-        NavigationRailDestination(
-            padding: const EdgeInsets.only(bottom: 5),
-            icon: Icon(Icons.favorite_outline_outlined),
-            label: Text(localizations.favorites, style: Theme.of(context).textTheme.bodySmall)),
-        NavigationRailDestination(
-            padding: const EdgeInsets.only(bottom: 5),
-            icon: Icon(Icons.history_outlined),
-            label: Text(localizations.history, style: Theme.of(context).textTheme.bodySmall)),
-        NavigationRailDestination(
-            padding: const EdgeInsets.only(bottom: 5),
-            icon: Icon(Icons.hardware_outlined),
-            label: Text(localizations.toolbox, style: Theme.of(context).textTheme.bodySmall)),
-      ];
+    NavigationRailDestination(
+      padding: const EdgeInsets.only(bottom: 5),
+      icon: Icon(Icons.workspaces_outlined),
+      label: Text(
+        localizations.requests,
+        style: Theme.of(context).textTheme.bodySmall,
+      ),
+    ),
+    NavigationRailDestination(
+      padding: const EdgeInsets.only(bottom: 5),
+      icon: Icon(Icons.favorite_outline_outlined),
+      label: Text(
+        localizations.favorites,
+        style: Theme.of(context).textTheme.bodySmall,
+      ),
+    ),
+    NavigationRailDestination(
+      padding: const EdgeInsets.only(bottom: 5),
+      icon: Icon(Icons.history_outlined),
+      label: Text(
+        localizations.history,
+        style: Theme.of(context).textTheme.bodySmall,
+      ),
+    ),
+    NavigationRailDestination(
+      padding: const EdgeInsets.only(bottom: 5),
+      icon: Icon(Icons.hardware_outlined),
+      label: Text(
+        localizations.toolbox,
+        style: Theme.of(context).textTheme.bodySmall,
+      ),
+    ),
+  ];
 
   @override
   Widget build(BuildContext context) {
     return ValueListenableBuilder(
-        valueListenable: widget.selectIndex,
-        builder: (_, index, __) {
-          if (index == -1) {
-            return const SizedBox();
-          }
+      valueListenable: widget.selectIndex,
+      builder: (_, index, __) {
+        if (index == -1) {
+          return const SizedBox();
+        }
 
-          return Container(
-            width: localizations.localeName == 'en' ? 70 : 57,
-            decoration:
-                BoxDecoration(border: Border(right: BorderSide(color: Theme.of(context).dividerColor, width: 0.2))),
-            child: Column(children: <Widget>[
-              SizedBox(
-                height: 320,
-                child: leftNavigation(index),
+        return Container(
+          width: localizations.localeName == 'en' ? 70 : 57,
+          decoration: BoxDecoration(
+            border: Border(
+              right: BorderSide(
+                color: Theme.of(context).dividerColor,
+                width: 0.2,
               ),
+            ),
+          ),
+          child: Column(
+            children: <Widget>[
+              SizedBox(height: 320, child: leftNavigation(index)),
               Expanded(
-                  child: Column(
-                mainAxisAlignment: MainAxisAlignment.end,
-                children: [
-                  Tooltip(
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.end,
+                  children: [
+                    Tooltip(
                       message: localizations.preference,
                       preferBelow: false,
                       child: IconButton(
-                          iconSize: 22,
-                          onPressed: () {
-                            showDialog(
-                                context: context,
-                                builder: (_) => Preference(widget.appConfiguration, widget.proxyServer.configuration));
-                          },
-                          icon: Icon(Icons.settings_outlined, color: Colors.grey.shade500))),
-                  const SizedBox(height: 5),
-                  Tooltip(
+                        iconSize: 22,
+                        onPressed: () {
+                          showDialog(
+                            context: context,
+                            builder: (_) => Preference(
+                              widget.appConfiguration,
+                              widget.proxyServer.configuration,
+                            ),
+                          );
+                        },
+                        icon: Icon(
+                          Icons.settings_outlined,
+                          color: Colors.grey.shade500,
+                        ),
+                      ),
+                    ),
+                    const SizedBox(height: 5),
+                    Tooltip(
                       preferBelow: true,
                       message: localizations.feedback,
                       child: IconButton(
                         iconSize: 22,
-                        onPressed: () => launchUrl(Uri.parse("https://github.com/wanghongenpin/proxypin/issues")),
-                        icon: Icon(Icons.feedback_outlined, color: Colors.grey.shade500),
-                      )),
-                  const SizedBox(height: 10),
-                ],
-              ))
-            ]),
-          );
-        });
+                        onPressed: () => launchUrl(
+                          Uri.parse(
+                            "https://github.com/wanghongenpin/proxypin/issues",
+                          ),
+                        ),
+                        icon: Icon(
+                          Icons.feedback_outlined,
+                          color: Colors.grey.shade500,
+                        ),
+                      ),
+                    ),
+                    const SizedBox(height: 10),
+                  ],
+                ),
+              ),
+            ],
+          ),
+        );
+      },
+    );
   }
 
   //left menu eg: requests, favorites, history, toolbox
   Widget leftNavigation(int index) {
     return NavigationRail(
-        minWidth: 57,
-        backgroundColor: Theme.of(context).scaffoldBackgroundColor,
-        selectedIconTheme: IconTheme.of(context).copyWith(color: Theme.of(context).colorScheme.primary, size: 22),
-        unselectedIconTheme:
-            IconTheme.of(context).copyWith(color: IconTheme.of(context).color?.withValues(alpha: 0.55), size: 22),
-        labelType: NavigationRailLabelType.all,
-        destinations: destinations,
-        selectedIndex: index,
-        onDestinationSelected: (int index) {
-          widget.selectIndex.value = index;
-        });
+      minWidth: 57,
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
+      selectedIconTheme: IconTheme.of(
+        context,
+      ).copyWith(color: Theme.of(context).colorScheme.primary, size: 22),
+      unselectedIconTheme: IconTheme.of(context).copyWith(
+        color: IconTheme.of(context).color?.withValues(alpha: 0.55),
+        size: 22,
+      ),
+      labelType: NavigationRailLabelType.all,
+      destinations: destinations,
+      selectedIndex: index,
+      onDestinationSelected: (int index) {
+        widget.selectIndex.value = index;
+      },
+    );
   }
 }

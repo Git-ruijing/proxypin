@@ -4,7 +4,10 @@ import 'package:html/dom.dart' as dom;
 import 'package:html/parser.dart' as html_parser;
 
 class HTML {
-  static final RegExp _documentTagPattern = RegExp(r'^\s*<(?:!doctype|html|head|body)\b', caseSensitive: false);
+  static final RegExp _documentTagPattern = RegExp(
+    r'^\s*<(?:!doctype|html|head|body)\b',
+    caseSensitive: false,
+  );
 
   /// 格式化 HTML
   static String pretty(String htmlString) {
@@ -48,8 +51,15 @@ class _HtmlPrettyPrinter {
     'track',
     'wbr',
   };
-  static const Set<String> _preserveContentElements = {'pre', 'script', 'style', 'textarea'};
-  static const HtmlEscape _attributeEscaper = HtmlEscape(HtmlEscapeMode.attribute);
+  static const Set<String> _preserveContentElements = {
+    'pre',
+    'script',
+    'style',
+    'textarea',
+  };
+  static const HtmlEscape _attributeEscaper = HtmlEscape(
+    HtmlEscapeMode.attribute,
+  );
 
   static void writeNode(dom.Node node, StringBuffer buffer, int depth) {
     if (node is dom.Text) {
@@ -80,7 +90,11 @@ class _HtmlPrettyPrinter {
     }
   }
 
-  static void _writeElement(dom.Element element, StringBuffer buffer, int depth) {
+  static void _writeElement(
+    dom.Element element,
+    StringBuffer buffer,
+    int depth,
+  ) {
     final tag = (element.localName ?? '').toLowerCase();
     if (tag.isEmpty) {
       for (final child in element.nodes) {
@@ -148,8 +162,11 @@ class _HtmlPrettyPrinter {
       return '<$tag>';
     }
 
-    final attributes =
-        element.attributes.entries.map((entry) => '${entry.key}="${_attributeEscaper.convert(entry.value)}"').join(' ');
+    final attributes = element.attributes.entries
+        .map(
+          (entry) => '${entry.key}="${_attributeEscaper.convert(entry.value)}"',
+        )
+        .join(' ');
     return '<$tag $attributes>';
   }
 
@@ -163,4 +180,3 @@ class _HtmlPrettyPrinter {
       ..writeln(line);
   }
 }
-

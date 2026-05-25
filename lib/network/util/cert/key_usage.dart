@@ -28,7 +28,7 @@ enum KeyUsage {
   ENCIPHER_ONLY,
 
   /// 8
-  DECIPHER_ONLY
+  DECIPHER_ONLY,
 }
 
 class ExtensionKeyUsage {
@@ -45,12 +45,14 @@ class ExtensionKeyUsage {
   final ASN1BitString bitString;
   final bool critical;
 
-  ExtensionKeyUsage(int usage, {this.critical = true}) : bitString = ASN1BitString.fromBytes(keyUsageBytes(usage));
+  ExtensionKeyUsage(int usage, {this.critical = true})
+    : bitString = ASN1BitString.fromBytes(keyUsageBytes(usage));
 
   static Uint8List keyUsageBytes(int valueBytes) {
     var bytes = [valueBytes];
     if (valueBytes > 0xFF) {
-      final int firstValueByte = (valueBytes & int.parse("ff00", radix: 16)) >> 8;
+      final int firstValueByte =
+          (valueBytes & int.parse("ff00", radix: 16)) >> 8;
       final int secondValueByte = (valueBytes & int.parse("00ff", radix: 16));
       bytes = [firstValueByte, secondValueByte];
     }
@@ -62,7 +64,7 @@ class ExtensionKeyUsage {
       bytes.length + 1,
       // Unused bytes at the end
       1,
-      ...bytes
+      ...bytes,
     ]);
   }
 }

@@ -44,71 +44,103 @@ class Websocket extends StatelessWidget {
       itemBuilder: (context, index) {
         var message = messages[index];
         var avatar = SelectionContainer.disabled(
-            child: CircleAvatar(
-                backgroundColor: message.isFromClient ? Colors.green : Colors.blue,
-                child:
-                    Text(message.isFromClient ? 'C' : 'S', style: const TextStyle(fontSize: 18, color: Colors.white))));
+          child: CircleAvatar(
+            backgroundColor: message.isFromClient ? Colors.green : Colors.blue,
+            child: Text(
+              message.isFromClient ? 'C' : 'S',
+              style: const TextStyle(fontSize: 18, color: Colors.white),
+            ),
+          ),
+        );
 
         var previewButton = IconButton(
           tooltip: "Preview",
           onPressed: () {
-            showDialog(context: context, builder: (context) => _PreviewDialog(bytes: message.payloadData));
+            showDialog(
+              context: context,
+              builder: (context) => _PreviewDialog(bytes: message.payloadData),
+            );
           },
           icon: Icon(Icons.expand_more, color: ColorScheme.of(context).primary),
         );
 
         return Padding(
-            padding: const EdgeInsets.only(bottom: 5),
-            child: Row(
-              mainAxisAlignment: message.isFromClient ? MainAxisAlignment.start : MainAxisAlignment.end,
-              children: [
-                if (message.isFromClient) avatar,
-                const SizedBox(width: 8),
-                Flexible(
-                  child: Column(
-                      crossAxisAlignment: message.isFromClient ? CrossAxisAlignment.start : CrossAxisAlignment.end,
+          padding: const EdgeInsets.only(bottom: 5),
+          child: Row(
+            mainAxisAlignment: message.isFromClient
+                ? MainAxisAlignment.start
+                : MainAxisAlignment.end,
+            children: [
+              if (message.isFromClient) avatar,
+              const SizedBox(width: 8),
+              Flexible(
+                child: Column(
+                  crossAxisAlignment: message.isFromClient
+                      ? CrossAxisAlignment.start
+                      : CrossAxisAlignment.end,
+                  children: [
+                    SelectionContainer.disabled(
+                      child: Text(
+                        message.time.format(),
+                        style: const TextStyle(
+                          fontSize: 12,
+                          color: Colors.grey,
+                        ),
+                      ),
+                    ),
+                    Row(
+                      mainAxisSize: MainAxisSize.min,
                       children: [
-                        SelectionContainer.disabled(
-                            child:
-                                Text(message.time.format(), style: const TextStyle(fontSize: 12, color: Colors.grey))),
-                        Row(mainAxisSize: MainAxisSize.min, children: [
-                          if (!message.isFromClient) previewButton,
-                          Flexible(
-                            child: Container(
-                                padding: const EdgeInsets.all(8),
-                                decoration: BoxDecoration(
-                                  color: message.isFromClient
-                                      ? Colors.green.withOpacity(0.26)
-                                      : Colors.blue.withOpacity(0.3),
-                                  borderRadius: BorderRadius.circular(10),
-                                ),
-                                child: SelectableText(
-                                  "${message.payloadDataAsString}${message.isBinary ? ' ${getPackage(message.payloadLength)}' : ''}",
-                                  maxLines: 3,
-                                  minLines: 1,
-                                  contextMenuBuilder: (context, editableTextState) =>
-                                      contextMenu(context, editableTextState,
-                                          customItem: ContextMenuButtonItem(
-                                            label: localizations.download,
-                                            onPressed: () async {
-                                              String? path = (await FilePicker.platform
-                                                  .saveFile(fileName: "websocket.txt", bytes: message.payloadData));
-                                              if (path != null && context.mounted) {
-                                                CustomToast.success(localizations.saveSuccess).show(context);
-                                              }
-                                            },
-                                            type: ContextMenuButtonType.custom,
-                                          )),
-                                )),
+                        if (!message.isFromClient) previewButton,
+                        Flexible(
+                          child: Container(
+                            padding: const EdgeInsets.all(8),
+                            decoration: BoxDecoration(
+                              color: message.isFromClient
+                                  ? Colors.green.withOpacity(0.26)
+                                  : Colors.blue.withOpacity(0.3),
+                              borderRadius: BorderRadius.circular(10),
+                            ),
+                            child: SelectableText(
+                              "${message.payloadDataAsString}${message.isBinary ? ' ${getPackage(message.payloadLength)}' : ''}",
+                              maxLines: 3,
+                              minLines: 1,
+                              contextMenuBuilder:
+                                  (context, editableTextState) => contextMenu(
+                                    context,
+                                    editableTextState,
+                                    customItem: ContextMenuButtonItem(
+                                      label: localizations.download,
+                                      onPressed: () async {
+                                        String? path = (await FilePicker
+                                            .platform
+                                            .saveFile(
+                                              fileName: "websocket.txt",
+                                              bytes: message.payloadData,
+                                            ));
+                                        if (path != null && context.mounted) {
+                                          CustomToast.success(
+                                            localizations.saveSuccess,
+                                          ).show(context);
+                                        }
+                                      },
+                                      type: ContextMenuButtonType.custom,
+                                    ),
+                                  ),
+                            ),
                           ),
-                          if (message.isFromClient) previewButton,
-                        ])
-                      ]),
+                        ),
+                        if (message.isFromClient) previewButton,
+                      ],
+                    ),
+                  ],
                 ),
-                const SizedBox(width: 8),
-                if (!message.isFromClient) avatar,
-              ],
-            ));
+              ),
+              const SizedBox(width: 8),
+              if (!message.isFromClient) avatar,
+            ],
+          ),
+        );
       },
     );
   }
@@ -142,41 +174,55 @@ class _PreviewDialogState extends State<_PreviewDialog> {
         child: DefaultTabController(
           length: tabs.length,
           initialIndex: tabIndex,
-          child: Column(mainAxisSize: MainAxisSize.min, children: [
-            TabBar(
-              tabs: tabs,
-              onTap: (index) {
-                setState(() {
-                  tabIndex = index;
-                });
-              },
-            ),
-            Expanded(
-              child: TabBarView(children: [
-                if (isJsonText(widget.bytes))
-                  SingleChildScrollView(padding: const EdgeInsets.all(8.0), child: jsonText()),
-                if (isJsonText(widget.bytes))
-                  SingleChildScrollView(padding: const EdgeInsets.all(8.0), child: jsonView()),
-                // TEXT
-                SingleChildScrollView(
-                  padding: const EdgeInsets.all(8),
-                  child: SelectableText(safeTextPreview(widget.bytes)),
-                ),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              TabBar(
+                tabs: tabs,
+                onTap: (index) {
+                  setState(() {
+                    tabIndex = index;
+                  });
+                },
+              ),
+              Expanded(
+                child: TabBarView(
+                  children: [
+                    if (isJsonText(widget.bytes))
+                      SingleChildScrollView(
+                        padding: const EdgeInsets.all(8.0),
+                        child: jsonText(),
+                      ),
+                    if (isJsonText(widget.bytes))
+                      SingleChildScrollView(
+                        padding: const EdgeInsets.all(8.0),
+                        child: jsonView(),
+                      ),
+                    // TEXT
+                    SingleChildScrollView(
+                      padding: const EdgeInsets.all(8),
+                      child: SelectableText(safeTextPreview(widget.bytes)),
+                    ),
 
-                // HEX
-                SingleChildScrollView(
-                  padding: const EdgeInsets.all(8),
-                  child: SelectableText(widget.bytes.map(intToHex).join(" ")),
+                    // HEX
+                    SingleChildScrollView(
+                      padding: const EdgeInsets.all(8),
+                      child: SelectableText(
+                        widget.bytes.map(intToHex).join(" "),
+                      ),
+                    ),
+                  ],
                 ),
-              ]),
-            ),
-          ]),
+              ),
+            ],
+          ),
         ),
       ),
       actions: [
         TextButton(
-            onPressed: () => Navigator.of(context).pop(),
-            child: Text(MaterialLocalizations.of(context).closeButtonLabel))
+          onPressed: () => Navigator.of(context).pop(),
+          child: Text(MaterialLocalizations.of(context).closeButtonLabel),
+        ),
       ],
     );
   }
@@ -194,7 +240,11 @@ class _PreviewDialogState extends State<_PreviewDialog> {
       return SelectableText(safeTextPreview(widget.bytes));
     }
 
-    return JsonText(json: jsonData, indent: Platforms.isDesktop() ? '    ' : '  ', colorTheme: ColorTheme.of(context));
+    return JsonText(
+      json: jsonData,
+      indent: Platforms.isDesktop() ? '    ' : '  ',
+      colorTheme: ColorTheme.of(context),
+    );
   }
 
   Widget jsonView() {
@@ -238,7 +288,9 @@ class _PreviewDialogState extends State<_PreviewDialog> {
     try {
       return utf8.decode(bytes);
     } catch (_) {
-      return bytes.map((b) => b >= 32 && b <= 126 ? String.fromCharCode(b) : '.').join();
+      return bytes
+          .map((b) => b >= 32 && b <= 126 ? String.fromCharCode(b) : '.')
+          .join();
     }
   }
 }

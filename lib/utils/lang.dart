@@ -26,11 +26,37 @@ extension ListFirstWhere<T> on Iterable<T> {
 
 extension DateTimeFormat on DateTime {
   String format() {
-    return formatDate(this, [yyyy, '-', mm, '-', dd, ' ', HH, ':', nn, ':', ss]);
+    return formatDate(this, [
+      yyyy,
+      '-',
+      mm,
+      '-',
+      dd,
+      ' ',
+      HH,
+      ':',
+      nn,
+      ':',
+      ss,
+    ]);
   }
 
   String formatMillisecond() {
-    return formatDate(this, [yyyy, '-', mm, '-', dd, ' ', HH, ':', nn, ':', ss, '.', SSS]);
+    return formatDate(this, [
+      yyyy,
+      '-',
+      mm,
+      '-',
+      dd,
+      ' ',
+      HH,
+      ':',
+      nn,
+      ':',
+      ss,
+      '.',
+      SSS,
+    ]);
   }
 
   String dateFormat() {
@@ -111,7 +137,6 @@ class Strings {
 /// 这样会导致，换行时上一行可能会留很大的空白区域
 /// 把每个字符插入一个0宽的字符， \u{200B}
 extension StringEnhance on String {
-
   String removePrefix(String prefix) {
     if (startsWith(prefix)) {
       return substring(prefix.length, length);

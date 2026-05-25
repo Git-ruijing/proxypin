@@ -25,7 +25,9 @@ Future<String> localIp({bool readCache = true}) async {
 }
 
 Future<InternetAddress> localAddress() async {
-  return await NetworkInterface.list(type: InternetAddressType.IPv4).then((interfaces) {
+  return await NetworkInterface.list(type: InternetAddressType.IPv4).then((
+    interfaces,
+  ) {
     interfaces.sort((a, b) {
       return weight(a) - weight(b);
     });
@@ -56,7 +58,9 @@ Future<List<String>> localIps({bool readCache = true}) async {
 }
 
 Future<String> networkName() {
-  return NetworkInterface.list(type: InternetAddressType.IPv4).then((interfaces) {
+  return NetworkInterface.list(type: InternetAddressType.IPv4).then((
+    interfaces,
+  ) {
     interfaces.sort((a, b) {
       return weight(a) - weight(b);
     });

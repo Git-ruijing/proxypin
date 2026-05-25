@@ -10,12 +10,15 @@ import 'package:proxypin/ui/component/multi_window.dart';
 import '../http/http_headers.dart';
 
 class RequestBreakpointInterceptor extends Interceptor {
-  static RequestBreakpointInterceptor instance = RequestBreakpointInterceptor._();
+  static RequestBreakpointInterceptor instance =
+      RequestBreakpointInterceptor._();
 
   final manager = RequestBreakpointManager.instance;
 
-  final ExpiringCache<String, Completer<HttpRequest?>> _pausedRequests = ExpiringCache(Duration(minutes: 10));
-  final ExpiringCache<String, Completer<HttpResponse?>> _pausedResponses = ExpiringCache(Duration(minutes: 10));
+  final ExpiringCache<String, Completer<HttpRequest?>> _pausedRequests =
+      ExpiringCache(Duration(minutes: 10));
+  final ExpiringCache<String, Completer<HttpResponse?>> _pausedResponses =
+      ExpiringCache(Duration(minutes: 10));
 
   RequestBreakpointInterceptor._();
 
@@ -31,12 +34,21 @@ class RequestBreakpointInterceptor extends Interceptor {
         _pausedRequests[request.requestId] = completer;
 
         // Open Breakpoint Executor Window
-        MultiWindow.openWindow("Breakpoint - Request", 'BreakpointExecutor',
-            args: {'type': 'request', 'request': request.toJson(), 'requestId': request.requestId});
+        MultiWindow.openWindow(
+          "Breakpoint - Request",
+          'BreakpointExecutor',
+          args: {
+            'type': 'request',
+            'request': request.toJson(),
+            'requestId': request.requestId,
+          },
+        );
 
         return completer.future.then((req) {
           if (req == null) {
-            logger.d('Request ${request.requestId} was resumed null, aborting request');
+            logger.d(
+              'Request ${request.requestId} was resumed null, aborting request',
+            );
             return null;
           }
 
@@ -53,7 +65,9 @@ class RequestBreakpointInterceptor extends Interceptor {
           request.headers.remove(HttpHeaders.CONTENT_ENCODING);
 
           request.body = req.body;
-          logger.d('Resuming request ${request.requestId} with modified request');
+          logger.d(
+            'Resuming request ${request.requestId} with modified request',
+          );
           return request;
         });
       }
@@ -62,7 +76,10 @@ class RequestBreakpointInterceptor extends Interceptor {
   }
 
   @override
-  Future<HttpResponse?> onResponse(HttpRequest request, HttpResponse response) async {
+  Future<HttpResponse?> onResponse(
+    HttpRequest request,
+    HttpResponse response,
+  ) async {
     RequestBreakpointManager requestBreakpointManager = await manager;
     if (!requestBreakpointManager.enabled) return response;
 
@@ -73,12 +90,16 @@ class RequestBreakpointInterceptor extends Interceptor {
         _pausedResponses[request.requestId] = completer;
 
         // Open Breakpoint Executor Window
-        MultiWindow.openWindow("Breakpoint - Response", 'BreakpointExecutor', args: {
-          'type': 'response',
-          'request': request.toJson(),
-          'response': response.toJson(),
-          'requestId': request.requestId
-        });
+        MultiWindow.openWindow(
+          "Breakpoint - Response",
+          'BreakpointExecutor',
+          args: {
+            'type': 'response',
+            'request': request.toJson(),
+            'response': response.toJson(),
+            'requestId': request.requestId,
+          },
+        );
 
         return completer.future.then((res) {
           if (res == null) {
@@ -92,7 +113,9 @@ class RequestBreakpointInterceptor extends Interceptor {
 
           response.body = res.body;
 
-          logger.d('Resuming response for request ${request.requestId} with modified response');
+          logger.d(
+            'Resuming response for request ${request.requestId} with modified response',
+          );
           return response;
         });
       }

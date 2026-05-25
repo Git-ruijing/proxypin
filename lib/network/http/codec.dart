@@ -40,12 +40,7 @@ class ParserException implements Exception {
   }
 }
 
-enum State {
-  readInitial,
-  readHeader,
-  body,
-  done,
-}
+enum State { readInitial, readHeader, body, done }
 
 class DecoderResult<T> {
   bool isDone = true;
@@ -88,7 +83,11 @@ abstract class HttpCodec<T extends HttpMessage> implements Codec<T, T> {
   T createMessage(List<String> reqLine);
 
   Http2Codec<T> getH2Codec() {
-    return _h2Codec ??= (this is HttpRequestCodec ? Http2RequestDecoder() : Http2ResponseDecoder()) as Http2Codec<T>;
+    return _h2Codec ??=
+        (this is HttpRequestCodec
+                ? Http2RequestDecoder()
+                : Http2ResponseDecoder())
+            as Http2Codec<T>;
   }
 
   @override
@@ -118,8 +117,11 @@ abstract class HttpCodec<T extends HttpMessage> implements Codec<T, T> {
 
       //请求体
       if (_state == State.body) {
-        bool resolveBody = channelContext.currentRequest?.method != HttpMethod.head;
-        var bodyResult = resolveBody ? bodyReader!.readBody(data.readAvailableBytes()) : null;
+        bool resolveBody =
+            channelContext.currentRequest?.method != HttpMethod.head;
+        var bodyResult = resolveBody
+            ? bodyReader!.readBody(data.readAvailableBytes())
+            : null;
         if (!resolveBody || bodyResult?.isDone == true) {
           _state = State.done;
           result.data!.body = bodyResult?.body;
@@ -232,8 +234,11 @@ class HttpRequestCodec extends HttpCodec<HttpRequest> {
 
     //http scheme 输入地址和host不一致
     if (uri.startsWith(HostAndPort.httpScheme) &&
-        (message.requestUri?.host != message.headers.host && message.headers.host?.contains(':') != true)) {
-      uri = message.requestUri?.replace(host: message.headers.host).toString() ?? uri;
+        (message.requestUri?.host != message.headers.host &&
+            message.headers.host?.contains(':') != true)) {
+      uri =
+          message.requestUri?.replace(host: message.headers.host).toString() ??
+          uri;
     }
 
     //请求行
@@ -274,7 +279,10 @@ class HttpServerCodec extends Codec<HttpRequest, HttpResponse> {
   HttpResponseCodec responseCodec = HttpResponseCodec();
 
   @override
-  DecoderResult<HttpRequest> decode(ChannelContext channelContext, ByteBuf byteBuf) {
+  DecoderResult<HttpRequest> decode(
+    ChannelContext channelContext,
+    ByteBuf byteBuf,
+  ) {
     return requestCodec.decode(channelContext, byteBuf);
   }
 
@@ -289,7 +297,10 @@ class HttpClientCodec extends Codec<HttpResponse, HttpRequest> {
   HttpResponseCodec responseCodec = HttpResponseCodec();
 
   @override
-  DecoderResult<HttpResponse> decode(ChannelContext channelContext, ByteBuf byteBuf) {
+  DecoderResult<HttpResponse> decode(
+    ChannelContext channelContext,
+    ByteBuf byteBuf,
+  ) {
     return responseCodec.decode(channelContext, byteBuf);
   }
 

@@ -34,7 +34,9 @@ enum RuleType {
   const RuleType(this.label);
 
   static RuleType fromName(String name) {
-    return values.firstWhere((element) => element.name == name || element.label == name);
+    return values.firstWhere(
+      (element) => element.name == name || element.label == name,
+    );
   }
 }
 
@@ -50,15 +52,22 @@ class RequestRewriteRule {
   // 可选的 HTTP 方法匹配；null 表示匹配任意方法
   HttpMethod? method;
 
-  RequestRewriteRule({this.enabled = true, this.name, required this.url, required this.type, this.rewritePath, this.method})
-      : _urlReg = RegExp(url.replaceAll("*", ".*").replaceFirst('?', '\\?'));
+  RequestRewriteRule({
+    this.enabled = true,
+    this.name,
+    required this.url,
+    required this.type,
+    this.rewritePath,
+    this.method,
+  }) : _urlReg = RegExp(url.replaceAll("*", ".*").replaceFirst('?', '\\?'));
 
   bool match(String url, {RuleType? type, HttpMethod? method}) {
     if (!enabled) return false;
     if (type != null && this.type != type) return false;
 
     // 如果调用方提供了 method，则当规则定义了 method 时进行比较；如果调用方未提供 method，则不按方法过滤（向后兼容）
-    if (method != null && this.method != null && this.method != method) return false;
+    if (method != null && this.method != null && this.method != method)
+      return false;
 
     return _urlReg.hasMatch(url);
   }
@@ -79,12 +88,13 @@ class RequestRewriteRule {
     }
 
     return RequestRewriteRule(
-        enabled: map['enabled'] == true,
-        name: map['name'],
-        url: map['url'] ?? map['domain'] + map['path'],
-        type: RuleType.fromName(map['type']),
-        rewritePath: map['rewritePath'],
-        method: method);
+      enabled: map['enabled'] == true,
+      name: map['name'],
+      url: map['url'] ?? map['domain'] + map['path'],
+      type: RuleType.fromName(map['type']),
+      rewritePath: map['rewritePath'],
+      method: method,
+    );
   }
 
   void updatePathReg() {
@@ -131,23 +141,45 @@ class RewriteItem {
   }
 
   factory RewriteItem.fromJson(Map<dynamic, dynamic> map) {
-    return RewriteItem(RewriteType.fromName(map['type']), map['enabled'], values: map['values']);
+    return RewriteItem(
+      RewriteType.fromName(map['type']),
+      map['enabled'],
+      values: map['values'],
+    );
   }
 
   static List<RewriteItem> fromRequest(HttpRequest request) {
     List<RewriteItem> items = [];
-    items.add(RewriteItem(RewriteType.replaceRequestLine, false)..path = request.requestUri?.path);
-    items.add(RewriteItem(RewriteType.replaceRequestHeader, false)..headers = request.headers.toMap());
-    items.add(RewriteItem(RewriteType.replaceRequestBody, true)..body = request.getBodyString());
+    items.add(
+      RewriteItem(RewriteType.replaceRequestLine, false)
+        ..path = request.requestUri?.path,
+    );
+    items.add(
+      RewriteItem(RewriteType.replaceRequestHeader, false)
+        ..headers = request.headers.toMap(),
+    );
+    items.add(
+      RewriteItem(RewriteType.replaceRequestBody, true)
+        ..body = request.getBodyString(),
+    );
 
     return items;
   }
 
   static List<RewriteItem> fromResponse(HttpResponse response) {
     List<RewriteItem> items = [];
-    items.add(RewriteItem(RewriteType.replaceResponseStatus, false)..statusCode = response.status.code);
-    items.add(RewriteItem(RewriteType.replaceResponseHeader, false)..headers = response.headers.toMap());
-    items.add(RewriteItem(RewriteType.replaceResponseBody, true)..body = response.getBodyString());
+    items.add(
+      RewriteItem(RewriteType.replaceResponseStatus, false)
+        ..statusCode = response.status.code,
+    );
+    items.add(
+      RewriteItem(RewriteType.replaceResponseHeader, false)
+        ..headers = response.headers.toMap(),
+    );
+    items.add(
+      RewriteItem(RewriteType.replaceResponseBody, true)
+        ..body = response.getBodyString(),
+    );
 
     return items;
   }
@@ -169,7 +201,9 @@ class RewriteItem {
   //method
   HttpMethod? get method => values['method'] == null
       ? null
-      : HttpMethod.values.firstWhereOrNull((element) => element.name == values['method']);
+      : HttpMethod.values.firstWhereOrNull(
+          (element) => element.name == values['method'],
+        );
 
   set method(HttpMethod? method) => values['method'] = method?.name;
 
@@ -188,7 +222,8 @@ class RewriteItem {
   set statusCode(int? statusCode) => values['statusCode'] = statusCode;
 
   //headers
-  Map<String, String>? get headers => values['headers'] == null ? null : Map.from(values['headers']);
+  Map<String, String>? get headers =>
+      values['headers'] == null ? null : Map.from(values['headers']);
 
   set headers(Map<String, String>? headers) => values['headers'] = headers;
 
@@ -206,11 +241,7 @@ class RewriteItem {
   set bodyFile(String? bodyFile) => values['bodyFile'] = bodyFile;
 
   Map<String, dynamic> toJson() {
-    return {
-      'enabled': enabled,
-      'type': type.name,
-      'values': values,
-    };
+    return {'enabled': enabled, 'type': type.name, 'values': values};
   }
 
   @override
@@ -238,8 +269,7 @@ enum RewriteType {
   updateQueryParam("修改参数"),
   addHeader("添加头部"),
   removeHeader("删除头部"),
-  updateHeader("修改头部"),
-  ;
+  updateHeader("修改头部");
 
   static List<RewriteType> updateRequest = [
     updateBody,
@@ -248,10 +278,15 @@ enum RewriteType {
     removeQueryParam,
     addHeader,
     updateHeader,
-    removeHeader
+    removeHeader,
   ];
 
-  static List<RewriteType> updateResponse = [updateBody, addHeader, updateHeader, removeHeader];
+  static List<RewriteType> updateResponse = [
+    updateBody,
+    addHeader,
+    updateHeader,
+    removeHeader,
+  ];
 
   final String label;
 

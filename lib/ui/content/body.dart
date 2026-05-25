@@ -60,13 +60,14 @@ class HttpBodyWidget extends StatefulWidget {
   final ScrollController? scrollController;
   final bool hideRequestRewrite; //是否隐藏请求重写
 
-  const HttpBodyWidget(
-      {super.key,
-      required this.httpMessage,
-      this.inNewWindow = false,
-      this.windowController,
-      this.scrollController,
-      this.hideRequestRewrite = false});
+  const HttpBodyWidget({
+    super.key,
+    required this.httpMessage,
+    this.inNewWindow = false,
+    this.windowController,
+    this.scrollController,
+    this.hideRequestRewrite = false,
+  });
 
   @override
   State<StatefulWidget> createState() {
@@ -106,7 +107,8 @@ class HttpBodyState extends State<HttpBodyWidget> {
 
   /// 按键事件
   bool onKeyEvent(KeyEvent event) {
-    if ((HardwareKeyboard.instance.isMetaPressed || HardwareKeyboard.instance.isControlPressed) &&
+    if ((HardwareKeyboard.instance.isMetaPressed ||
+            HardwareKeyboard.instance.isControlPressed) &&
         event.logicalKey == LogicalKeyboardKey.keyW) {
       HardwareKeyboard.instance.removeHandler(onKeyEvent);
       widget.windowController?.close();
@@ -139,14 +141,16 @@ class HttpBodyState extends State<HttpBodyWidget> {
       return const SizedBox();
     }
 
-    if ((widget.httpMessage?.body == null || widget.httpMessage?.body?.isEmpty == true) &&
+    if ((widget.httpMessage?.body == null ||
+            widget.httpMessage?.body?.isEmpty == true) &&
         widget.httpMessage?.messages.isNotEmpty == false) {
       return const SizedBox();
     }
 
     var tabs = Tabs.of(widget.httpMessage?.contentType, isJsonText());
 
-    if (tabIndex > 0 && tabIndex >= tabs.list.length) tabIndex = tabs.list.length - 1;
+    if (tabIndex > 0 && tabIndex >= tabs.list.length)
+      tabIndex = tabs.list.length - 1;
     bodyKey.currentState?.changeState(widget.httpMessage, tabs.list[tabIndex]);
 
     //TabBar
@@ -154,66 +158,94 @@ class HttpBodyState extends State<HttpBodyWidget> {
       widget.inNewWindow ? const SizedBox() : titleWidget(),
       const SizedBox(height: 3),
       SizedBox(
-          height: 36,
-          child: TabBar(
-              labelStyle: const TextStyle(fontSize: 14, fontWeight: FontWeight.w500),
-              labelPadding: const EdgeInsets.only(left: 3, right: 5),
-              tabs: tabs.tabList(),
-              onTap: (index) {
-                tabIndex = index;
-                bodyKey.currentState?.changeState(widget.httpMessage, tabs.list[tabIndex]);
-              })),
+        height: 36,
+        child: TabBar(
+          labelStyle: const TextStyle(
+            fontSize: 14,
+            fontWeight: FontWeight.w500,
+          ),
+          labelPadding: const EdgeInsets.only(left: 3, right: 5),
+          tabs: tabs.tabList(),
+          onTap: (index) {
+            tabIndex = index;
+            bodyKey.currentState?.changeState(
+              widget.httpMessage,
+              tabs.list[tabIndex],
+            );
+          },
+        ),
+      ),
       Padding(
-          padding: const EdgeInsets.all(10),
-          child: _Body(
-              key: bodyKey,
-              message: widget.httpMessage,
-              viewType: tabs.list[tabIndex],
-              scrollController: widget.scrollController,
-              searchController: searchController)) //body
+        padding: const EdgeInsets.all(10),
+        child: _Body(
+          key: bodyKey,
+          message: widget.httpMessage,
+          viewType: tabs.list[tabIndex],
+          scrollController: widget.scrollController,
+          searchController: searchController,
+        ),
+      ), //body
     ];
 
     var tabController = FocusableActionDetector(
-        shortcuts: {
-          LogicalKeySet(
-                  Platform.isMacOS ? LogicalKeyboardKey.meta : LogicalKeyboardKey.control, LogicalKeyboardKey.keyF):
-              ActivateIntent(),
-          LogicalKeySet(LogicalKeyboardKey.escape): DismissIntent(),
-        },
-        actions: {
-          ActivateIntent: CallbackAction<ActivateIntent>(
-            onInvoke: (intent) {
-              if (searchController.isSearchOverlayVisible) {
-                hideSearchOverlay();
-              } else {
-                RenderBox renderBox = searchIconKey.currentContext?.findRenderObject() as RenderBox;
-                Offset position = renderBox.localToGlobal(Offset.zero); // 获取搜索图标的位置
-
-                searchController.showSearchOverlay(context,
-                    top: max(position.dy + renderBox.size.height + 50, 100), right: 10);
-              }
-              return null;
-            },
-          ),
-          DismissIntent: CallbackAction<DismissIntent>(
-            onInvoke: (intent) {
+      shortcuts: {
+        LogicalKeySet(
+          Platform.isMacOS
+              ? LogicalKeyboardKey.meta
+              : LogicalKeyboardKey.control,
+          LogicalKeyboardKey.keyF,
+        ): ActivateIntent(),
+        LogicalKeySet(LogicalKeyboardKey.escape): DismissIntent(),
+      },
+      actions: {
+        ActivateIntent: CallbackAction<ActivateIntent>(
+          onInvoke: (intent) {
+            if (searchController.isSearchOverlayVisible) {
               hideSearchOverlay();
-              return null;
-            },
-          ),
-        },
-        child: DefaultTabController(
-            initialIndex: tabIndex,
-            length: tabs.list.length,
-            child: widget.inNewWindow
-                ? ListView(children: list)
-                : Column(crossAxisAlignment: CrossAxisAlignment.start, children: list)));
+            } else {
+              RenderBox renderBox =
+                  searchIconKey.currentContext?.findRenderObject() as RenderBox;
+              Offset position = renderBox.localToGlobal(
+                Offset.zero,
+              ); // 获取搜索图标的位置
+
+              searchController.showSearchOverlay(
+                context,
+                top: max(position.dy + renderBox.size.height + 50, 100),
+                right: 10,
+              );
+            }
+            return null;
+          },
+        ),
+        DismissIntent: CallbackAction<DismissIntent>(
+          onInvoke: (intent) {
+            hideSearchOverlay();
+            return null;
+          },
+        ),
+      },
+      child: DefaultTabController(
+        initialIndex: tabIndex,
+        length: tabs.list.length,
+        child: widget.inNewWindow
+            ? ListView(children: list)
+            : Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: list,
+              ),
+      ),
+    );
 
     //在新窗口打开
     if (widget.inNewWindow) {
       return Scaffold(
-          appBar: AppBar(title: titleWidget(inNewWindow: true), toolbarHeight: Platform.isWindows ? 36 : null),
-          body: tabController);
+        appBar: AppBar(
+          title: titleWidget(inNewWindow: true),
+          toolbarHeight: Platform.isWindows ? 36 : null,
+        ),
+        body: tabController,
+      );
     }
     return tabController;
   }
@@ -235,7 +267,9 @@ class HttpBodyState extends State<HttpBodyWidget> {
     var type = widget.httpMessage is HttpRequest ? "Request" : "Response";
 
     bool isImage = widget.httpMessage?.contentType == ContentType.image;
-    VisualDensity visualDensity = Platforms.isMobile() ? VisualDensity.compact : VisualDensity.standard;
+    VisualDensity visualDensity = Platforms.isMobile()
+        ? VisualDensity.compact
+        : VisualDensity.standard;
 
     final isMobile = Platforms.isMobile();
 
@@ -248,9 +282,14 @@ class HttpBodyState extends State<HttpBodyWidget> {
         if (searchController.isSearchOverlayVisible) {
           searchController.removeSearchOverlay();
         } else {
-          RenderBox renderBox = searchIconKey.currentContext?.findRenderObject() as RenderBox;
+          RenderBox renderBox =
+              searchIconKey.currentContext?.findRenderObject() as RenderBox;
           Offset position = renderBox.localToGlobal(Offset.zero);
-          searchController.showSearchOverlay(context, top: position.dy + renderBox.size.height + 50, right: 10);
+          searchController.showSearchOverlay(
+            context,
+            top: position.dy + renderBox.size.height + 50,
+            right: 10,
+          );
         }
       },
     );
@@ -280,23 +319,25 @@ class HttpBodyState extends State<HttpBodyWidget> {
     );
 
     final encodeBtn = IconButton(
-        visualDensity: visualDensity,
-        iconSize: 20,
-        icon: const Icon(Icons.text_format),
-        tooltip: localizations.encode,
-        onPressed: () async {
-          var body = await bodyKey.currentState?.getBody();
-          if (mounted) {
-            encodeWindow(EncoderType.base64, context, body);
-          }
-        });
+      visualDensity: visualDensity,
+      iconSize: 20,
+      icon: const Icon(Icons.text_format),
+      tooltip: localizations.encode,
+      onPressed: () async {
+        var body = await bodyKey.currentState?.getBody();
+        if (mounted) {
+          encodeWindow(EncoderType.base64, context, body);
+        }
+      },
+    );
 
     final openNewBtn = IconButton(
-        visualDensity: visualDensity,
-        iconSize: 16,
-        icon: const Icon(Icons.open_in_new),
-        tooltip: localizations.newWindow,
-        onPressed: () => openNew());
+      visualDensity: visualDensity,
+      iconSize: 16,
+      icon: const Icon(Icons.open_in_new),
+      tooltip: localizations.newWindow,
+      onPressed: () => openNew(),
+    );
 
     Widget? cryptoToggle;
     if (decoded != null) {
@@ -307,7 +348,11 @@ class HttpBodyState extends State<HttpBodyWidget> {
           });
         },
         icon: Icon(showDecoded ? Icons.lock_open : Icons.lock, size: 18),
-        label: Text(showDecoded ? localizations.cryptoDecoded : localizations.cryptoDecodeToggle),
+        label: Text(
+          showDecoded
+              ? localizations.cryptoDecoded
+              : localizations.cryptoDecodeToggle,
+        ),
       );
     }
 
@@ -318,17 +363,32 @@ class HttpBodyState extends State<HttpBodyWidget> {
     if (isMobile && cryptoToggle != null) {
       final overflowItems = <PopupMenuEntry<String>>[];
       if (!widget.hideRequestRewrite) {
-        overflowItems.add(PopupMenuItem(value: 'rewrite', child: Text(localizations.requestRewrite)));
+        overflowItems.add(
+          PopupMenuItem(
+            value: 'rewrite',
+            child: Text(localizations.requestRewrite),
+          ),
+        );
       }
-      overflowItems.add(PopupMenuItem(value: 'encode', child: Text(localizations.encode)));
+      overflowItems.add(
+        PopupMenuItem(value: 'encode', child: Text(localizations.encode)),
+      );
       if (!inNewWindow) {
-        overflowItems.add(PopupMenuItem(value: 'new_window', child: Text(localizations.newWindow)));
+        overflowItems.add(
+          PopupMenuItem(
+            value: 'new_window',
+            child: Text(localizations.newWindow),
+          ),
+        );
       }
 
       return Row(
         mainAxisSize: MainAxisSize.min,
         children: [
-          Text('$type Body', style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w500)),
+          Text(
+            '$type Body',
+            style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w500),
+          ),
           const SizedBox(width: 8),
           searchBtn,
           const SizedBox(width: 4),
@@ -342,7 +402,8 @@ class HttpBodyState extends State<HttpBodyWidget> {
                 if (v == 'rewrite') showRequestRewrite();
                 if (v == 'encode') {
                   bodyKey.currentState?.getBody().then((body) {
-                    if (mounted) encodeWindow(EncoderType.base64, context, body);
+                    if (mounted)
+                      encodeWindow(EncoderType.base64, context, body);
                   });
                 }
                 if (v == 'new_window') openNew();
@@ -356,7 +417,10 @@ class HttpBodyState extends State<HttpBodyWidget> {
     // Default (desktop + mobile without crypto): keep the previous full inline actions
     // (horizontal scroll when needed).
     final list = <Widget>[
-      Text('$type Body', style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w500)),
+      Text(
+        '$type Body',
+        style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w500),
+      ),
       const SizedBox(width: 18),
       searchBtn,
       const SizedBox(width: 4),
@@ -374,41 +438,52 @@ class HttpBodyState extends State<HttpBodyWidget> {
       list.add(cryptoToggle);
     }
 
-    return SingleChildScrollView(scrollDirection: Axis.horizontal, child: Row(children: list));
+    return SingleChildScrollView(
+      scrollDirection: Axis.horizontal,
+      child: Row(children: list),
+    );
   }
 
   ///下载图片
   Widget downloadImageButton() {
     return IconButton(
-        iconSize: 19,
-        visualDensity: VisualDensity.comfortable,
-        icon: Icon(Icons.download),
-        tooltip: localizations.saveImage,
-        onPressed: () async {
-          var body = bodyKey.currentState?.message?.body;
-          if (body == null) {
-            return;
+      iconSize: 19,
+      visualDensity: VisualDensity.comfortable,
+      icon: Icon(Icons.download),
+      tooltip: localizations.saveImage,
+      onPressed: () async {
+        var body = bodyKey.currentState?.message?.body;
+        if (body == null) {
+          return;
+        }
+        var bytes = Uint8List.fromList(body);
+        if (Platforms.isMobile()) {
+          String? path = await ImagePickers.saveByteDataImageToGallery(bytes);
+          if (path != null && mounted) {
+            FlutterToastr.show(
+              localizations.saveSuccess,
+              context,
+              duration: 2,
+              rootNavigator: true,
+            );
           }
-          var bytes = Uint8List.fromList(body);
-          if (Platforms.isMobile()) {
-            String? path = await ImagePickers.saveByteDataImageToGallery(bytes);
-            if (path != null && mounted) {
-              FlutterToastr.show(localizations.saveSuccess, context, duration: 2, rootNavigator: true);
-            }
-            return;
-          }
+          return;
+        }
 
-          if (Platforms.isDesktop()) {
-            var fileName = "image_${DateTime.now().millisecondsSinceEpoch}.png";
-            String? path = (await FilePicker.platform.saveFile(fileName: fileName));
-            if (path == null) return;
+        if (Platforms.isDesktop()) {
+          var fileName = "image_${DateTime.now().millisecondsSinceEpoch}.png";
+          String? path = (await FilePicker.platform.saveFile(
+            fileName: fileName,
+          ));
+          if (path == null) return;
 
-            await File(path).writeAsBytes(bytes);
-            if (mounted) {
-              FlutterToastr.show(localizations.saveSuccess, context, duration: 2);
-            }
+          await File(path).writeAsBytes(bytes);
+          if (mounted) {
+            FlutterToastr.show(localizations.saveSuccess, context, duration: 2);
           }
-        });
+        }
+      },
+    );
   }
 
   ///展示请求重写
@@ -426,7 +501,9 @@ class HttpBodyState extends State<HttpBodyWidget> {
     }
     var requestRewrites = await RequestRewriteManager.instance;
 
-    var ruleType = isRequest ? RuleType.requestReplace : RuleType.responseReplace;
+    var ruleType = isRequest
+        ? RuleType.requestReplace
+        : RuleType.responseReplace;
     var rule = requestRewrites.getRequestRewriteRule(request!, ruleType);
 
     var rewriteItems = await requestRewrites.getRewriteItems(rule);
@@ -435,13 +512,19 @@ class HttpBodyState extends State<HttpBodyWidget> {
 
     if (Platforms.isMobile()) {
       Navigator.push(
-          context, MaterialPageRoute(builder: (_) => RewriteRule(rule: rule, items: rewriteItems, request: request)));
+        context,
+        MaterialPageRoute(
+          builder: (_) =>
+              RewriteRule(rule: rule, items: rewriteItems, request: request),
+        ),
+      );
     } else {
       showDialog(
-              context: context,
-              barrierDismissible: false,
-              builder: (BuildContext context) => RewriteRuleEdit(rule: rule, items: rewriteItems, request: request))
-          .then((value) {
+        context: context,
+        barrierDismissible: false,
+        builder: (BuildContext context) =>
+            RewriteRuleEdit(rule: rule, items: rewriteItems, request: request),
+      ).then((value) {
         if (value is RequestRewriteRule && mounted) {
           FlutterToastr.show(localizations.saveSuccess, context);
         }
@@ -457,19 +540,34 @@ class HttpBodyState extends State<HttpBodyWidget> {
       if (Platform.isWindows) {
         ratio = WindowManager.instance.getDevicePixelRatio();
       }
-      final window = await DesktopMultiWindow.createWindow(jsonEncode(
-        {'name': 'HttpBodyWidget', 'httpMessage': widget.httpMessage, 'inNewWindow': true},
-      ));
+      final window = await DesktopMultiWindow.createWindow(
+        jsonEncode({
+          'name': 'HttpBodyWidget',
+          'httpMessage': widget.httpMessage,
+          'inNewWindow': true,
+        }),
+      );
       window
-        ..setTitle(widget.httpMessage is HttpRequest ? localizations.requestBody : localizations.responseBody)
-        ..setFrame(const Offset(100, 100) & Size(800 * ratio, size.height * ratio))
+        ..setTitle(
+          widget.httpMessage is HttpRequest
+              ? localizations.requestBody
+              : localizations.responseBody,
+        )
+        ..setFrame(
+          const Offset(100, 100) & Size(800 * ratio, size.height * ratio),
+        )
         ..center()
         ..show();
       return;
     }
 
     Navigator.push(
-        context, MaterialPageRoute(builder: (_) => HttpBodyWidget(httpMessage: widget.httpMessage, inNewWindow: true)));
+      context,
+      MaterialPageRoute(
+        builder: (_) =>
+            HttpBodyWidget(httpMessage: widget.httpMessage, inNewWindow: true),
+      ),
+    );
   }
 }
 
@@ -519,7 +617,9 @@ class _BodyState extends State<_Body> {
   }
 
   HttpMessage? _effectiveMessage(HttpBodyState? parent) {
-    if (parent?.showDecoded == true && parent?.decoded != null && message != null) {
+    if (parent?.showDecoded == true &&
+        parent?.decoded != null &&
+        message != null) {
       return _DecodedHttpMessage(message!, parent!.decoded!);
     }
     return message;
@@ -561,7 +661,9 @@ class _BodyState extends State<_Body> {
     final currentMessage = _effectiveMessage(parent);
 
     if (currentMessage?.isWebSocket == true) {
-      return currentMessage?.messages.map((e) => e.payloadDataAsString).join("\n");
+      return currentMessage?.messages
+          .map((e) => e.payloadDataAsString)
+          .join("\n");
     }
 
     if (currentMessage == null || currentMessage.body == null) {
@@ -588,30 +690,45 @@ class _BodyState extends State<_Body> {
     final message = _effectiveMessage(parent);
 
     if (message?.isWebSocket == true ||
-        (message?.contentType == ContentType.sse && message?.messages.isNotEmpty == true)) {
+        (message?.contentType == ContentType.sse &&
+            message?.messages.isNotEmpty == true)) {
       List<Widget>? list = message?.messages
-          .map((e) => Container(
+          .map(
+            (e) => Container(
               margin: const EdgeInsets.only(top: 2, bottom: 2),
               child: Row(
                 children: [
                   Expanded(child: Text(e.payloadDataAsString)),
                   const SizedBox(width: 5),
                   SizedBox(
-                      width: 130,
-                      child: SelectionContainer.disabled(
-                          child: Text(e.time.format(), style: const TextStyle(fontSize: 12, color: Colors.grey))))
+                    width: 130,
+                    child: SelectionContainer.disabled(
+                      child: Text(
+                        e.time.format(),
+                        style: const TextStyle(
+                          fontSize: 12,
+                          color: Colors.grey,
+                        ),
+                      ),
+                    ),
+                  ),
                 ],
-              )))
+              ),
+            ),
+          )
           .toList();
       return Column(
         children: [
           const SelectionContainer.disabled(
-              child: Row(children: [
-            Expanded(child: Text("Data")),
-            SizedBox(width: 130, child: Text("Time")),
-          ])),
+            child: Row(
+              children: [
+                Expanded(child: Text("Data")),
+                SizedBox(width: 130, child: Text("Time")),
+              ],
+            ),
+          ),
           Divider(height: 5, thickness: 1, color: Colors.grey[300]),
-          ...list ?? []
+          ...list ?? [],
         ],
       );
     }
@@ -621,47 +738,67 @@ class _BodyState extends State<_Body> {
     }
 
     if (type == ViewType.image) {
-      return Center(child: Image.memory(Uint8List.fromList(message.body ?? []), fit: BoxFit.scaleDown));
+      return Center(
+        child: Image.memory(
+          Uint8List.fromList(message.body ?? []),
+          fit: BoxFit.scaleDown,
+        ),
+      );
     }
     if (type == ViewType.video) {
       return const Center(child: Text("video not support preview"));
     }
     if (type == ViewType.hex) {
-      return HexViewer(data: Uint8List.fromList(message.body!), searchController: widget.searchController);
+      return HexViewer(
+        data: Uint8List.fromList(message.body!),
+        searchController: widget.searchController,
+      );
     }
 
     if (type == ViewType.formUrl) {
       return HighlightTextWidget(
-          text: _formatTextBody(type, message.getBodyString()),
-          searchController: widget.searchController,
-          contextMenuBuilder: contextMenu);
+        text: _formatTextBody(type, message.getBodyString()),
+        searchController: widget.searchController,
+        contextMenuBuilder: contextMenu,
+      );
     }
 
-    return futureWidget(message.decodeBodyString(), initialData: message.getBodyString(), (body) {
-      try {
-        if (type == ViewType.jsonText) {
-          var jsonObject = json.decode(body);
-          return JsonText(
+    return futureWidget(
+      message.decodeBodyString(),
+      initialData: message.getBodyString(),
+      (body) {
+        try {
+          if (type == ViewType.jsonText) {
+            var jsonObject = json.decode(body);
+            return JsonText(
               json: jsonObject,
               indent: Platforms.isDesktop() ? '    ' : '  ',
               colorTheme: ColorTheme.of(context),
               searchController: widget.searchController,
-              scrollController: widget.scrollController);
+              scrollController: widget.scrollController,
+            );
+          }
+
+          if (type == ViewType.json) {
+            return JsonViewer(
+              json.decode(body),
+              colorTheme: ColorTheme.of(context),
+              searchController: widget.searchController,
+            );
+          }
+
+          return _buildTextBodyViewer(type, body, message: message);
+        } catch (e) {
+          logger.e(e, stackTrace: StackTrace.current);
         }
 
-        if (type == ViewType.json) {
-          return JsonViewer(json.decode(body),
-              colorTheme: ColorTheme.of(context), searchController: widget.searchController);
-        }
-
-        return _buildTextBodyViewer(type, body, message: message);
-      } catch (e) {
-        logger.e(e, stackTrace: StackTrace.current);
-      }
-
-      return HighlightTextWidget(
-          text: body, searchController: widget.searchController, contextMenuBuilder: contextMenu);
-    });
+        return HighlightTextWidget(
+          text: body,
+          searchController: widget.searchController,
+          contextMenuBuilder: contextMenu,
+        );
+      },
+    );
   }
 
   String? _languageForViewType(ViewType type, HttpMessage? message) {
@@ -701,10 +838,11 @@ class _BodyState extends State<_Body> {
     }
 
     return HighlightTextWidget(
-        language: language,
-        text: formattedText,
-        searchController: widget.searchController,
-        contextMenuBuilder: contextMenu);
+      language: language,
+      text: formattedText,
+      searchController: widget.searchController,
+      contextMenuBuilder: contextMenu,
+    );
   }
 }
 
@@ -766,8 +904,7 @@ enum ViewType {
   video("Video"),
   css("CSS"),
   js("JavaScript"),
-  hex("Hex"),
-  ;
+  hex("Hex");
 
   final String title;
 
@@ -788,15 +925,21 @@ class HexViewer extends StatelessWidget {
   final int bytesPerRow;
   final SearchTextController searchController;
 
-  const HexViewer({super.key, required this.data, this.bytesPerRow = 16, required this.searchController});
+  const HexViewer({
+    super.key,
+    required this.data,
+    this.bytesPerRow = 16,
+    required this.searchController,
+  });
 
   @override
   Widget build(BuildContext context) {
     return HighlightTextWidget(
-        style: const TextStyle(fontFamily: 'Courier', fontSize: 14),
-        text: _formatHex(data, bytesPerRow),
-        searchController: searchController,
-        contextMenuBuilder: contextMenu);
+      style: const TextStyle(fontFamily: 'Courier', fontSize: 14),
+      text: _formatHex(data, bytesPerRow),
+      searchController: searchController,
+      contextMenuBuilder: contextMenu,
+    );
   }
 
   String _formatHex(Uint8List data, int bytesPerRow) {
@@ -840,7 +983,8 @@ class _DecodedHttpMessage extends HttpMessage {
   final HttpMessage original;
   final CryptoDecodedResult decoded;
 
-  _DecodedHttpMessage(this.original, this.decoded) : super(original.protocolVersion) {
+  _DecodedHttpMessage(this.original, this.decoded)
+    : super(original.protocolVersion) {
     headers.addAll(original.headers);
     body = decoded.bytes;
   }

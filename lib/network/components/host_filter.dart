@@ -82,10 +82,7 @@ abstract class HostList {
 
   // json序列化
   Map<String, dynamic> toJson() {
-    return {
-      'list': list.map((e) => e.pattern).toList(),
-      'enabled': enabled,
-    };
+    return {'list': list.map((e) => e.pattern).toList(), 'enabled': enabled};
   }
 }
 

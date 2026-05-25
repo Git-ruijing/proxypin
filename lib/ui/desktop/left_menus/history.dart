@@ -46,8 +46,15 @@ class HistoryPageWidget extends StatelessWidget {
   final NetworkTabController panel;
   final HistoryTask historyTask;
 
-  HistoryPageWidget({super.key, required this.proxyServer, required this.container, required this.panel})
-      : historyTask = HistoryTask.ensureInstance(proxyServer.configuration, container);
+  HistoryPageWidget({
+    super.key,
+    required this.proxyServer,
+    required this.container,
+    required this.panel,
+  }) : historyTask = HistoryTask.ensureInstance(
+         proxyServer.configuration,
+         container,
+       );
 
   @override
   Widget build(BuildContext context) {
@@ -55,14 +62,22 @@ class HistoryPageWidget extends StatelessWidget {
       onGenerateRoute: (settings) {
         switch (settings.name) {
           case "/request_list":
-            return MaterialPageRoute(builder: (_) => requestListWidget(context, settings.arguments as Map));
+            return MaterialPageRoute(
+              builder: (_) =>
+                  requestListWidget(context, settings.arguments as Map),
+            );
           default:
             return MaterialPageRoute(
-                builder: (_) => futureWidget(
-                      HistoryStorage.instance,
-                      (storage) => _HistoryListWidget(storage,
-                          container: container, proxyServer: proxyServer, historyTask: historyTask),
-                    ));
+              builder: (_) => futureWidget(
+                HistoryStorage.instance,
+                (storage) => _HistoryListWidget(
+                  storage,
+                  container: container,
+                  proxyServer: proxyServer,
+                  historyTask: historyTask,
+                ),
+              ),
+            );
         }
       },
     );
@@ -75,23 +90,38 @@ class HistoryPageWidget extends StatelessWidget {
     var localizations = AppLocalizations.of(context)!;
 
     return Scaffold(
-        appBar: PreferredSize(
-            preferredSize: const Size.fromHeight(40),
-            child: AppBar(
-              leadingWidth: 50,
-              leading: BackButton(style: ButtonStyle(iconSize: WidgetStateProperty.all(15))),
-              centerTitle: false,
-              title: Text(
-                  textAlign: TextAlign.start,
-                  localizations.historyRecordTitle(
-                      item.requestLength, item.name.substring(0, min(item.name.length, 25))),
-                  style: const TextStyle(fontSize: 14)),
-            )),
-        body: futureWidget(HistoryStorage.instance.then((value) => value.getRequests(item)), (data) {
+      appBar: PreferredSize(
+        preferredSize: const Size.fromHeight(40),
+        child: AppBar(
+          leadingWidth: 50,
+          leading: BackButton(
+            style: ButtonStyle(iconSize: WidgetStateProperty.all(15)),
+          ),
+          centerTitle: false,
+          title: Text(
+            textAlign: TextAlign.start,
+            localizations.historyRecordTitle(
+              item.requestLength,
+              item.name.substring(0, min(item.name.length, 25)),
+            ),
+            style: const TextStyle(fontSize: 14),
+          ),
+        ),
+      ),
+      body: futureWidget(
+        HistoryStorage.instance.then((value) => value.getRequests(item)),
+        (data) {
           //shrinkWrap: false,
           return DesktopRequestListWidget(
-              panel: panel, proxyServer: proxyServer, list: ListenableList(data), key: requestListKey);
-        }, loading: true));
+            panel: panel,
+            proxyServer: proxyServer,
+            list: ListenableList(data),
+            key: requestListKey,
+          );
+        },
+        loading: true,
+      ),
+    );
   }
 }
 
@@ -103,8 +133,12 @@ class _HistoryListWidget extends StatefulWidget {
   final ProxyServer proxyServer;
   final HistoryTask historyTask;
 
-  const _HistoryListWidget(this.storage,
-      {required this.container, required this.proxyServer, required this.historyTask});
+  const _HistoryListWidget(
+    this.storage, {
+    required this.container,
+    required this.proxyServer,
+    required this.historyTask,
+  });
 
   @override
   State<StatefulWidget> createState() => _HistoryListState();
@@ -131,16 +165,20 @@ class _HistoryListState extends State<_HistoryListWidget> {
     proxyServer = widget.proxyServer;
 
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      storage.addListener(OnchangeListEvent(() {
-        if (mounted) setState(() {});
-      }));
+      storage.addListener(
+        OnchangeListEvent(() {
+          if (mounted) setState(() {});
+        }),
+      );
     });
   }
 
   @override
   Widget build(BuildContext context) {
     List<Widget> children = [];
-    if (!_sessionSaved && proxyServer.configuration.historyCacheTime == 0 && widget.historyTask.history == null) {
+    if (!_sessionSaved &&
+        proxyServer.configuration.historyCacheTime == 0 &&
+        widget.historyTask.history == null) {
       //当前会话未保存，是否保存当前会话
       children.add(buildSaveSession());
     }
@@ -152,47 +190,62 @@ class _HistoryListState extends State<_HistoryListWidget> {
     }
 
     return Scaffold(
-        appBar: PreferredSize(
-            preferredSize: const Size.fromHeight(36),
-            child: AppBar(
-              toolbarHeight: 36,
-              titleSpacing: 8,
-              centerTitle: false,
-              title: Text(
-                localizations.historyRecord,
-                style: TextStyle(
-                  fontSize: 12.5,
-                  color: Theme.of(context).textTheme.bodyMedium?.color?.withOpacity(0.82),
-                ),
-              ),
-              bottom: const PreferredSize(preferredSize: Size.fromHeight(1), child: Divider(height: 1, thickness: 0.4)),
-              actions: [
-                IconButton(
-                    onPressed: import,
-                    icon: const Icon(Icons.input, size: 18),
-                    constraints: const BoxConstraints(minWidth: 34, minHeight: 34),
-                    tooltip: localizations.import),
-                const SizedBox(width: 3),
-                HistoryCacheTime(proxyServer.configuration, onSelected: (val) {
-                  if (val == 0) {
-                    widget.container.removeListener(widget.historyTask);
-                  } else {
-                    widget.container.addListener(widget.historyTask);
-                  }
-                }),
-                const SizedBox(width: 5)
-              ],
-            )),
-        body: ListView.separated(
-          itemCount: children.length,
-          itemBuilder: (_, index) => children[index],
-          separatorBuilder: (_, index) => const Divider(thickness: 0.3, height: 0),
-        ));
+      appBar: PreferredSize(
+        preferredSize: const Size.fromHeight(36),
+        child: AppBar(
+          toolbarHeight: 36,
+          titleSpacing: 8,
+          centerTitle: false,
+          title: Text(
+            localizations.historyRecord,
+            style: TextStyle(
+              fontSize: 12.5,
+              color: Theme.of(
+                context,
+              ).textTheme.bodyMedium?.color?.withOpacity(0.82),
+            ),
+          ),
+          bottom: const PreferredSize(
+            preferredSize: Size.fromHeight(1),
+            child: Divider(height: 1, thickness: 0.4),
+          ),
+          actions: [
+            IconButton(
+              onPressed: import,
+              icon: const Icon(Icons.input, size: 18),
+              constraints: const BoxConstraints(minWidth: 34, minHeight: 34),
+              tooltip: localizations.import,
+            ),
+            const SizedBox(width: 3),
+            HistoryCacheTime(
+              proxyServer.configuration,
+              onSelected: (val) {
+                if (val == 0) {
+                  widget.container.removeListener(widget.historyTask);
+                } else {
+                  widget.container.addListener(widget.historyTask);
+                }
+              },
+            ),
+            const SizedBox(width: 5),
+          ],
+        ),
+      ),
+      body: ListView.separated(
+        itemCount: children.length,
+        itemBuilder: (_, index) => children[index],
+        separatorBuilder: (_, index) =>
+            const Divider(thickness: 0.3, height: 0),
+      ),
+    );
   }
 
   //导入har
   Future<void> import() async {
-    final results = await FilePicker.platform.pickFiles(type: FileType.custom, allowedExtensions: ['har']);
+    final results = await FilePicker.platform.pickFiles(
+      type: FileType.custom,
+      allowedExtensions: ['har'],
+    );
     if (results == null || results.files.isEmpty) {
       return;
     }
@@ -214,76 +267,117 @@ class _HistoryListState extends State<_HistoryListWidget> {
 
   //构建保存会话
   Widget buildSaveSession() {
-    var name = formatDate(DateTime.now(), [mm, '-', d, ' ', HH, ':', nn, ':', ss]);
+    var name = formatDate(DateTime.now(), [
+      mm,
+      '-',
+      d,
+      ' ',
+      HH,
+      ':',
+      nn,
+      ':',
+      ss,
+    ]);
 
     return ListTile(
-        dense: true,
-        title: Text(name),
-        subtitle: Text(localizations.historyUnSave),
-        trailing: TextButton.icon(
-          icon: const Icon(Icons.save),
-          label: Text(localizations.save),
-          onPressed: () async {
-            widget.container.addListener(widget.historyTask);
-            widget.historyTask.startTask();
+      dense: true,
+      title: Text(name),
+      subtitle: Text(localizations.historyUnSave),
+      trailing: TextButton.icon(
+        icon: const Icon(Icons.save),
+        label: Text(localizations.save),
+        onPressed: () async {
+          widget.container.addListener(widget.historyTask);
+          widget.historyTask.startTask();
 
-            setState(() {
-              _sessionSaved = true;
-            });
-          },
-        ),
-        onTap: () {});
+          setState(() {
+            _sessionSaved = true;
+          });
+        },
+      ),
+      onTap: () {},
+    );
   }
 
   //构建历史记录
   Widget buildItem(BuildContext rootContext, int index, HistoryItem item) {
     return GestureDetector(
-        onSecondaryTapDown: (details) {
-          setState(() {
-            selectIndex = index;
-          });
-          showContextMenu(rootContext, details.globalPosition, items: [
+      onSecondaryTapDown: (details) {
+        setState(() {
+          selectIndex = index;
+        });
+        showContextMenu(
+          rootContext,
+          details.globalPosition,
+          items: [
             CustomPopupMenuItem(
-                height: 35,
-                child: Text(localizations.rename, style: const TextStyle(fontSize: 13)),
-                onTap: () => renameHistory(storage, item)),
+              height: 35,
+              child: Text(
+                localizations.rename,
+                style: const TextStyle(fontSize: 13),
+              ),
+              onTap: () => renameHistory(storage, item),
+            ),
             CustomPopupMenuItem(
-                height: 35,
-                child: Text(localizations.export, style: const TextStyle(fontSize: 13)),
-                onTap: () => export(item)),
+              height: 35,
+              child: Text(
+                localizations.export,
+                style: const TextStyle(fontSize: 13),
+              ),
+              onTap: () => export(item),
+            ),
             const PopupMenuDivider(height: 3),
             CustomPopupMenuItem(
-                height: 35,
-                child: Text(localizations.repeatAllRequests, style: const TextStyle(fontSize: 13)),
-                onTap: () async {
-                  var requests = (await storage.getRequests(item)).reversed;
-                  //重发所有请求
-                  _repeatAllRequests(requests.toList());
-                }),
+              height: 35,
+              child: Text(
+                localizations.repeatAllRequests,
+                style: const TextStyle(fontSize: 13),
+              ),
+              onTap: () async {
+                var requests = (await storage.getRequests(item)).reversed;
+                //重发所有请求
+                _repeatAllRequests(requests.toList());
+              },
+            ),
             const PopupMenuDivider(height: 3),
             CustomPopupMenuItem(
-                height: 35,
-                child: Text(localizations.delete, style: const TextStyle(fontSize: 13)),
-                onTap: () {
-                  if (item == widget.historyTask.history) {
-                    widget.historyTask.cancelTask();
-                  }
-                  storage.removeHistory(index);
-                  FlutterToastr.show(localizations.deleteSuccess, context);
-                }),
-          ]).whenComplete(() => setState(() => selectIndex = -1));
-        },
-        child: ListTile(
-            selected: selectIndex == index,
-            dense: true,
-            title: Text(item.name),
-            subtitle: Text(localizations.historySubtitle(item.requestLength, item.size)),
-            onTap: () => toRequestsView(item)));
+              height: 35,
+              child: Text(
+                localizations.delete,
+                style: const TextStyle(fontSize: 13),
+              ),
+              onTap: () {
+                if (item == widget.historyTask.history) {
+                  widget.historyTask.cancelTask();
+                }
+                storage.removeHistory(index);
+                FlutterToastr.show(localizations.deleteSuccess, context);
+              },
+            ),
+          ],
+        ).whenComplete(() => setState(() => selectIndex = -1));
+      },
+      child: ListTile(
+        selected: selectIndex == index,
+        dense: true,
+        title: Text(item.name),
+        subtitle: Text(
+          localizations.historySubtitle(item.requestLength, item.size),
+        ),
+        onTap: () => toRequestsView(item),
+      ),
+    );
   }
 
   void toRequestsView(HistoryItem item) {
-    Navigator.pushNamed(context, "/request_list", arguments: {'item': item}).whenComplete(() async {
-      if (item != widget.historyTask.history && item.requests != null && item.requestLength != item.requests?.length) {
+    Navigator.pushNamed(
+      context,
+      "/request_list",
+      arguments: {'item': item},
+    ).whenComplete(() async {
+      if (item != widget.historyTask.history &&
+          item.requests != null &&
+          item.requestLength != item.requests?.length) {
         await widget.storage.flushRequests(item, item.requests!);
         setState(() {});
       }
@@ -295,40 +389,50 @@ class _HistoryListState extends State<_HistoryListWidget> {
   void renameHistory(HistoryStorage storage, HistoryItem item) {
     String name = item.name;
     showDialog(
-        context: context,
-        builder: (context) {
-          return AlertDialog(
-            content: TextFormField(
-              initialValue: name,
-              decoration: InputDecoration(label: Text(localizations.name)),
-              onChanged: (val) => name = val,
+      context: context,
+      builder: (context) {
+        return AlertDialog(
+          content: TextFormField(
+            initialValue: name,
+            decoration: InputDecoration(label: Text(localizations.name)),
+            onChanged: (val) => name = val,
+          ),
+          actions: <Widget>[
+            TextButton(
+              onPressed: () => Navigator.pop(context),
+              child: Text(localizations.cancel),
             ),
-            actions: <Widget>[
-              TextButton(onPressed: () => Navigator.pop(context), child: Text(localizations.cancel)),
-              TextButton(
-                child: Text(localizations.save),
-                onPressed: () {
-                  if (name.isEmpty) {
-                    FlutterToastr.show(localizations.historyEmptyName, context, position: 2);
-                    return;
-                  }
-                  Navigator.maybePop(context);
-                  setState(() {
-                    item.name = name;
-                    storage.refresh();
-                  });
-                },
-              ),
-            ],
-          );
-        });
+            TextButton(
+              child: Text(localizations.save),
+              onPressed: () {
+                if (name.isEmpty) {
+                  FlutterToastr.show(
+                    localizations.historyEmptyName,
+                    context,
+                    position: 2,
+                  );
+                  return;
+                }
+                Navigator.maybePop(context);
+                setState(() {
+                  item.name = name;
+                  storage.refresh();
+                });
+              },
+            ),
+          ],
+        );
+      },
+    );
   }
 
   //导出har
   Future<void> export(HistoryItem item) async {
     //文件名称
     String fileName =
-        '${item.name.contains("ProxyPin") ? '' : 'ProxyPin'}${item.name}.har'.replaceAll(" ", "_").replaceAll(":", "_");
+        '${item.name.contains("ProxyPin") ? '' : 'ProxyPin'}${item.name}.har'
+            .replaceAll(" ", "_")
+            .replaceAll(":", "_");
 
     final String? path = await FilePicker.platform.saveFile(fileName: fileName);
     if (path == null) {
@@ -349,15 +453,29 @@ class _HistoryListState extends State<_HistoryListWidget> {
 
     for (var request in requests) {
       var httpRequest = request.copy(uri: request.requestUrl);
-      var proxyInfo = proxyServer.isRunning ? ProxyInfo.of("127.0.0.1", proxyServer.port) : null;
+      var proxyInfo = proxyServer.isRunning
+          ? ProxyInfo.of("127.0.0.1", proxyServer.port)
+          : null;
       try {
-        await HttpClients.proxyRequest(httpRequest, proxyInfo: proxyInfo, timeout: const Duration(seconds: 3));
+        await HttpClients.proxyRequest(
+          httpRequest,
+          proxyInfo: proxyInfo,
+          timeout: const Duration(seconds: 3),
+        );
         if (mounted) {
-          FlutterToastr.show(localizations!.reSendRequest, rootNavigator: true, context);
+          FlutterToastr.show(
+            localizations!.reSendRequest,
+            rootNavigator: true,
+            context,
+          );
         }
       } catch (e) {
         if (mounted) {
-          FlutterToastr.show('${localizations!.fail} $e', rootNavigator: true, context);
+          FlutterToastr.show(
+            '${localizations!.fail} $e',
+            rootNavigator: true,
+            context,
+          );
         }
       }
     }

@@ -45,7 +45,9 @@ class BodyReader {
   int _chunkReadableSize = 0;
 
   BodyReader(this.message)
-      : _state = message.headers.isChunked ? ReaderState.readChunkSize : ReaderState.readFixedLengthContent;
+    : _state = message.headers.isChunked
+          ? ReaderState.readChunkSize
+          : ReaderState.readFixedLengthContent;
 
   Result readBody(Uint8List data) {
     if (_bodyBuffer.length > Codec.maxBodyLength) {
@@ -55,7 +57,8 @@ class BodyReader {
 
     _offset = 0;
 
-    if (message.headers.contentType == 'video/x-flv' || message.headers.contentType.startsWith("text/event-stream")) {
+    if (message.headers.contentType == 'video/x-flv' ||
+        message.headers.contentType.startsWith("text/event-stream")) {
       //Directly forward without processing for now
       return Result(false, supportedParse: false, body: data);
     }
@@ -81,7 +84,8 @@ class BodyReader {
       _bodyBuffer.add(data.sublist(_offset));
     }
 
-    if (message.contentLength == -1 || _bodyBuffer.length >= message.contentLength) {
+    if (message.contentLength == -1 ||
+        _bodyBuffer.length >= message.contentLength) {
       _state = ReaderState.done;
     }
   }
@@ -145,8 +149,16 @@ class BodyReader {
       }
     }
 
-    throw Exception('Invalid chunked encoding line: ${String.fromCharCodes(data)}');
+    throw Exception(
+      'Invalid chunked encoding line: ${String.fromCharCodes(data)}',
+    );
   }
 }
 
-enum ReaderState { readFixedLengthContent, readChunked, readChunkSize, readChunkedContent, done }
+enum ReaderState {
+  readFixedLengthContent,
+  readChunked,
+  readChunkSize,
+  readChunkedContent,
+  done,
+}

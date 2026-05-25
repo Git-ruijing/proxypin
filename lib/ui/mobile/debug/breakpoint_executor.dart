@@ -49,7 +49,10 @@ class _BreakpointExecutorState extends State<BreakpointExecutor> {
       onExecuteRequest: (newRequest) async {
         if (Navigator.canPop(context)) {
           Navigator.pop(context, newRequest);
-          RequestBreakpointInterceptor.instance.resumeRequest(widget.requestId, newRequest);
+          RequestBreakpointInterceptor.instance.resumeRequest(
+            widget.requestId,
+            newRequest,
+          );
         }
       },
     );
@@ -64,7 +67,10 @@ class _BreakpointExecutorState extends State<BreakpointExecutor> {
       onExecuteResponse: (newResponse) async {
         if (Navigator.canPop(context)) {
           Navigator.pop(context, newResponse);
-          RequestBreakpointInterceptor.instance.resumeResponse(widget.requestId, newResponse);
+          RequestBreakpointInterceptor.instance.resumeResponse(
+            widget.requestId,
+            newResponse,
+          );
         }
       },
     );

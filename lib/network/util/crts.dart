@@ -81,14 +81,21 @@ class CertificateManager {
       await initCAConfig();
     }
 
-    String cer = generate(_caCert!, _serverKeyPair.publicKey as RSAPublicKey, _caPriKey, host);
+    String cer = generate(
+      _caCert!,
+      _serverKeyPair.publicKey as RSAPublicKey,
+      _caPriKey,
+      host,
+    );
 
     var rsaPrivateKey = _serverKeyPair.privateKey as RSAPrivateKey;
 
     securityContext = SecurityContext(withTrustedRoots: true)
       ..useCertificateChainBytes(cer.codeUnits)
       ..allowLegacyUnsafeRenegotiation = true
-      ..usePrivateKeyBytes(CryptoUtils.encodeRSAPrivateKeyToPemPkcs1(rsaPrivateKey).codeUnits);
+      ..usePrivateKeyBytes(
+        CryptoUtils.encodeRSAPrivateKeyToPemPkcs1(rsaPrivateKey).codeUnits,
+      );
 
     _certificateMap[host] = securityContext;
 
@@ -100,11 +107,21 @@ class CertificateManager {
     if (_state != StartState.initialized) {
       await initCAConfig();
     }
-    return generate(_caCert!, _serverKeyPair.publicKey as RSAPublicKey, _caPriKey, host);
+    return generate(
+      _caCert!,
+      _serverKeyPair.publicKey as RSAPublicKey,
+      _caPriKey,
+      host,
+    );
   }
 
   /// 生成证书
-  static String generate(X509CertificateData caRoot, RSAPublicKey serverPubKey, RSAPrivateKey caPriKey, String host) {
+  static String generate(
+    X509CertificateData caRoot,
+    RSAPublicKey serverPubKey,
+    RSAPrivateKey caPriKey,
+    String host,
+  ) {
     //根据CA证书subject来动态生成目标服务器证书的issuer和subject
     Map<String, String> x509Subject = {
       'C': 'CN',
@@ -116,8 +133,15 @@ class CertificateManager {
 
     x509Subject['CN'] = host;
 
-    var csrPem = X509Utils.generateSelfSignedCertificate(caRoot, serverPubKey, caPriKey, 365,
-        sans: [host], serialNumber: Random().nextInt(1000000).toString(), subject: x509Subject);
+    var csrPem = X509Utils.generateSelfSignedCertificate(
+      caRoot,
+      serverPubKey,
+      caPriKey,
+      365,
+      sans: [host],
+      serialNumber: Random().nextInt(1000000).toString(),
+      subject: x509Subject,
+    );
     return csrPem;
   }
 
@@ -149,7 +173,8 @@ class CertificateManager {
       'O': 'Proxy',
       'OU': 'ProxyPin',
     };
-    x509Subject['CN'] = 'ProxyPin CA (${DateTime.now().dateFormat()},${RandomUtil.randomString(6).toUpperCase()})';
+    x509Subject['CN'] =
+        'ProxyPin CA (${DateTime.now().dateFormat()},${RandomUtil.randomString(6).toUpperCase()})';
 
     var csrPem = X509Utils.generateSelfSignedCertificate(
       _caCert!,
@@ -204,12 +229,16 @@ class CertificateManager {
 
       //从项目目录加入ca根证书
       var caPemFile = await certificateFile();
-      _caCert = X509Utils.x509CertificateFromPem(await caPemFile.readAsString());
+      _caCert = X509Utils.x509CertificateFromPem(
+        await caPemFile.readAsString(),
+      );
       //根据CA证书subject来动态生成目标服务器证书的issuer和subject
 
       //从项目目录加入ca私钥
       var keyFile = await privateKeyFile();
-      _caPriKey = CryptoUtils.rsaPrivateKeyFromPem(await keyFile.readAsString());
+      _caPriKey = CryptoUtils.rsaPrivateKeyFromPem(
+        await keyFile.readAsString(),
+      );
 
       _state = StartState.initialized;
       _initializationCompleter.complete();
@@ -219,14 +248,18 @@ class CertificateManager {
       _initializationCompleter.completeError(e);
     }
 
-    logger.d('init ca config end cost:${DateTime.now().millisecondsSinceEpoch - startTime}');
+    logger.d(
+      'init ca config end cost:${DateTime.now().millisecondsSinceEpoch - startTime}',
+    );
 
     return _initializationCompleter.future;
   }
 
   /// 证书文件
   static Future<File> certificateFile() async {
-    final String appPath = await getApplicationSupportDirectory().then((value) => value.path);
+    final String appPath = await getApplicationSupportDirectory().then(
+      (value) => value.path,
+    );
     var caFile = File("$appPath${Platform.pathSeparator}ca.crt");
     if (!(await caFile.exists())) {
       var body = await FileRead.read('assets/certs/ca.crt');
@@ -244,7 +277,9 @@ class CertificateManager {
 
   /// 私钥文件
   static Future<File> privateKeyFile() async {
-    final String appPath = await getApplicationSupportDirectory().then((value) => value.path);
+    final String appPath = await getApplicationSupportDirectory().then(
+      (value) => value.path,
+    );
     var caFile = File("$appPath${Platform.pathSeparator}ca_key.pem");
     if (!(await caFile.exists())) {
       var body = await FileRead.read('assets/certs/ca_key.pem');
@@ -258,7 +293,9 @@ class CertificateManager {
   static Future<Uint8List> generatePkcs12(String? password) async {
     var caFile = await CertificateManager.certificateFile();
     var keyFile = await CertificateManager.privateKeyFile();
-    return Pkcs12.generatePkcs12(await keyFile.readAsString(), [await caFile.readAsString()], password: password);
+    return Pkcs12.generatePkcs12(await keyFile.readAsString(), [
+      await caFile.readAsString(),
+    ], password: password);
   }
 
   ///import p12文件

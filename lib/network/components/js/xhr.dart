@@ -53,7 +53,8 @@ String _debugSendNativeCallback() {
     return "";
 }
 
-final String xhrJsCode = """
+final String xhrJsCode =
+    """
 function XMLHttpRequest() {
   this._send_native = XMLHttpRequestExtension_send_native;
   this._httpMethod = null;
@@ -259,7 +260,10 @@ extension JavascriptRuntimeXhrExtension on JavascriptRuntime {
     var httpClient = HttpClient();
     String proxy;
     if (Platforms.isDesktop()) {
-      Map? proxyResult = await DesktopMultiWindow.invokeMethod(0, 'getProxyInfo');
+      Map? proxyResult = await DesktopMultiWindow.invokeMethod(
+        0,
+        'getProxyInfo',
+      );
       if (proxyResult == null) {
         return http.Client();
       }
@@ -276,7 +280,8 @@ extension JavascriptRuntimeXhrExtension on JavascriptRuntime {
       return "PROXY $proxy";
     };
 
-    httpClient.badCertificateCallback = (X509Certificate cert, String host, int port) => true;
+    httpClient.badCertificateCallback =
+        (X509Certificate cert, String host, int port) => true;
 
     // 创建一个 IOClient 实例，将 HttpClient 传入
     return IOClient(httpClient);
@@ -298,8 +303,11 @@ extension JavascriptRuntimeXhrExtension on JavascriptRuntime {
       // for each pending call, calls the remote http service
       pendingCalls.forEach((element) async {
         XhrPendingCall pendingCall = element as XhrPendingCall;
-        HttpMethod eMethod = HttpMethod.values
-            .firstWhere((e) => e.toString().toLowerCase() == ("HttpMethod.${pendingCall.method}".toLowerCase()));
+        HttpMethod eMethod = HttpMethod.values.firstWhere(
+          (e) =>
+              e.toString().toLowerCase() ==
+              ("HttpMethod.${pendingCall.method}".toLowerCase()),
+        );
         late http.Response response;
         switch (eMethod) {
           case HttpMethod.head:
@@ -317,21 +325,27 @@ extension JavascriptRuntimeXhrExtension on JavascriptRuntime {
           case HttpMethod.post:
             response = await httpClient!.post(
               Uri.parse(pendingCall.url!),
-              body: (pendingCall.body is String) ? pendingCall.body : jsonEncode(pendingCall.body),
+              body: (pendingCall.body is String)
+                  ? pendingCall.body
+                  : jsonEncode(pendingCall.body),
               headers: pendingCall.headers,
             );
             break;
           case HttpMethod.put:
             response = await httpClient!.put(
               Uri.parse(pendingCall.url!),
-              body: (pendingCall.body is String) ? pendingCall.body : jsonEncode(pendingCall.body),
+              body: (pendingCall.body is String)
+                  ? pendingCall.body
+                  : jsonEncode(pendingCall.body),
               headers: pendingCall.headers,
             );
             break;
           case HttpMethod.patch:
             response = await httpClient!.patch(
               Uri.parse(pendingCall.url!),
-              body: (pendingCall.body is String) ? pendingCall.body : jsonEncode(pendingCall.body),
+              body: (pendingCall.body is String)
+                  ? pendingCall.body
+                  : jsonEncode(pendingCall.body),
               headers: pendingCall.headers,
             );
             break;
@@ -355,7 +369,11 @@ extension JavascriptRuntimeXhrExtension on JavascriptRuntime {
 
         final xhrResult = XmlHttpRequestResponse(
           responseText: responseText,
-          responseInfo: XhtmlHttpResponseInfo(statusCode: 200, statusText: "OK", body: body),
+          responseInfo: XhtmlHttpResponseInfo(
+            statusCode: 200,
+            statusText: "OK",
+            body: body,
+          ),
         );
 
         response.headers.forEach((key, value) {
@@ -363,7 +381,9 @@ extension JavascriptRuntimeXhrExtension on JavascriptRuntime {
         });
 
         final responseInfo = jsonEncode(xhrResult.responseInfo);
-        final safeResponseText = responseText != null ? jsonEncode(responseText) : null;
+        final safeResponseText = responseText != null
+            ? jsonEncode(responseText)
+            : null;
         final error = xhrResult.error;
         // logger.d('XHR response for url: ${pendingCall.url}, status: ${xhrResult.responseInfo?.statusCode}');
 
@@ -373,7 +393,9 @@ extension JavascriptRuntimeXhrExtension on JavascriptRuntime {
           "globalThis.xhrRequests[${pendingCall.idRequest}].callback($responseInfo, $safeResponseText, $error);",
         );
         if (jsResult.isError) {
-          logger.e('jsResult error url:${pendingCall.url}, ${jsResult.stringResult}');
+          logger.e(
+            'jsResult error url:${pendingCall.url}, ${jsResult.stringResult}',
+          );
         }
       });
     });
@@ -447,11 +469,7 @@ class XhtmlHttpResponseInfo {
   final List<int>? body;
   final List<List<String>> responseHeaders = [];
 
-  XhtmlHttpResponseInfo({
-    this.body,
-    this.statusCode,
-    this.statusText,
-  });
+  XhtmlHttpResponseInfo({this.body, this.statusCode, this.statusText});
 
   void addResponseHeaders(String name, String value) {
     responseHeaders.add([name, value]);
@@ -462,7 +480,7 @@ class XhtmlHttpResponseInfo {
       "statusCode": statusCode,
       "statusText": statusText,
       "body": body,
-      "responseHeaders": responseHeaders
+      "responseHeaders": responseHeaders,
     };
   }
 }
@@ -475,6 +493,10 @@ class XmlHttpRequestResponse {
   XmlHttpRequestResponse({this.responseText, this.responseInfo, this.error});
 
   Map<String, Object?> toJson() {
-    return {'responseText': responseText, 'responseInfo': responseInfo!.toJson(), 'error': error};
+    return {
+      'responseText': responseText,
+      'responseInfo': responseInfo!.toJson(),
+      'error': error,
+    };
   }
 }

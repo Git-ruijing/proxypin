@@ -35,7 +35,11 @@ class MobileFilterWidget extends StatefulWidget {
   final Configuration configuration;
   final HostList hostList;
 
-  const MobileFilterWidget({super.key, required this.configuration, required this.hostList});
+  const MobileFilterWidget({
+    super.key,
+    required this.configuration,
+    required this.hostList,
+  });
 
   @override
   State<MobileFilterWidget> createState() => _MobileFilterState();
@@ -54,21 +58,31 @@ class _MobileFilterState extends State<MobileFilterWidget> {
 
   @override
   Widget build(BuildContext context) {
-    var title = widget.hostList.runtimeType == Whites ? localizations.domainWhitelist : localizations.domainBlacklist;
-    var subtitle =
-        widget.hostList.runtimeType == Whites ? localizations.domainWhitelistDescribe : localizations.domainBlacklist;
+    var title = widget.hostList.runtimeType == Whites
+        ? localizations.domainWhitelist
+        : localizations.domainBlacklist;
+    var subtitle = widget.hostList.runtimeType == Whites
+        ? localizations.domainWhitelistDescribe
+        : localizations.domainBlacklist;
 
     return Scaffold(
-        appBar: AppBar(title: Text(localizations.domainFilter, style: const TextStyle(fontSize: 16))),
-        body: Container(
-          padding: const EdgeInsets.all(10),
-          child: DomainFilter(
-              title: title,
-              subtitle: subtitle,
-              hostList: widget.hostList,
-              configuration: widget.configuration,
-              hostEnableNotifier: hostEnableNotifier),
-        ));
+      appBar: AppBar(
+        title: Text(
+          localizations.domainFilter,
+          style: const TextStyle(fontSize: 16),
+        ),
+      ),
+      body: Container(
+        padding: const EdgeInsets.all(10),
+        child: DomainFilter(
+          title: title,
+          subtitle: subtitle,
+          hostList: widget.hostList,
+          configuration: widget.configuration,
+          hostEnableNotifier: hostEnableNotifier,
+        ),
+      ),
+    );
   }
 }
 
@@ -79,13 +93,14 @@ class DomainFilter extends StatefulWidget {
   final Configuration configuration;
   final ValueNotifier<bool> hostEnableNotifier;
 
-  const DomainFilter(
-      {super.key,
-      required this.title,
-      required this.subtitle,
-      required this.hostList,
-      required this.hostEnableNotifier,
-      required this.configuration});
+  const DomainFilter({
+    super.key,
+    required this.title,
+    required this.subtitle,
+    required this.hostList,
+    required this.hostEnableNotifier,
+    required this.configuration,
+  });
 
   @override
   State<StatefulWidget> createState() {
@@ -110,34 +125,54 @@ class _DomainFilterState extends State<DomainFilter> {
   Widget build(BuildContext context) {
     return Column(
       children: [
-        ListTile(title: Text(widget.title), subtitle: Text(widget.subtitle, style: const TextStyle(fontSize: 12))),
+        ListTile(
+          title: Text(widget.title),
+          subtitle: Text(widget.subtitle, style: const TextStyle(fontSize: 12)),
+        ),
         ValueListenableBuilder(
-            valueListenable: widget.hostEnableNotifier,
-            builder: (_, bool enable, __) {
-              return SwitchListTile(
-                  title: Text(localizations.enable),
-                  value: widget.hostList.enabled,
-                  onChanged: (value) {
-                    widget.hostList.enabled = value;
-                    changed = true;
-                    widget.hostEnableNotifier.value = !widget.hostEnableNotifier.value;
-                  });
-            }),
-        Row(mainAxisAlignment: MainAxisAlignment.end, children: [
-          TextButton.icon(icon: const Icon(Icons.add, size: 20), onPressed: add, label: Text(localizations.add)),
-          const SizedBox(width: 10),
-          TextButton.icon(
-              icon: const Icon(Icons.input_rounded, size: 20), onPressed: import, label: Text(localizations.import)),
-          const SizedBox(width: 5),
-        ]),
-        Expanded(child: DomainList(widget.hostList, onChange: () => changed = true))
+          valueListenable: widget.hostEnableNotifier,
+          builder: (_, bool enable, __) {
+            return SwitchListTile(
+              title: Text(localizations.enable),
+              value: widget.hostList.enabled,
+              onChanged: (value) {
+                widget.hostList.enabled = value;
+                changed = true;
+                widget.hostEnableNotifier.value =
+                    !widget.hostEnableNotifier.value;
+              },
+            );
+          },
+        ),
+        Row(
+          mainAxisAlignment: MainAxisAlignment.end,
+          children: [
+            TextButton.icon(
+              icon: const Icon(Icons.add, size: 20),
+              onPressed: add,
+              label: Text(localizations.add),
+            ),
+            const SizedBox(width: 10),
+            TextButton.icon(
+              icon: const Icon(Icons.input_rounded, size: 20),
+              onPressed: import,
+              label: Text(localizations.import),
+            ),
+            const SizedBox(width: 5),
+          ],
+        ),
+        Expanded(
+          child: DomainList(widget.hostList, onChange: () => changed = true),
+        ),
       ],
     );
   }
 
   //导入
   import() async {
-    final FilePickerResult? result = await FilePicker.platform.pickFiles(type: FileType.any);
+    final FilePickerResult? result = await FilePicker.platform.pickFiles(
+      type: FileType.any,
+    );
     if (result == null || result.files.isEmpty) {
       return;
     }
@@ -162,8 +197,11 @@ class _DomainFilterState extends State<DomainFilter> {
   }
 
   void add() {
-    showDialog(context: context, builder: (BuildContext context) => DomainAddDialog(hostList: widget.hostList))
-        .then((value) {
+    showDialog(
+      context: context,
+      builder: (BuildContext context) =>
+          DomainAddDialog(hostList: widget.hostList),
+    ).then((value) {
       if (value != null) {
         setState(() {
           changed = true;
@@ -184,40 +222,61 @@ class DomainAddDialog extends StatelessWidget {
     AppLocalizations localizations = AppLocalizations.of(context)!;
 
     GlobalKey formKey = GlobalKey<FormState>();
-    String? host = index == null ? null : hostList.list.elementAt(index!).pattern.replaceAll(".*", "*");
+    String? host = index == null
+        ? null
+        : hostList.list.elementAt(index!).pattern.replaceAll(".*", "*");
     return AlertDialog(
-        scrollable: true,
-        content: Padding(
-            padding: const EdgeInsets.all(8.0),
-            child: Form(
-                key: formKey,
-                child: Column(children: <Widget>[
-                  TextFormField(
-                      initialValue: host,
-                      decoration: const InputDecoration(labelText: 'Host', hintText: '*.example.com'),
-                      validator: (val) => val == null || val.trim().isEmpty ? localizations.cannotBeEmpty : null,
-                      onChanged: (val) => host = val)
-                ]))),
-        actions: [
-          TextButton(child: Text(localizations.cancel), onPressed: () => Navigator.of(context).pop()),
-          TextButton(
-              child: Text(localizations.save),
-              onPressed: () {
-                if (!(formKey.currentState as FormState).validate()) {
-                  return;
-                }
-                try {
-                  if (index != null) {
-                    hostList.list[index!] = RegExp(host!.trim().replaceAll("*", ".*"));
-                  } else {
-                    hostList.add(host!.trim());
-                  }
-                } catch (e) {
-                  ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(e.toString())));
-                }
-                Navigator.of(context).pop(host);
-              }),
-        ]);
+      scrollable: true,
+      content: Padding(
+        padding: const EdgeInsets.all(8.0),
+        child: Form(
+          key: formKey,
+          child: Column(
+            children: <Widget>[
+              TextFormField(
+                initialValue: host,
+                decoration: const InputDecoration(
+                  labelText: 'Host',
+                  hintText: '*.example.com',
+                ),
+                validator: (val) => val == null || val.trim().isEmpty
+                    ? localizations.cannotBeEmpty
+                    : null,
+                onChanged: (val) => host = val,
+              ),
+            ],
+          ),
+        ),
+      ),
+      actions: [
+        TextButton(
+          child: Text(localizations.cancel),
+          onPressed: () => Navigator.of(context).pop(),
+        ),
+        TextButton(
+          child: Text(localizations.save),
+          onPressed: () {
+            if (!(formKey.currentState as FormState).validate()) {
+              return;
+            }
+            try {
+              if (index != null) {
+                hostList.list[index!] = RegExp(
+                  host!.trim().replaceAll("*", ".*"),
+                );
+              } else {
+                hostList.add(host!.trim());
+              }
+            } catch (e) {
+              ScaffoldMessenger.of(
+                context,
+              ).showSnackBar(SnackBar(content: Text(e.toString())));
+            }
+            Navigator.of(context).pop(host);
+          },
+        ),
+      ],
+    );
   }
 }
 
@@ -247,14 +306,15 @@ class _DomainListState extends State<DomainList> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-        persistentFooterButtons: multiple ? [globalMenu()] : null,
-        body: Container(
-            padding: const EdgeInsets.only(top: 10),
-            decoration: BoxDecoration(
-              border: Border.all(color: Colors.grey.withOpacity(0.2)),
-            ),
-            child: Scrollbar(
-                child: ListView(children: [
+      persistentFooterButtons: multiple ? [globalMenu()] : null,
+      body: Container(
+        padding: const EdgeInsets.only(top: 10),
+        decoration: BoxDecoration(
+          border: Border.all(color: Colors.grey.withOpacity(0.2)),
+        ),
+        child: Scrollbar(
+          child: ListView(
+            children: [
               Row(
                 mainAxisAlignment: MainAxisAlignment.start,
                 children: [
@@ -263,50 +323,77 @@ class _DomainListState extends State<DomainList> {
                 ],
               ),
               const Divider(thickness: 0.5),
-              Column(children: rows(widget.hostList.list))
-            ]))));
+              Column(children: rows(widget.hostList.list)),
+            ],
+          ),
+        ),
+      ),
+    );
   }
 
   globalMenu() {
-    return Stack(children: [
-      Container(
+    return Stack(
+      children: [
+        Container(
           height: 50,
           width: double.infinity,
           margin: const EdgeInsets.only(top: 10),
-          decoration: BoxDecoration(border: Border.all(color: Colors.grey.withOpacity(0.2)))),
-      Positioned(
+          decoration: BoxDecoration(
+            border: Border.all(color: Colors.grey.withOpacity(0.2)),
+          ),
+        ),
+        Positioned(
           top: 0,
           left: 0,
           right: 0,
           child: Center(
-              child: TextButton(
-                  onPressed: () {},
-                  child: Row(mainAxisAlignment: MainAxisAlignment.spaceBetween, children: [
-                    TextButton.icon(
-                        onPressed: () {
-                          export(selected.toList());
-                          setState(() {
-                            selected.clear();
-                            multiple = false;
-                          });
-                        },
-                        icon: const Icon(Icons.share, size: 18),
-                        label: Text(localizations.export, style: const TextStyle(fontSize: 14))),
-                    TextButton.icon(
-                        onPressed: () => remove(),
-                        icon: const Icon(Icons.delete, size: 18),
-                        label: Text(localizations.delete, style: const TextStyle(fontSize: 14))),
-                    TextButton.icon(
-                        onPressed: () {
-                          setState(() {
-                            multiple = false;
-                            selected.clear();
-                          });
-                        },
-                        icon: const Icon(Icons.cancel, size: 18),
-                        label: Text(localizations.cancel, style: const TextStyle(fontSize: 14))),
-                  ]))))
-    ]);
+            child: TextButton(
+              onPressed: () {},
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  TextButton.icon(
+                    onPressed: () {
+                      export(selected.toList());
+                      setState(() {
+                        selected.clear();
+                        multiple = false;
+                      });
+                    },
+                    icon: const Icon(Icons.share, size: 18),
+                    label: Text(
+                      localizations.export,
+                      style: const TextStyle(fontSize: 14),
+                    ),
+                  ),
+                  TextButton.icon(
+                    onPressed: () => remove(),
+                    icon: const Icon(Icons.delete, size: 18),
+                    label: Text(
+                      localizations.delete,
+                      style: const TextStyle(fontSize: 14),
+                    ),
+                  ),
+                  TextButton.icon(
+                    onPressed: () {
+                      setState(() {
+                        multiple = false;
+                        selected.clear();
+                      });
+                    },
+                    icon: const Icon(Icons.cancel, size: 18),
+                    label: Text(
+                      localizations.cancel,
+                      style: const TextStyle(fontSize: 14),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ),
+      ],
+    );
   }
 
   List<Widget> rows(List<RegExp> list) {
@@ -314,49 +401,56 @@ class _DomainListState extends State<DomainList> {
 
     return List.generate(list.length, (index) {
       return InkWell(
-          enableFeedback: false,
-          highlightColor: Colors.transparent,
-          splashColor: Colors.transparent,
-          hoverColor: primaryColor.withOpacity(0.3),
-          onLongPress: () => showMenus(index),
-          // menus
-          onDoubleTap: () => showEdit(index),
-          onTap: () {
-            if (multiple) {
-              setState(() {
-                if (!selected.add(index)) {
-                  selected.remove(index);
-                }
-              });
-              return;
-            }
-            showEdit(index);
-          },
-          child: Container(
-              color: selected.contains(index)
-                  ? primaryColor.withOpacity(0.8)
-                  : index.isEven
-                      ? Colors.grey.withOpacity(0.1)
-                      : null,
-              height: 38,
-              padding: const EdgeInsets.symmetric(vertical: 3),
-              child: Row(
-                children: [
-                  const SizedBox(width: 15),
-                  Expanded(
-                      child: Text(list[index].pattern.replaceAll(".*", "*"), style: const TextStyle(fontSize: 14))),
-                ],
-              )));
+        enableFeedback: false,
+        highlightColor: Colors.transparent,
+        splashColor: Colors.transparent,
+        hoverColor: primaryColor.withOpacity(0.3),
+        onLongPress: () => showMenus(index),
+        // menus
+        onDoubleTap: () => showEdit(index),
+        onTap: () {
+          if (multiple) {
+            setState(() {
+              if (!selected.add(index)) {
+                selected.remove(index);
+              }
+            });
+            return;
+          }
+          showEdit(index);
+        },
+        child: Container(
+          color: selected.contains(index)
+              ? primaryColor.withOpacity(0.8)
+              : index.isEven
+              ? Colors.grey.withOpacity(0.1)
+              : null,
+          height: 38,
+          padding: const EdgeInsets.symmetric(vertical: 3),
+          child: Row(
+            children: [
+              const SizedBox(width: 15),
+              Expanded(
+                child: Text(
+                  list[index].pattern.replaceAll(".*", "*"),
+                  style: const TextStyle(fontSize: 14),
+                ),
+              ),
+            ],
+          ),
+        ),
+      );
     });
   }
 
   showEdit([int? index]) {
     showDialog(
-        context: context,
-        barrierDismissible: false,
-        builder: (BuildContext context) {
-          return DomainAddDialog(hostList: widget.hostList, index: index);
-        }).then((value) {
+      context: context,
+      barrierDismissible: false,
+      builder: (BuildContext context) {
+        return DomainAddDialog(hostList: widget.hostList, index: index);
+      },
+    ).then((value) {
       if (value != null) {
         setState(() {
           onChanged();
@@ -373,49 +467,64 @@ class _DomainListState extends State<DomainList> {
     HapticFeedback.mediumImpact();
 
     showCupertinoModalPopup(
-        context: context,
-        builder: (BuildContext context) {
-          return CupertinoActionSheet(
-              actions: [
-                CupertinoActionSheetAction(
-                    child: Text(localizations.multiple),
-                    onPressed: () {
-                      setState(() => multiple = true);
-                      Navigator.of(context).pop();
-                    }),
-                CupertinoActionSheetAction(
-                    onPressed: () {
-                      Clipboard.setData(ClipboardData(text: widget.hostList.list[index].pattern.replaceAll(".*", "*")));
-                      FlutterToastr.show(localizations.copied, context);
-                      Navigator.of(context).pop();
-                    },
-                    child: Text(localizations.copy)),
-                CupertinoActionSheetAction(
-                    onPressed: () {
-                      Navigator.of(context).pop();
-                      showEdit(index);
-                    },
-                    child: Text(localizations.edit)),
-                CupertinoActionSheetAction(
-                    onPressed: () {
-                      export([index]);
-                      Navigator.of(context).pop();
-                    },
-                    child: Text(localizations.share)),
-                CupertinoActionSheetAction(
-                    onPressed: () {
-                      widget.hostList.removeIndex([index]);
-                      onChanged();
-                      Navigator.of(context).pop();
-                    },
-                    child: Text(localizations.delete)),
-              ],
-              cancelButton: CupertinoActionSheetAction(
-                  onPressed: () {
-                    Navigator.of(context).pop();
-                  },
-                  child: Text(localizations.cancel)));
-        }).then((value) {
+      context: context,
+      builder: (BuildContext context) {
+        return CupertinoActionSheet(
+          actions: [
+            CupertinoActionSheetAction(
+              child: Text(localizations.multiple),
+              onPressed: () {
+                setState(() => multiple = true);
+                Navigator.of(context).pop();
+              },
+            ),
+            CupertinoActionSheetAction(
+              onPressed: () {
+                Clipboard.setData(
+                  ClipboardData(
+                    text: widget.hostList.list[index].pattern.replaceAll(
+                      ".*",
+                      "*",
+                    ),
+                  ),
+                );
+                FlutterToastr.show(localizations.copied, context);
+                Navigator.of(context).pop();
+              },
+              child: Text(localizations.copy),
+            ),
+            CupertinoActionSheetAction(
+              onPressed: () {
+                Navigator.of(context).pop();
+                showEdit(index);
+              },
+              child: Text(localizations.edit),
+            ),
+            CupertinoActionSheetAction(
+              onPressed: () {
+                export([index]);
+                Navigator.of(context).pop();
+              },
+              child: Text(localizations.share),
+            ),
+            CupertinoActionSheetAction(
+              onPressed: () {
+                widget.hostList.removeIndex([index]);
+                onChanged();
+                Navigator.of(context).pop();
+              },
+              child: Text(localizations.delete),
+            ),
+          ],
+          cancelButton: CupertinoActionSheetAction(
+            onPressed: () {
+              Navigator.of(context).pop();
+            },
+            child: Text(localizations.cancel),
+          ),
+        );
+      },
+    ).then((value) {
       if (multiple) {
         return;
       }
@@ -441,25 +550,35 @@ class _DomainListState extends State<DomainList> {
       box = context.findRenderObject() as RenderBox?;
     }
 
-    final XFile file = XFile.fromData(utf8.encode(jsonEncode(list)), mimeType: 'config');
-    await Share.shareXFiles([file],
-        fileNameOverrides: [fileName],
-        sharePositionOrigin: box == null ? null : box.localToGlobal(Offset.zero) & box.size);
+    final XFile file = XFile.fromData(
+      utf8.encode(jsonEncode(list)),
+      mimeType: 'config',
+    );
+    await Share.shareXFiles(
+      [file],
+      fileNameOverrides: [fileName],
+      sharePositionOrigin: box == null
+          ? null
+          : box.localToGlobal(Offset.zero) & box.size,
+    );
   }
 
   //删除
   Future<void> remove() async {
     if (selected.isEmpty) return;
 
-    return showConfirmDialog(context, content: localizations.requestRewriteDeleteConfirm(selected.length),
-        onConfirm: () async {
-      widget.hostList.removeIndex(selected.toList());
-      onChanged();
-      setState(() {
-        multiple = false;
-        selected.clear();
-      });
-      if (mounted) FlutterToastr.show(localizations.deleteSuccess, context);
-    });
+    return showConfirmDialog(
+      context,
+      content: localizations.requestRewriteDeleteConfirm(selected.length),
+      onConfirm: () async {
+        widget.hostList.removeIndex(selected.toList());
+        onChanged();
+        setState(() {
+          multiple = false;
+          selected.clear();
+        });
+        if (mounted) FlutterToastr.show(localizations.deleteSuccess, context);
+      },
+    );
   }
 }

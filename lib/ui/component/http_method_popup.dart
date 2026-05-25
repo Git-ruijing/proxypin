@@ -6,9 +6,15 @@ import '../../network/http/http.dart';
 class MethodPopupMenu extends StatelessWidget {
   final HttpMethod? value;
   final ValueChanged<HttpMethod?> onChanged;
-  final bool showSeparator; // whether to display the vertical separator to the right
+  final bool
+  showSeparator; // whether to display the vertical separator to the right
 
-  const MethodPopupMenu({super.key, required this.value, required this.onChanged, this.showSeparator = true});
+  const MethodPopupMenu({
+    super.key,
+    required this.value,
+    required this.onChanged,
+    this.showSeparator = true,
+  });
 
   Color _methodColor(HttpMethod? m, BuildContext context) {
     // colors chosen similar to Postman style
@@ -40,10 +46,20 @@ class MethodPopupMenu extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     var items = <DropdownMenuItem<HttpMethod?>>[];
-    items.add(DropdownMenuItem<HttpMethod?>(value: null, child: _buildMenuItem(null, context)));
+    items.add(
+      DropdownMenuItem<HttpMethod?>(
+        value: null,
+        child: _buildMenuItem(null, context),
+      ),
+    );
     for (var m in HttpMethod.methods()) {
       if (m == HttpMethod.connect || m == HttpMethod.options) continue;
-      items.add(DropdownMenuItem<HttpMethod?>(value: m, child: _buildMenuItem(m, context)));
+      items.add(
+        DropdownMenuItem<HttpMethod?>(
+          value: m,
+          child: _buildMenuItem(m, context),
+        ),
+      );
     }
 
     final dropdown = DropdownButton<HttpMethod?>(
@@ -66,7 +82,7 @@ class MethodPopupMenu extends StatelessWidget {
           const SizedBox(width: 3),
           Container(width: 1, height: 22, color: Colors.grey.shade300),
           const SizedBox(width: 3),
-        ]
+        ],
       ],
     );
   }
@@ -76,7 +92,14 @@ class MethodPopupMenu extends StatelessWidget {
     final color = _methodColor(m, context);
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 4),
-      child: Text(name, style: TextStyle(color: color, fontSize: 13, fontWeight: FontWeight.w600)),
+      child: Text(
+        name,
+        style: TextStyle(
+          color: color,
+          fontSize: 13,
+          fontWeight: FontWeight.w600,
+        ),
+      ),
     );
   }
 }

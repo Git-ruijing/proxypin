@@ -40,12 +40,18 @@ class SseDecoder {
         // End of event: emit if any data collected
         if (_data.isNotEmpty) {
           String dataValue = _data.toString();
-          if (dataValue.endsWith('\n')) dataValue = dataValue.substring(0, dataValue.length - 1);
+          if (dataValue.endsWith('\n'))
+            dataValue = dataValue.substring(0, dataValue.length - 1);
 
           // Build a text frame from the SSE event. Include event/id headers if present as a prefix comment.
           final String payloadText = _event == null && _id == null
               ? dataValue
-              : _buildLabeledPayload(dataValue, event: _event, id: _id, retry: _retry);
+              : _buildLabeledPayload(
+                  dataValue,
+                  event: _event,
+                  id: _id,
+                  retry: _retry,
+                );
 
           frames.add(_textFrame(payloadText));
         }
@@ -93,7 +99,12 @@ class SseDecoder {
     _retry = null;
   }
 
-  String _buildLabeledPayload(String data, {String? event, String? id, int? retry}) {
+  String _buildLabeledPayload(
+    String data, {
+    String? event,
+    String? id,
+    int? retry,
+  }) {
     final StringBuffer b = StringBuffer();
     if (event != null && event.isNotEmpty) b.writeln('event: $event');
     if (id != null && id.isNotEmpty) b.writeln('id: $id');
@@ -114,4 +125,3 @@ class SseDecoder {
     );
   }
 }
-

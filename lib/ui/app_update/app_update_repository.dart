@@ -16,7 +16,11 @@ import 'new_version_dialog.dart';
 class AppUpdateRepository {
   static final HttpClient httpClient = HttpClient();
 
-  static Future<void> checkUpdate(BuildContext context, {bool canIgnore = true, bool showToast = false}) async {
+  static Future<void> checkUpdate(
+    BuildContext context, {
+    bool canIgnore = true,
+    bool showToast = false,
+  }) async {
     try {
       var lastVersion = await getLatestVersion();
       if (lastVersion == null) {
@@ -26,10 +30,15 @@ class AppUpdateRepository {
 
       if (!context.mounted) return;
 
-      var availableUpdates = compareVersions(AppConfiguration.version, lastVersion.version);
+      var availableUpdates = compareVersions(
+        AppConfiguration.version,
+        lastVersion.version,
+      );
       if (availableUpdates) {
         if (canIgnore) {
-          var ignoreVersion = await SharedPreferencesAsync().getString(Constants.ignoreReleaseVersionKey);
+          var ignoreVersion = await SharedPreferencesAsync().getString(
+            Constants.ignoreReleaseVersionKey,
+          );
           if (ignoreVersion == lastVersion.version) {
             logger.d("ignored release [${lastVersion.version}]");
             return;
@@ -47,11 +56,15 @@ class AppUpdateRepository {
         return;
       }
 
-      logger.i("already using latest version[${AppConfiguration.version}], last: [${lastVersion.version}]");
+      logger.i(
+        "already using latest version[${AppConfiguration.version}], last: [${lastVersion.version}]",
+      );
 
       if (showToast) {
         AppLocalizations localizations = AppLocalizations.of(context)!;
-        CustomToast.success(localizations.appUpdateNotAvailableMsg).show(context);
+        CustomToast.success(
+          localizations.appUpdateNotAvailableMsg,
+        ).show(context);
       }
     } catch (e) {
       logger.e("Error checking for updates: $e");
@@ -62,7 +75,9 @@ class AppUpdateRepository {
   }
 
   /// Fetches the latest version information from the GitHub releases API.
-  static Future<RemoteVersionEntity?> getLatestVersion({bool includePreReleases = false}) async {
+  static Future<RemoteVersionEntity?> getLatestVersion({
+    bool includePreReleases = false,
+  }) async {
     final response = await http.get(Uri.parse(Constants.githubReleasesApiUrl));
     if (response.statusCode != 200 || response.body.isEmpty) {
       logger.w("[AppUpdate] failed to fetch latest version info");
@@ -70,7 +85,9 @@ class AppUpdateRepository {
     }
 
     var body = jsonDecode(response.body) as List;
-    final releases = body.map((e) => GithubReleaseParser.parse(e as Map<String, dynamic>));
+    final releases = body.map(
+      (e) => GithubReleaseParser.parse(e as Map<String, dynamic>),
+    );
     late RemoteVersionEntity latest;
     if (includePreReleases) {
       latest = releases.first;

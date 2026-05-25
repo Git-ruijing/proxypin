@@ -63,7 +63,10 @@ class _FavoritesState extends State<MobileFavorites> {
     final favorites = await FavoriteStorage.favorites;
     final json = FavoriteStorage.toJson(favorites);
     final bytes = utf8.encode(json);
-    final path = await FilePicker.platform.saveFile(fileName: 'favorites.json', bytes: bytes);
+    final path = await FilePicker.platform.saveFile(
+      fileName: 'favorites.json',
+      bytes: bytes,
+    );
     if (path == null) return;
     if (mounted) FlutterToastr.show(localizations.exportSuccess, context);
   }
@@ -71,7 +74,9 @@ class _FavoritesState extends State<MobileFavorites> {
   Future<String?> _materializePickedFile(PlatformFile file) async {
     if (file.path != null) return file.path!;
     if (file.bytes == null) return null;
-    final tmp = await File('${Directory.systemTemp.path}/${file.name}').create();
+    final tmp = await File(
+      '${Directory.systemTemp.path}/${file.name}',
+    ).create();
     await tmp.writeAsBytes(file.bytes!, flush: true);
     return tmp.path;
   }
@@ -79,42 +84,63 @@ class _FavoritesState extends State<MobileFavorites> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-        appBar: AppBar(
-            title: Text(localizations.favorites, style: const TextStyle(fontSize: 16)),
-            centerTitle: true,
-            actions: [
-              IconButton(
-                  tooltip: localizations.export,
-                  icon: const Icon(Icons.upload_file, size: 20),
-                  onPressed: () async {
-                    try {
-                      await _exportJson();
-                    } catch (e) {
-                      if (context.mounted) FlutterToastr.show('${localizations.importFailed}: $e', context);
-                    }
-                  }),
-              IconButton(
-                  tooltip: localizations.import,
-                  icon: const Icon(Icons.download_for_offline_outlined, size: 20),
-                  onPressed: () async {
-                    final result = await FilePicker.platform
-                        .pickFiles(type: FileType.custom, allowedExtensions: ['json', 'har'], withData: true);
-                    final file = result?.files.isNotEmpty == true ? result!.files.first : null;
-                    if (file == null) return;
-                    final path = await _materializePickedFile(file);
-                    if (path == null) return;
-                    try {
-                      await FavoriteStorage.importFromFile(path);
-                      if (context.mounted) FlutterToastr.show(localizations.importSuccess, context);
-                      setState(() {});
-                    } catch (e) {
-                      if (context.mounted) FlutterToastr.show('${localizations.importFailed}: $e', context);
-                    }
-                  }),
-            ]),
-        body: FutureBuilder(
-            future: FavoriteStorage.favorites,
-            builder: (BuildContext context, AsyncSnapshot<Queue<Favorite>> snapshot) {
+      appBar: AppBar(
+        title: Text(
+          localizations.favorites,
+          style: const TextStyle(fontSize: 16),
+        ),
+        centerTitle: true,
+        actions: [
+          IconButton(
+            tooltip: localizations.export,
+            icon: const Icon(Icons.upload_file, size: 20),
+            onPressed: () async {
+              try {
+                await _exportJson();
+              } catch (e) {
+                if (context.mounted)
+                  FlutterToastr.show(
+                    '${localizations.importFailed}: $e',
+                    context,
+                  );
+              }
+            },
+          ),
+          IconButton(
+            tooltip: localizations.import,
+            icon: const Icon(Icons.download_for_offline_outlined, size: 20),
+            onPressed: () async {
+              final result = await FilePicker.platform.pickFiles(
+                type: FileType.custom,
+                allowedExtensions: ['json', 'har'],
+                withData: true,
+              );
+              final file = result?.files.isNotEmpty == true
+                  ? result!.files.first
+                  : null;
+              if (file == null) return;
+              final path = await _materializePickedFile(file);
+              if (path == null) return;
+              try {
+                await FavoriteStorage.importFromFile(path);
+                if (context.mounted)
+                  FlutterToastr.show(localizations.importSuccess, context);
+                setState(() {});
+              } catch (e) {
+                if (context.mounted)
+                  FlutterToastr.show(
+                    '${localizations.importFailed}: $e',
+                    context,
+                  );
+              }
+            },
+          ),
+        ],
+      ),
+      body: FutureBuilder(
+        future: FavoriteStorage.favorites,
+        builder:
+            (BuildContext context, AsyncSnapshot<Queue<Favorite>> snapshot) {
               if (snapshot.hasData) {
                 var favorites = snapshot.data ?? Queue();
                 if (favorites.isEmpty) {
@@ -135,12 +161,15 @@ class _FavoritesState extends State<MobileFavorites> {
                       proxyServer: widget.proxyServer,
                     );
                   },
-                  separatorBuilder: (_, __) => const Divider(height: 1, thickness: 0.3),
+                  separatorBuilder: (_, __) =>
+                      const Divider(height: 1, thickness: 0.3),
                 );
               } else {
                 return const SizedBox();
               }
-            }));
+            },
+      ),
+    );
   }
 }
 
@@ -150,7 +179,12 @@ class _FavoriteItem extends StatefulWidget {
   final ProxyServer proxyServer;
   final Function(Favorite favorite)? onRemove;
 
-  const _FavoriteItem(this.favorite, {required this.onRemove, required this.proxyServer, required this.index});
+  const _FavoriteItem(
+    this.favorite, {
+    required this.onRemove,
+    required this.proxyServer,
+    required this.index,
+  });
 
   @override
   State<_FavoriteItem> createState() => _FavoriteItemState();
@@ -174,58 +208,88 @@ class _FavoriteItemState extends State<_FavoriteItem> {
 
     var response = request.response;
     Widget? title = widget.favorite.name?.isNotEmpty == true
-        ? Text(widget.favorite.name!,
+        ? Text(
+            widget.favorite.name!,
             overflow: TextOverflow.ellipsis,
             maxLines: 1,
-            style: TextStyle(fontSize: 14, color: Colors.blueAccent.shade200))
+            style: TextStyle(fontSize: 14, color: Colors.blueAccent.shade200),
+          )
         : Text.rich(
             overflow: TextOverflow.ellipsis,
             maxLines: 2,
-            TextSpan(children: [
-              TextSpan(text: '${request.method.name} ', style: const TextStyle(fontSize: 14, color: Colors.teal)),
-              TextSpan(
-                text: request.remoteDomain(),
-                style: TextStyle(fontSize: 14, color: Colors.blue),
-              ),
-              TextSpan(
-                text: request.path,
-                style: TextStyle(fontSize: 14, color: Colors.green),
-              ),
-              if (request.requestUri?.query.isNotEmpty == true)
+            TextSpan(
+              children: [
                 TextSpan(
+                  text: '${request.method.name} ',
+                  style: const TextStyle(fontSize: 14, color: Colors.teal),
+                ),
+                TextSpan(
+                  text: request.remoteDomain(),
+                  style: TextStyle(fontSize: 14, color: Colors.blue),
+                ),
+                TextSpan(
+                  text: request.path,
+                  style: TextStyle(fontSize: 14, color: Colors.green),
+                ),
+                if (request.requestUri?.query.isNotEmpty == true)
+                  TextSpan(
                     text: '?${request.requestUri?.query}',
-                    style: TextStyle(fontSize: 14, color: Colors.pinkAccent.shade200))
-            ]));
+                    style: TextStyle(
+                      fontSize: 14,
+                      color: Colors.pinkAccent.shade200,
+                    ),
+                  ),
+              ],
+            ),
+          );
 
-    var time = formatDate(request.requestTime, [mm, '-', d, ' ', HH, ':', nn, ':', ss]);
+    var time = formatDate(request.requestTime, [
+      mm,
+      '-',
+      d,
+      ' ',
+      HH,
+      ':',
+      nn,
+      ':',
+      ss,
+    ]);
     String subtitle =
         '$time - [${response?.status.code ?? ''}]  ${response?.contentType.name.toUpperCase() ?? ''} ${response?.costTime() ?? ''} ';
 
     return GestureDetector(
-        onLongPressStart: menu,
-        child: ListTile(
-            selected: selected,
-            minLeadingWidth: 25,
-            leading: getIcon(response),
-            title: title,
-            trailing: request.isWebSocket
-                ? Text(
-                    'WS',
-                    style: TextStyle(
-                      fontSize: 10,
-                      fontWeight: FontWeight.w600,
-                      color: Theme.of(context).colorScheme.primary,
-                    ),
-                  )
-                : null,
-            subtitle: Text.rich(
-                maxLines: 1,
-                TextSpan(children: [
-                  TextSpan(text: '#${widget.index} ', style: const TextStyle(fontSize: 12, color: Colors.teal)),
-                  TextSpan(text: subtitle, style: const TextStyle(fontSize: 12)),
-                ])),
-            dense: true,
-            onTap: onClick));
+      onLongPressStart: menu,
+      child: ListTile(
+        selected: selected,
+        minLeadingWidth: 25,
+        leading: getIcon(response),
+        title: title,
+        trailing: request.isWebSocket
+            ? Text(
+                'WS',
+                style: TextStyle(
+                  fontSize: 10,
+                  fontWeight: FontWeight.w600,
+                  color: Theme.of(context).colorScheme.primary,
+                ),
+              )
+            : null,
+        subtitle: Text.rich(
+          maxLines: 1,
+          TextSpan(
+            children: [
+              TextSpan(
+                text: '#${widget.index} ',
+                style: const TextStyle(fontSize: 12, color: Colors.teal),
+              ),
+              TextSpan(text: subtitle, style: const TextStyle(fontSize: 12)),
+            ],
+          ),
+        ),
+        dense: true,
+        onTap: onClick,
+      ),
+    );
   }
 
   ///右键菜单
@@ -236,134 +300,187 @@ class _FavoriteItemState extends State<_FavoriteItem> {
 
     var globalPosition = details.globalPosition;
     MediaQueryData mediaQuery = MediaQuery.of(context);
-    var position = RelativeRect.fromLTRB(globalPosition.dx, globalPosition.dy, globalPosition.dx, globalPosition.dy);
+    var position = RelativeRect.fromLTRB(
+      globalPosition.dx,
+      globalPosition.dy,
+      globalPosition.dx,
+      globalPosition.dy,
+    );
     // Trigger haptic feedback
     if (Platform.isAndroid) HapticFeedback.mediumImpact();
 
     showMenu(
-        context: context,
-        constraints: BoxConstraints(maxWidth: mediaQuery.size.width * 0.88),
-        position: position,
-        items: [
-          //复制url
-          PopupMenuContainer(
-              child: Column(
+      context: context,
+      constraints: BoxConstraints(maxWidth: mediaQuery.size.width * 0.88),
+      position: position,
+      items: [
+        //复制url
+        PopupMenuContainer(
+          child: Column(
             children: [
               Align(
                 alignment: Alignment.centerLeft,
                 child: Padding(
-                    padding: EdgeInsets.only(left: 20, top: 5),
-                    child: Text(localizations.selectAction, style: Theme.of(context).textTheme.bodyLarge)),
+                  padding: EdgeInsets.only(left: 20, top: 5),
+                  child: Text(
+                    localizations.selectAction,
+                    style: Theme.of(context).textTheme.bodyLarge,
+                  ),
+                ),
               ),
               //copy
               menuItem(
                 left: itemButton(
-                    onPressed: () {
-                      Clipboard.setData(ClipboardData(text: request.requestUrl)).then((value) {
-                        if (mounted) {
-                          FlutterToastr.show(localizations.copied, context);
-                          Navigator.maybePop(context);
-                        }
-                      });
-                    },
-                    label: localizations.copyUrl,
-                    icon: Icons.link,
-                    iconSize: 22),
+                  onPressed: () {
+                    Clipboard.setData(
+                      ClipboardData(text: request.requestUrl),
+                    ).then((value) {
+                      if (mounted) {
+                        FlutterToastr.show(localizations.copied, context);
+                        Navigator.maybePop(context);
+                      }
+                    });
+                  },
+                  label: localizations.copyUrl,
+                  icon: Icons.link,
+                  iconSize: 22,
+                ),
                 right: itemButton(
-                    onPressed: () {
-                      Clipboard.setData(ClipboardData(text: curlRequest(request))).then((value) {
-                        if (mounted) {
-                          FlutterToastr.show(localizations.copied, context);
-                          Navigator.maybePop(context);
-                        }
-                      });
-                    },
-                    label: localizations.copyCurl,
-                    icon: Icons.code),
+                  onPressed: () {
+                    Clipboard.setData(
+                      ClipboardData(text: curlRequest(request)),
+                    ).then((value) {
+                      if (mounted) {
+                        FlutterToastr.show(localizations.copied, context);
+                        Navigator.maybePop(context);
+                      }
+                    });
+                  },
+                  label: localizations.copyCurl,
+                  icon: Icons.code,
+                ),
               ),
               //repeat
               menuItem(
                 left: itemButton(
-                    onPressed: () {
-                      onRepeat(request);
-                      Navigator.maybePop(context);
-                    },
-                    label: localizations.repeat,
-                    icon: Icons.repeat_one),
+                  onPressed: () {
+                    onRepeat(request);
+                    Navigator.maybePop(context);
+                  },
+                  label: localizations.repeat,
+                  icon: Icons.repeat_one,
+                ),
                 right: itemButton(
-                    onPressed: () => showCustomRepeat(request), label: localizations.customRepeat, icon: Icons.repeat),
+                  onPressed: () => showCustomRepeat(request),
+                  label: localizations.customRepeat,
+                  icon: Icons.repeat,
+                ),
               ),
               //favorite and edit
               menuItem(
                 left: itemButton(
-                    onPressed: () {
-                      Navigator.of(context).pop();
-                      rename(widget.favorite);
-                    },
-                    label: localizations.rename,
-                    icon: Icons.drive_file_rename_outline),
+                  onPressed: () {
+                    Navigator.of(context).pop();
+                    rename(widget.favorite);
+                  },
+                  label: localizations.rename,
+                  icon: Icons.drive_file_rename_outline,
+                ),
                 right: itemButton(
-                    onPressed: () async {
-                      Navigator.pop(context);
+                  onPressed: () async {
+                    Navigator.pop(context);
 
-                      var pageRoute = MaterialPageRoute(
-                          builder: (context) => MobileRequestEditor(request: request, proxyServer: widget.proxyServer));
-                      Navigator.push(context, pageRoute);
-                    },
-                    label: localizations.editRequest,
-                    icon: Icons.replay_outlined),
+                    var pageRoute = MaterialPageRoute(
+                      builder: (context) => MobileRequestEditor(
+                        request: request,
+                        proxyServer: widget.proxyServer,
+                      ),
+                    );
+                    Navigator.push(context, pageRoute);
+                  },
+                  label: localizations.editRequest,
+                  icon: Icons.replay_outlined,
+                ),
               ),
 
               //script and rewrite
               menuItem(
                 left: itemButton(
-                    onPressed: () async {
-                      Navigator.maybePop(context);
-                      var scriptManager = await ScriptManager.instance;
-                      var url = request.domainPath;
-                      var scriptItem = (scriptManager).list.firstWhereOrNull((it) => it.urls.contains(url));
-                      String? script = scriptItem == null ? null : await scriptManager.getScript(scriptItem);
+                  onPressed: () async {
+                    Navigator.maybePop(context);
+                    var scriptManager = await ScriptManager.instance;
+                    var url = request.domainPath;
+                    var scriptItem = (scriptManager).list.firstWhereOrNull(
+                      (it) => it.urls.contains(url),
+                    );
+                    String? script = scriptItem == null
+                        ? null
+                        : await scriptManager.getScript(scriptItem);
 
-                      var pageRoute = MaterialPageRoute(
-                          builder: (context) =>
-                              ScriptEdit(scriptItem: scriptItem, script: script, urls: scriptItem?.urls ?? [url]));
-                      if (mounted) Navigator.push(context, pageRoute);
-                    },
-                    label: localizations.script,
-                    icon: Icons.javascript_outlined),
+                    var pageRoute = MaterialPageRoute(
+                      builder: (context) => ScriptEdit(
+                        scriptItem: scriptItem,
+                        script: script,
+                        urls: scriptItem?.urls ?? [url],
+                      ),
+                    );
+                    if (mounted) Navigator.push(context, pageRoute);
+                  },
+                  label: localizations.script,
+                  icon: Icons.javascript_outlined,
+                ),
                 right: itemButton(
-                    onPressed: () async {
-                      Navigator.maybePop(context);
-                      bool isRequest = request.response == null;
-                      var requestRewrites = await RequestRewriteManager.instance;
+                  onPressed: () async {
+                    Navigator.maybePop(context);
+                    bool isRequest = request.response == null;
+                    var requestRewrites = await RequestRewriteManager.instance;
 
-                      var ruleType = isRequest ? RuleType.requestReplace : RuleType.responseReplace;
-                      var rule = requestRewrites.getRequestRewriteRule(request, ruleType);
+                    var ruleType = isRequest
+                        ? RuleType.requestReplace
+                        : RuleType.responseReplace;
+                    var rule = requestRewrites.getRequestRewriteRule(
+                      request,
+                      ruleType,
+                    );
 
-                      var rewriteItems = await requestRewrites.getRewriteItems(rule);
+                    var rewriteItems = await requestRewrites.getRewriteItems(
+                      rule,
+                    );
 
-                      var pageRoute = MaterialPageRoute(
-                          builder: (_) => RewriteRule(rule: rule, items: rewriteItems, request: request));
-                      if (mounted) Navigator.push(context, pageRoute);
-                    },
-                    label: localizations.requestRewrite,
-                    icon: Icons.edit_outlined),
+                    var pageRoute = MaterialPageRoute(
+                      builder: (_) => RewriteRule(
+                        rule: rule,
+                        items: rewriteItems,
+                        request: request,
+                      ),
+                    );
+                    if (mounted) Navigator.push(context, pageRoute);
+                  },
+                  label: localizations.requestRewrite,
+                  icon: Icons.edit_outlined,
+                ),
               ),
               SizedBox(height: 2),
-              Row(mainAxisAlignment: MainAxisAlignment.center, children: [
-                itemButton(
+              Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  itemButton(
                     onPressed: () {
                       widget.onRemove?.call(widget.favorite);
                       FlutterToastr.show(localizations.deleteSuccess, context);
                       Navigator.maybePop(context);
                     },
                     label: localizations.deleteFavorite,
-                    icon: Icons.delete_outline),
-                SizedBox(width: 10),
-              ]),
+                    icon: Icons.delete_outline,
+                  ),
+                  SizedBox(width: 10),
+                ],
+              ),
             ],
-          )),
-        ]).then((value) {
+          ),
+        ),
+      ],
+    ).then((value) {
       selected = false;
       // if (mounted) setState(() {});
     });
@@ -372,14 +489,24 @@ class _FavoriteItemState extends State<_FavoriteItem> {
   //显示高级重发
   void showCustomRepeat(HttpRequest request) {
     Navigator.of(context).pop();
-    Navigator.of(context).push(MaterialPageRoute(
-        builder: (context) => futureWidget(SharedPreferences.getInstance(),
-            (prefs) => MobileCustomRepeat(onRepeat: () => onRepeat(request), prefs: prefs))));
+    Navigator.of(context).push(
+      MaterialPageRoute(
+        builder: (context) => futureWidget(
+          SharedPreferences.getInstance(),
+          (prefs) => MobileCustomRepeat(
+            onRepeat: () => onRepeat(request),
+            prefs: prefs,
+          ),
+        ),
+      ),
+    );
   }
 
   void onRepeat(HttpRequest request) {
     var httpRequest = request.copy(uri: request.requestUrl);
-    var proxyInfo = widget.proxyServer.isRunning ? ProxyInfo.of("127.0.0.1", widget.proxyServer.port) : null;
+    var proxyInfo = widget.proxyServer.isRunning
+        ? ProxyInfo.of("127.0.0.1", widget.proxyServer.port)
+        : null;
     HttpClients.proxyRequest(httpRequest, proxyInfo: proxyInfo);
 
     if (mounted) {
@@ -391,57 +518,84 @@ class _FavoriteItemState extends State<_FavoriteItem> {
   void rename(Favorite item) {
     String? name = item.name;
     showDialog(
-        context: context,
-        builder: (context) {
-          return AlertDialog(
-            content: TextFormField(
-              initialValue: name,
-              decoration: InputDecoration(label: Text(localizations.name)),
-              onChanged: (val) => name = val,
+      context: context,
+      builder: (context) {
+        return AlertDialog(
+          content: TextFormField(
+            initialValue: name,
+            decoration: InputDecoration(label: Text(localizations.name)),
+            onChanged: (val) => name = val,
+          ),
+          actions: <Widget>[
+            TextButton(
+              onPressed: () => Navigator.pop(context),
+              child: Text(localizations.cancel),
             ),
-            actions: <Widget>[
-              TextButton(onPressed: () => Navigator.pop(context), child: Text(localizations.cancel)),
-              TextButton(
-                child: Text(localizations.save),
-                onPressed: () {
-                  Navigator.maybePop(context);
-                  setState(() {
-                    item.name = name?.isEmpty == true ? null : name;
-                    FavoriteStorage.flushConfig();
-                  });
-                },
-              ),
-            ],
-          );
-        });
+            TextButton(
+              child: Text(localizations.save),
+              onPressed: () {
+                Navigator.maybePop(context);
+                setState(() {
+                  item.name = name?.isEmpty == true ? null : name;
+                  FavoriteStorage.flushConfig();
+                });
+              },
+            ),
+          ],
+        );
+      },
+    );
   }
 
   //点击事件
   void onClick() {
-    Navigator.push(context, MaterialPageRoute(builder: (context) {
-      return NetworkTabController(
-          proxyServer: widget.proxyServer,
-          httpRequest: request,
-          httpResponse: request.response,
-          title: Text(localizations.captureDetail, style: const TextStyle(fontSize: 16)));
-    }));
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) {
+          return NetworkTabController(
+            proxyServer: widget.proxyServer,
+            httpRequest: request,
+            httpResponse: request.response,
+            title: Text(
+              localizations.captureDetail,
+              style: const TextStyle(fontSize: 16),
+            ),
+          );
+        },
+      ),
+    );
   }
 
-  Widget itemButton(
-      {required String label, required IconData icon, required Function() onPressed, double iconSize = 20}) {
+  Widget itemButton({
+    required String label,
+    required IconData icon,
+    required Function() onPressed,
+    double iconSize = 20,
+  }) {
     var theme = Theme.of(context);
     var style = theme.textTheme.bodyMedium;
     return TextButton.icon(
-        onPressed: onPressed,
-        label: Text(label, style: style),
-        icon: Icon(icon, size: iconSize, color: theme.colorScheme.primary.withOpacity(0.65)));
+      onPressed: onPressed,
+      label: Text(label, style: style),
+      icon: Icon(
+        icon,
+        size: iconSize,
+        color: theme.colorScheme.primary.withOpacity(0.65),
+      ),
+    );
   }
 
   Widget menuItem({required Widget left, required Widget right}) {
     return Row(
       children: [
-        SizedBox(width: 130, child: Align(alignment: Alignment.centerLeft, child: left)),
-        Expanded(child: Align(alignment: Alignment.centerLeft, child: right))
+        SizedBox(
+          width: 130,
+          child: Align(alignment: Alignment.centerLeft, child: left),
+        ),
+        Expanded(
+          child: Align(alignment: Alignment.centerLeft, child: right),
+        ),
       ],
     );
   }

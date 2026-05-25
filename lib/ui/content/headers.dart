@@ -64,10 +64,18 @@ class _HeadersWidgetState extends State<HeadersWidget> {
   void initState() {
     super.initState();
     _controller =
-        widget.controller ?? CodeController(readOnly: true, language: http, text: _buildRawHeaders(widget.message));
+        widget.controller ??
+        CodeController(
+          readOnly: true,
+          language: http,
+          text: _buildRawHeaders(widget.message),
+        );
     // 优先使用按 type 缓存，其次使用全局配置，最后使用 widget 默认
     final key = widget.title;
-    _expanded = _lastExpanded[key] ?? AppConfiguration.current?.headerExpanded ?? widget.initiallyExpanded;
+    _expanded =
+        _lastExpanded[key] ??
+        AppConfiguration.current?.headerExpanded ??
+        widget.initiallyExpanded;
   }
 
   @override
@@ -77,7 +85,6 @@ class _HeadersWidgetState extends State<HeadersWidget> {
   }
 
   Widget _buildHeaderModeToggle(BuildContext context) {
-
     final config = AppConfiguration.current;
     if (config == null) return const SizedBox();
     final isText = config.headerViewMode == 'text';
@@ -98,15 +105,19 @@ class _HeadersWidgetState extends State<HeadersWidget> {
 
   @override
   Widget build(BuildContext context) {
-    final isTextMode = (AppConfiguration.current?.headerViewMode ?? 'table') == 'text';
+    final isTextMode =
+        (AppConfiguration.current?.headerViewMode ?? 'table') == 'text';
     return ExpansionTile(
       tilePadding: const EdgeInsets.only(left: 0),
       dense: true,
       title: Row(
         children: [
           Expanded(
-              child:
-                  Text('${widget.title} Headers', style: const TextStyle(fontWeight: FontWeight.w500, fontSize: 14))),
+            child: Text(
+              '${widget.title} Headers',
+              style: const TextStyle(fontWeight: FontWeight.w500, fontSize: 14),
+            ),
+          ),
           _buildHeaderModeToggle(context),
         ],
       ),
@@ -119,7 +130,9 @@ class _HeadersWidgetState extends State<HeadersWidget> {
         if (mounted) setState(() {});
       },
       shape: const Border(),
-      children: !isTextMode ? _buildHeaderRows(widget.message) : buildTextMode(widget.message),
+      children: !isTextMode
+          ? _buildHeaderRows(widget.message)
+          : buildTextMode(widget.message),
     );
   }
 
@@ -132,12 +145,19 @@ class _HeadersWidgetState extends State<HeadersWidget> {
     return [
       CodeTheme(
         data: CodeThemeData(
-            styles: Theme.brightnessOf(context) == Brightness.light ? atomOneLightTheme : atomOneDarkTheme),
+          styles: Theme.brightnessOf(context) == Brightness.light
+              ? atomOneLightTheme
+              : atomOneDarkTheme,
+        ),
         child: CodeField(
           background: Colors.transparent,
           readOnly: Platforms.isMobile(),
           wrap: true,
-          gutterStyle: const GutterStyle(margin: 0, width: 52, showErrors: false),
+          gutterStyle: const GutterStyle(
+            margin: 0,
+            width: 52,
+            showErrors: false,
+          ),
           textStyle: const TextStyle(fontSize: 15.3),
           controller: _controller,
         ),
@@ -149,25 +169,39 @@ class _HeadersWidgetState extends State<HeadersWidget> {
     final rows = <Widget>[];
     message?.headers.forEach((name, values) {
       for (final v in values) {
-        rows.add(Row(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            SelectableText(name,
+        rows.add(
+          Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              SelectableText(
+                name,
                 contextMenuBuilder: contextMenu,
-                style: const TextStyle(fontWeight: FontWeight.w500, color: Colors.deepOrangeAccent, fontSize: 15)),
-            const Text(': ',
-                style: TextStyle(fontWeight: FontWeight.w500, color: Colors.deepOrangeAccent, fontSize: 15)),
-            Expanded(
-              child: SelectableText(
-                v,
-                style: widget.valueTextStyle,
-                contextMenuBuilder: contextMenu,
-                maxLines: 8,
-                minLines: 1,
+                style: const TextStyle(
+                  fontWeight: FontWeight.w500,
+                  color: Colors.deepOrangeAccent,
+                  fontSize: 15,
+                ),
               ),
-            ),
-          ],
-        ));
+              const Text(
+                ': ',
+                style: TextStyle(
+                  fontWeight: FontWeight.w500,
+                  color: Colors.deepOrangeAccent,
+                  fontSize: 15,
+                ),
+              ),
+              Expanded(
+                child: SelectableText(
+                  v,
+                  style: widget.valueTextStyle,
+                  contextMenuBuilder: contextMenu,
+                  maxLines: 8,
+                  minLines: 1,
+                ),
+              ),
+            ],
+          ),
+        );
         rows.add(const Divider(thickness: 0.1, height: 10));
       }
     });

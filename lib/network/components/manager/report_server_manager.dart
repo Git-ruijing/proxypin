@@ -65,7 +65,9 @@ class ReportServerManager {
       if (content.trim().isNotEmpty) {
         try {
           final decoded = jsonDecode(content) as List<dynamic>;
-          list = decoded.map((e) => ReportServer.fromJson(e as Map<String, dynamic>)).toList();
+          list = decoded
+              .map((e) => ReportServer.fromJson(e as Map<String, dynamic>))
+              .toList();
         } catch (e, t) {
           logger.e('上报服务器配置解析失败', error: e, stackTrace: t);
         }
@@ -108,7 +110,9 @@ class ReportServer {
     this.enabled = true,
     this.compression,
     this.splitReport = false,
-  }) : _urlReg = RegExp(matchUrl.replaceAll("*", ".*").replaceFirst('?', '\\?'));
+  }) : _urlReg = RegExp(
+         matchUrl.replaceAll("*", ".*").replaceFirst('?', '\\?'),
+       );
 
   bool match(String url) {
     if (enabled) {

@@ -27,41 +27,54 @@ class MobileThemeSetting extends StatelessWidget {
     AppLocalizations localizations = AppLocalizations.of(context)!;
 
     return PopupMenuButton(
-        tooltip: appConfiguration.themeMode.name,
-        surfaceTintColor: Theme.of(context).colorScheme.onPrimary,
-        offset: const Offset(150, 0),
-        itemBuilder: (BuildContext context) {
-          return [
-            PopupMenuItem(
-                child: Tooltip(
-                    preferBelow: false,
-                    message: localizations.material3,
-                    child: SwitchListTile(
-                      value: appConfiguration.useMaterial3,
-                      onChanged: (bool value) {
-                        appConfiguration.useMaterial3 = value;
-                        Navigator.of(context).pop();
-                      },
-                      dense: true,
-                      title: const Text("Material3"),
-                    ))),
-            PopupMenuItem(
-                child:
-                    ListTile(trailing: const Icon(Icons.cached), dense: true, title: Text(localizations.followSystem)),
-                onTap: () => appConfiguration.themeMode = ThemeMode.system),
-            PopupMenuItem(
-                child: ListTile(trailing: const Icon(Icons.sunny), dense: true, title: Text(localizations.themeLight)),
-                onTap: () => appConfiguration.themeMode = ThemeMode.light),
-            PopupMenuItem(
-                child: ListTile(
-                    trailing: const Icon(Icons.nightlight_outlined), dense: true, title: Text(localizations.themeDark)),
-                onTap: () => appConfiguration.themeMode = ThemeMode.dark),
-          ];
-        },
-        child: ListTile(
-          title: Text(localizations.theme),
-          trailing: getIcon(),
-        ));
+      tooltip: appConfiguration.themeMode.name,
+      surfaceTintColor: Theme.of(context).colorScheme.onPrimary,
+      offset: const Offset(150, 0),
+      itemBuilder: (BuildContext context) {
+        return [
+          PopupMenuItem(
+            child: Tooltip(
+              preferBelow: false,
+              message: localizations.material3,
+              child: SwitchListTile(
+                value: appConfiguration.useMaterial3,
+                onChanged: (bool value) {
+                  appConfiguration.useMaterial3 = value;
+                  Navigator.of(context).pop();
+                },
+                dense: true,
+                title: const Text("Material3"),
+              ),
+            ),
+          ),
+          PopupMenuItem(
+            child: ListTile(
+              trailing: const Icon(Icons.cached),
+              dense: true,
+              title: Text(localizations.followSystem),
+            ),
+            onTap: () => appConfiguration.themeMode = ThemeMode.system,
+          ),
+          PopupMenuItem(
+            child: ListTile(
+              trailing: const Icon(Icons.sunny),
+              dense: true,
+              title: Text(localizations.themeLight),
+            ),
+            onTap: () => appConfiguration.themeMode = ThemeMode.light,
+          ),
+          PopupMenuItem(
+            child: ListTile(
+              trailing: const Icon(Icons.nightlight_outlined),
+              dense: true,
+              title: Text(localizations.themeDark),
+            ),
+            onTap: () => appConfiguration.themeMode = ThemeMode.dark,
+          ),
+        ];
+      },
+      child: ListTile(title: Text(localizations.theme), trailing: getIcon()),
+    );
   }
 
   Icon getIcon() {

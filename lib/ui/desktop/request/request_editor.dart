@@ -36,11 +36,7 @@ import 'package:proxypin/utils/lang.dart';
 
 import '../../component/http_method_popup.dart';
 
-enum RequestEditorSource {
-  editor,
-  breakpointRequest,
-  breakpointResponse,
-}
+enum RequestEditorSource { editor, breakpointRequest, breakpointResponse }
 
 /// @author wanghongen
 class RequestEditor extends StatefulWidget {
@@ -106,7 +102,8 @@ class RequestEditorState extends State<RequestEditor> {
     }
 
     //cmd+w 关闭窗口
-    if ((HardwareKeyboard.instance.isMetaPressed || HardwareKeyboard.instance.isControlPressed) &&
+    if ((HardwareKeyboard.instance.isMetaPressed ||
+            HardwareKeyboard.instance.isControlPressed) &&
         event.logicalKey == LogicalKeyboardKey.keyW) {
       HardwareKeyboard.instance.removeHandler(onKeyEvent);
       responseChange.dispose();
@@ -115,7 +112,8 @@ class RequestEditorState extends State<RequestEditor> {
     }
 
     //粘贴
-    if ((HardwareKeyboard.instance.isMetaPressed || HardwareKeyboard.instance.isControlPressed) &&
+    if ((HardwareKeyboard.instance.isMetaPressed ||
+            HardwareKeyboard.instance.isControlPressed) &&
         event.logicalKey == LogicalKeyboardKey.keyV) {
       curlParse();
       return true;
@@ -158,87 +156,134 @@ class RequestEditorState extends State<RequestEditor> {
     }
 
     return Scaffold(
-        appBar: AppBar(
-          title: Text(title, style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w500)),
-          toolbarHeight: Platform.isWindows ? 36 : null,
-          centerTitle: true,
-          actions: [
-            TextButton.icon(
-                onPressed: () async {
-                  if (widget.source == RequestEditorSource.editor) {
-                    sendRequest();
-                  } else {
-                    executeBreakpoint();
-                  }
-                },
-                icon: Icon(icon),
-                label: Text(buttonText)),
-            if (widget.source == RequestEditorSource.breakpointRequest ||
-                widget.source == RequestEditorSource.breakpointResponse)
-              TextButton.icon(
-                  onPressed: () {
-                    // ignore breakpoint
-                    if (widget.source == RequestEditorSource.breakpointRequest) {
-                      widget.onExecuteRequest?.call(null);
-                    } else {
-                      widget.onExecuteResponse?.call(null);
-                    }
-                    widget.windowController?.close();
-                  },
-                  icon: const Icon(Icons.cancel),
-                  label: Text(localizations.cancel)),
-            const SizedBox(width: 10)
-          ],
+      appBar: AppBar(
+        title: Text(
+          title,
+          style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w500),
         ),
-        body: Column(children: [
-          _RequestLine(key: requestLineKey, request: request, urlQueryNotifier: _queryNotifier),
-          Expanded(
-              child: VerticalSplitView(
-            ratio: 0.53,
-            left: _HttpWidget(
-              key: requestKey,
-              title: const Text("Request", style: TextStyle(fontSize: 14, fontWeight: FontWeight.w500)),
-              message: request,
-              urlQueryNotifier: _queryNotifier,
-              readOnly: widget.source == RequestEditorSource.breakpointResponse,
+        toolbarHeight: Platform.isWindows ? 36 : null,
+        centerTitle: true,
+        actions: [
+          TextButton.icon(
+            onPressed: () async {
+              if (widget.source == RequestEditorSource.editor) {
+                sendRequest();
+              } else {
+                executeBreakpoint();
+              }
+            },
+            icon: Icon(icon),
+            label: Text(buttonText),
+          ),
+          if (widget.source == RequestEditorSource.breakpointRequest ||
+              widget.source == RequestEditorSource.breakpointResponse)
+            TextButton.icon(
+              onPressed: () {
+                // ignore breakpoint
+                if (widget.source == RequestEditorSource.breakpointRequest) {
+                  widget.onExecuteRequest?.call(null);
+                } else {
+                  widget.onExecuteResponse?.call(null);
+                }
+                widget.windowController?.close();
+              },
+              icon: const Icon(Icons.cancel),
+              label: Text(localizations.cancel),
             ),
-            right: ValueListenableBuilder(
+          const SizedBox(width: 10),
+        ],
+      ),
+      body: Column(
+        children: [
+          _RequestLine(
+            key: requestLineKey,
+            request: request,
+            urlQueryNotifier: _queryNotifier,
+          ),
+          Expanded(
+            child: VerticalSplitView(
+              ratio: 0.53,
+              left: _HttpWidget(
+                key: requestKey,
+                title: const Text(
+                  "Request",
+                  style: TextStyle(fontSize: 14, fontWeight: FontWeight.w500),
+                ),
+                message: request,
+                urlQueryNotifier: _queryNotifier,
+                readOnly:
+                    widget.source == RequestEditorSource.breakpointResponse,
+              ),
+              right: ValueListenableBuilder(
                 valueListenable: responseChange,
                 builder: (_, value, __) {
                   return Stack(
                     children: [
-                      Offstage(offstage: value != 0, child: const Center(child: CircularProgressIndicator())),
                       Offstage(
-                          offstage: value == 0,
-                          child: _HttpWidget(
-                              key: responseKey,
-                              title: Row(children: [
-                                const Text("Response", style: TextStyle(fontSize: 14, fontWeight: FontWeight.w500)),
-                                const Spacer(),
-                                Text.rich(TextSpan(children: [
-                                  TextSpan(
+                        offstage: value != 0,
+                        child: const Center(child: CircularProgressIndicator()),
+                      ),
+                      Offstage(
+                        offstage: value == 0,
+                        child: _HttpWidget(
+                          key: responseKey,
+                          title: Row(
+                            children: [
+                              const Text(
+                                "Response",
+                                style: TextStyle(
+                                  fontSize: 14,
+                                  fontWeight: FontWeight.w500,
+                                ),
+                              ),
+                              const Spacer(),
+                              Text.rich(
+                                TextSpan(
+                                  children: [
+                                    TextSpan(
                                       text: response?.protocolVersion,
                                       style: const TextStyle(
-                                          fontSize: 14,
-                                          fontWeight: FontWeight.w500,
-                                          decorationColor: Colors.green,
-                                          color: Colors.green)),
-                                  WidgetSpan(child: SizedBox(width: 12)),
-                                  TextSpan(
-                                      text: response?.status.code.toString() ?? '',
+                                        fontSize: 14,
+                                        fontWeight: FontWeight.w500,
+                                        decorationColor: Colors.green,
+                                        color: Colors.green,
+                                      ),
+                                    ),
+                                    WidgetSpan(child: SizedBox(width: 12)),
+                                    TextSpan(
+                                      text:
+                                          response?.status.code.toString() ??
+                                          '',
                                       style: TextStyle(
-                                          fontWeight: FontWeight.w500,
-                                          fontSize: 14,
-                                          color: response?.status.isSuccessful() == true ? Colors.green : Colors.red))
-                                ]))
-                              ]),
-                              message: response,
-                              readOnly: widget.source != RequestEditorSource.breakpointResponse))
+                                        fontWeight: FontWeight.w500,
+                                        fontSize: 14,
+                                        color:
+                                            response?.status.isSuccessful() ==
+                                                true
+                                            ? Colors.green
+                                            : Colors.red,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            ],
+                          ),
+                          message: response,
+                          readOnly:
+                              widget.source !=
+                              RequestEditorSource.breakpointResponse,
+                        ),
+                      ),
                     ],
                   );
-                }),
-          )),
-        ]));
+                },
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
   }
 
   ///发送请求
@@ -247,8 +292,11 @@ class RequestEditorState extends State<RequestEditor> {
     var headers = requestKey.currentState?.getHeaders();
     var requestBody = requestKey.currentState?.getBody();
     String url = currentState.requestUrl.text;
-    HttpRequest request = HttpRequest(currentState.requestMethod, Uri.parse(url).toString(),
-        protocolVersion: this.request?.protocolVersion ?? "HTTP/1.1");
+    HttpRequest request = HttpRequest(
+      currentState.requestMethod,
+      Uri.parse(url).toString(),
+      protocolVersion: this.request?.protocolVersion ?? "HTTP/1.1",
+    );
     request.headers.addAll(headers);
     request.body = requestBody == null ? null : utf8.encode(requestBody);
 
@@ -256,18 +304,26 @@ class RequestEditorState extends State<RequestEditor> {
     responseChange.value = 0;
 
     Map? proxyResult = await DesktopMultiWindow.invokeMethod(0, 'getProxyInfo');
-    ProxyInfo? proxyInfo = proxyResult == null ? null : ProxyInfo.of(proxyResult['host'], proxyResult['port']);
+    ProxyInfo? proxyInfo = proxyResult == null
+        ? null
+        : ProxyInfo.of(proxyResult['host'], proxyResult['port']);
 
-    HttpClients.proxyRequest(request, proxyInfo: proxyInfo, timeout: Duration(seconds: 15)).then((response) {
-      this.response = response;
-      responseKey.currentState?.change(response);
-      responseChange.value = 1;
-      // if (mounted) FlutterToastr.show(localizations.requestSuccess, context);
-    }).catchError((e, stackTrace) {
-      logger.e("Request failed", error: e, stackTrace: stackTrace);
-      responseChange.value = -1;
-      if (mounted) FlutterToastr.show('${localizations.fail}$e', context);
-    });
+    HttpClients.proxyRequest(
+          request,
+          proxyInfo: proxyInfo,
+          timeout: Duration(seconds: 15),
+        )
+        .then((response) {
+          this.response = response;
+          responseKey.currentState?.change(response);
+          responseChange.value = 1;
+          // if (mounted) FlutterToastr.show(localizations.requestSuccess, context);
+        })
+        .catchError((e, stackTrace) {
+          logger.e("Request failed", error: e, stackTrace: stackTrace);
+          responseChange.value = -1;
+          if (mounted) FlutterToastr.show('${localizations.fail}$e', context);
+        });
   }
 
   void executeBreakpoint() {
@@ -293,7 +349,9 @@ class RequestEditorState extends State<RequestEditor> {
       HttpResponse newResponse = response!.copy();
       newResponse.headers.clear();
       newResponse.headers.addAll(headers);
-      newResponse.body = responseBody == null ? null : utf8.encode(responseBody);
+      newResponse.body = responseBody == null
+          ? null
+          : utf8.encode(responseBody);
       widget.onExecuteResponse?.call(newResponse);
     }
   }
@@ -305,36 +363,47 @@ class RequestEditorState extends State<RequestEditor> {
     }
 
     var text = data.text;
-    if (text?.startsWith("http://") == true || text?.startsWith("https://") == true) {
+    if (text?.startsWith("http://") == true ||
+        text?.startsWith("https://") == true) {
       requestLineKey.currentState?.requestUrl.text = text!;
       return;
     }
 
-    if (text?.trimLeft().startsWith('curl') == true && mounted && !showCURLDialog) {
+    if (text?.trimLeft().startsWith('curl') == true &&
+        mounted &&
+        !showCURLDialog) {
       showCURLDialog = true;
       showDialog(
         context: context,
         builder: (BuildContext context) {
           return AlertDialog(
-              title: Text(localizations.prompt),
-              content: Text(localizations.curlSchemeRequest),
-              actions: [
-                TextButton(child: Text(localizations.cancel), onPressed: () => Navigator.of(context).pop()),
-                TextButton(
-                    child: Text(localizations.confirm),
-                    onPressed: () {
-                      try {
-                        setState(() {
-                          request = Curl.parse(text!);
-                          requestKey.currentState?.change(request!);
-                          requestLineKey.currentState?.change(request?.requestUrl, request?.method);
-                        });
-                      } catch (e) {
-                        FlutterToastr.show(localizations.fail, context);
-                      }
-                      Navigator.of(context).pop();
-                    }),
-              ]);
+            title: Text(localizations.prompt),
+            content: Text(localizations.curlSchemeRequest),
+            actions: [
+              TextButton(
+                child: Text(localizations.cancel),
+                onPressed: () => Navigator.of(context).pop(),
+              ),
+              TextButton(
+                child: Text(localizations.confirm),
+                onPressed: () {
+                  try {
+                    setState(() {
+                      request = Curl.parse(text!);
+                      requestKey.currentState?.change(request!);
+                      requestLineKey.currentState?.change(
+                        request?.requestUrl,
+                        request?.method,
+                      );
+                    });
+                  } catch (e) {
+                    FlutterToastr.show(localizations.fail, context);
+                  }
+                  Navigator.of(context).pop();
+                },
+              ),
+            ],
+          );
         },
       ).then((value) => showCURLDialog = false);
     }
@@ -349,7 +418,8 @@ class UrlQueryNotifier {
 
   ParamCallback urlListener(ParamCallback listener) => _urlNotifier = listener;
 
-  ParamCallback paramListener(ParamCallback listener) => _paramNotifier = listener;
+  ParamCallback paramListener(ParamCallback listener) =>
+      _paramNotifier = listener;
 
   void onUrlChange(String url) => _urlNotifier?.call(url);
 
@@ -362,7 +432,13 @@ class _HttpWidget extends StatefulWidget {
   final Widget title;
   final UrlQueryNotifier? urlQueryNotifier;
 
-  const _HttpWidget({this.message, this.readOnly = false, super.key, required this.title, this.urlQueryNotifier});
+  const _HttpWidget({
+    this.message,
+    this.readOnly = false,
+    super.key,
+    required this.title,
+    this.urlQueryNotifier,
+  });
 
   @override
   State<StatefulWidget> createState() {
@@ -412,51 +488,74 @@ class _HttpState extends State<_HttpWidget> {
   @override
   Widget build(BuildContext context) {
     if (widget.message == null && widget.readOnly) {
-      return Scaffold(appBar: AppBar(title: widget.title), body: Center(child: Text(localizations.emptyData)));
+      return Scaffold(
+        appBar: AppBar(title: widget.title),
+        body: Center(child: Text(localizations.emptyData)),
+      );
     }
 
     return SingleChildScrollView(
-        child: SizedBox(
-            height: MediaQuery.of(context).size.height - 120,
-            child: DefaultTabController(
-                length: tabs.length,
-                initialIndex: tabs.length >= 3 ? 1 : 0,
-                child: Scaffold(
-                  primary: false,
-                  appBar: PreferredSize(
-                      preferredSize: const Size.fromHeight(70),
-                      child: AppBar(
-                        title: widget.title,
-                        bottom: TabBar(tabs: tabs.map((e) => Tab(text: e, height: 35)).toList()),
-                      )),
-                  body: Padding(
-                      padding: const EdgeInsets.only(left: 10),
-                      child: TabBarView(
-                        children: [
-                          if (tabs.length == 3)
-                            KeyValWidget(
-                                paramNotifier: widget.urlQueryNotifier,
-                                params: message is HttpRequest
-                                    ? (message as HttpRequest).requestUri?.queryParametersAll
-                                    : null),
-                          KeyValWidget(
-                              key: headerKey,
-                              params: message?.headers.getHeaders() ?? initHeader,
-                              readOnly: widget.readOnly,
-                              suggestions: HttpHeaders.commonHeaderKeys),
-                          _body()
-                        ],
-                      )),
-                ))));
+      child: SizedBox(
+        height: MediaQuery.of(context).size.height - 120,
+        child: DefaultTabController(
+          length: tabs.length,
+          initialIndex: tabs.length >= 3 ? 1 : 0,
+          child: Scaffold(
+            primary: false,
+            appBar: PreferredSize(
+              preferredSize: const Size.fromHeight(70),
+              child: AppBar(
+                title: widget.title,
+                bottom: TabBar(
+                  tabs: tabs.map((e) => Tab(text: e, height: 35)).toList(),
+                ),
+              ),
+            ),
+            body: Padding(
+              padding: const EdgeInsets.only(left: 10),
+              child: TabBarView(
+                children: [
+                  if (tabs.length == 3)
+                    KeyValWidget(
+                      paramNotifier: widget.urlQueryNotifier,
+                      params: message is HttpRequest
+                          ? (message as HttpRequest)
+                                .requestUri
+                                ?.queryParametersAll
+                          : null,
+                    ),
+                  KeyValWidget(
+                    key: headerKey,
+                    params: message?.headers.getHeaders() ?? initHeader,
+                    readOnly: widget.readOnly,
+                    suggestions: HttpHeaders.commonHeaderKeys,
+                  ),
+                  _body(),
+                ],
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
   }
 
   Widget _body() {
     if (widget.readOnly) {
       return KeepAliveWrapper(
-          child: SingleChildScrollView(child: HttpBodyWidget(httpMessage: message, hideRequestRewrite: true)));
+        child: SingleChildScrollView(
+          child: HttpBodyWidget(httpMessage: message, hideRequestRewrite: true),
+        ),
+      );
     }
 
-    return TextFormField(autofocus: true, controller: body, readOnly: widget.readOnly, minLines: 20, maxLines: 20);
+    return TextFormField(
+      autofocus: true,
+      controller: body,
+      readOnly: widget.readOnly,
+      minLines: 20,
+      maxLines: 20,
+    );
   }
 }
 
@@ -506,7 +605,9 @@ class _RequestLineState extends State<_RequestLine> {
 
   void urlNotifier() {
     var splitFirst = requestUrl.text.splitFirst("?".codeUnits.first);
-    widget.urlQueryNotifier?.onUrlChange(splitFirst.length > 1 ? splitFirst.last : '');
+    widget.urlQueryNotifier?.onUrlChange(
+      splitFirst.length > 1 ? splitFirst.last : '',
+    );
   }
 
   void onQueryChange(String query) {
@@ -523,24 +624,28 @@ class _RequestLineState extends State<_RequestLine> {
   @override
   Widget build(BuildContext context) {
     return TextField(
-        controller: requestUrl,
-        decoration: InputDecoration(
-            prefix: Padding(
-              padding: const EdgeInsets.only(right: 6),
-              child: MethodPopupMenu(
-                value: requestMethod,
-                showSeparator: true,
-                onChanged: (val) {
-                  setState(() => requestMethod = val!);
-                },
-              ),
-            ),
-            isDense: true,
-            border: const OutlineInputBorder(borderSide: BorderSide()),
-            enabledBorder: const OutlineInputBorder(borderSide: BorderSide(color: Colors.grey, width: 0.3))),
-        onChanged: (value) {
-          urlNotifier();
-        });
+      controller: requestUrl,
+      decoration: InputDecoration(
+        prefix: Padding(
+          padding: const EdgeInsets.only(right: 6),
+          child: MethodPopupMenu(
+            value: requestMethod,
+            showSeparator: true,
+            onChanged: (val) {
+              setState(() => requestMethod = val!);
+            },
+          ),
+        ),
+        isDense: true,
+        border: const OutlineInputBorder(borderSide: BorderSide()),
+        enabledBorder: const OutlineInputBorder(
+          borderSide: BorderSide(color: Colors.grey, width: 0.3),
+        ),
+      ),
+      onChanged: (value) {
+        urlNotifier();
+      },
+    );
   }
 }
 
@@ -561,13 +666,20 @@ class KeyValWidget extends StatefulWidget {
   final UrlQueryNotifier? paramNotifier;
   final List<String>? suggestions;
 
-  const KeyValWidget({super.key, this.params, this.readOnly = false, this.paramNotifier, this.suggestions});
+  const KeyValWidget({
+    super.key,
+    this.params,
+    this.readOnly = false,
+    this.paramNotifier,
+    this.suggestions,
+  });
 
   @override
   State<StatefulWidget> createState() => KeyValState();
 }
 
-class KeyValState extends State<KeyValWidget> with AutomaticKeepAliveClientMixin {
+class KeyValState extends State<KeyValWidget>
+    with AutomaticKeepAliveClientMixin {
   final List<KeyVal> _params = [];
 
   AppLocalizations get localizations => AppLocalizations.of(context)!;
@@ -587,7 +699,10 @@ class KeyValState extends State<KeyValWidget> with AutomaticKeepAliveClientMixin
 
     widget.params?.forEach((name, values) {
       for (var val in values) {
-        var keyVal = KeyVal(TextEditingController(text: name), TextEditingController(text: val));
+        var keyVal = KeyVal(
+          TextEditingController(text: name),
+          TextEditingController(text: val),
+        );
         _params.add(keyVal);
       }
     });
@@ -608,7 +723,12 @@ class KeyValState extends State<KeyValWidget> with AutomaticKeepAliveClientMixin
       String key = splitFirst.first;
       String? val = splitFirst.length == 1 ? null : splitFirst.last;
       if (_params.length <= index) {
-        _params.add(KeyVal(TextEditingController(text: key), TextEditingController(text: val)));
+        _params.add(
+          KeyVal(
+            TextEditingController(text: key),
+            TextEditingController(text: val),
+          ),
+        );
         continue;
       }
 
@@ -644,7 +764,10 @@ class KeyValState extends State<KeyValWidget> with AutomaticKeepAliveClientMixin
     setState(() {
       headers?.forEach((name, values) {
         for (var val in values) {
-          var keyVal = KeyVal(TextEditingController(text: name), TextEditingController(text: val));
+          var keyVal = KeyVal(
+            TextEditingController(text: name),
+            TextEditingController(text: val),
+          );
           _params.add(keyVal);
         }
       });
@@ -670,96 +793,121 @@ class KeyValState extends State<KeyValWidget> with AutomaticKeepAliveClientMixin
     super.build(context);
 
     var list = [
-      const Row(children: [
-        SizedBox(width: 38),
-        Expanded(flex: 4, child: Text('Key')),
-        Expanded(flex: 5, child: Text('Value'))
-      ]),
+      const Row(
+        children: [
+          SizedBox(width: 38),
+          Expanded(flex: 4, child: Text('Key')),
+          Expanded(flex: 5, child: Text('Value')),
+        ],
+      ),
       ..._buildRows(),
     ];
 
     if (!widget.readOnly) {
-      list.add(TextButton(
-        child: Text(localizations.add, textAlign: TextAlign.center),
-        onPressed: () {
-          setState(() {
-            _params.add(KeyVal(TextEditingController(), TextEditingController()));
-          });
-        },
-      ));
+      list.add(
+        TextButton(
+          child: Text(localizations.add, textAlign: TextAlign.center),
+          onPressed: () {
+            setState(() {
+              _params.add(
+                KeyVal(TextEditingController(), TextEditingController()),
+              );
+            });
+          },
+        ),
+      );
     }
     return Scaffold(
-        body: Padding(
-            padding: const EdgeInsets.only(top: 10),
-            child: ListView.separated(
-                separatorBuilder: (context, index) =>
-                    index == list.length ? const SizedBox() : const Divider(thickness: 0.2),
-                itemBuilder: (context, index) => list[index],
-                itemCount: list.length)));
+      body: Padding(
+        padding: const EdgeInsets.only(top: 10),
+        child: ListView.separated(
+          separatorBuilder: (context, index) => index == list.length
+              ? const SizedBox()
+              : const Divider(thickness: 0.2),
+          itemBuilder: (context, index) => list[index],
+          itemCount: list.length,
+        ),
+      ),
+    );
   }
 
   List<Widget> _buildRows() {
     List<Widget> list = [];
     for (var keyVal in _params) {
-      list.add(_row(
+      list.add(
+        _row(
           keyVal,
           widget.readOnly
               ? null
               : Padding(
                   padding: const EdgeInsets.only(right: 15),
                   child: InkWell(
-                      onTap: () {
-                        setState(() {
-                          _params.remove(keyVal);
-                          keyVal.key.dispose();
-                          keyVal.value.dispose();
-                        });
-                        notifierChange();
-                      },
-                      child: const Icon(Icons.remove_circle, size: 16)))));
+                    onTap: () {
+                      setState(() {
+                        _params.remove(keyVal);
+                        keyVal.key.dispose();
+                        keyVal.value.dispose();
+                      });
+                      notifierChange();
+                    },
+                    child: const Icon(Icons.remove_circle, size: 16),
+                  ),
+                ),
+        ),
+      );
     }
 
     return list;
   }
 
-  Widget _cell(KeyVal keyVal,
-      {bool isKey = false,
-      FocusNode? focusNode,
-      List<String>? suggestions,
-      Map<String, List<String>>? valueSuggestions}) {
+  Widget _cell(
+    KeyVal keyVal, {
+    bool isKey = false,
+    FocusNode? focusNode,
+    List<String>? suggestions,
+    Map<String, List<String>>? valueSuggestions,
+  }) {
     TextEditingController textController = isKey ? keyVal.key : keyVal.value;
 
     if (!widget.readOnly && (suggestions != null || valueSuggestions != null)) {
       return Container(
-          padding: const EdgeInsets.only(right: 5),
-          child: RawAutocomplete<String>(
-            textEditingController: textController,
-            focusNode: focusNode,
-            optionsBuilder: (TextEditingValue textEditingValue) {
-              if (textEditingValue.text.isEmpty) {
-                return const Iterable<String>.empty();
-              }
+        padding: const EdgeInsets.only(right: 5),
+        child: RawAutocomplete<String>(
+          textEditingController: textController,
+          focusNode: focusNode,
+          optionsBuilder: (TextEditingValue textEditingValue) {
+            if (textEditingValue.text.isEmpty) {
+              return const Iterable<String>.empty();
+            }
 
-              var currentSuggestions = suggestions;
-              if (!isKey && valueSuggestions?.containsKey(keyVal.key.text) == true) {
-                currentSuggestions = valueSuggestions![keyVal.key.text];
-              }
+            var currentSuggestions = suggestions;
+            if (!isKey &&
+                valueSuggestions?.containsKey(keyVal.key.text) == true) {
+              currentSuggestions = valueSuggestions![keyVal.key.text];
+            }
 
-              if (currentSuggestions == null) {
-                return const Iterable<String>.empty();
-              }
+            if (currentSuggestions == null) {
+              return const Iterable<String>.empty();
+            }
 
-              return currentSuggestions.where((String option) {
-                return option.toLowerCase().contains(textEditingValue.text.toLowerCase());
-              });
-            },
-            onSelected: (String selection) {
-              textController.text = selection;
-              notifierChange();
-            },
-            fieldViewBuilder: (BuildContext context, TextEditingController textEditingController,
-                FocusNode fieldFocusNode, VoidCallback onFieldSubmitted) {
-              return TextFormField(
+            return currentSuggestions.where((String option) {
+              return option.toLowerCase().contains(
+                textEditingValue.text.toLowerCase(),
+              );
+            });
+          },
+          onSelected: (String selection) {
+            textController.text = selection;
+            notifierChange();
+          },
+          fieldViewBuilder:
+              (
+                BuildContext context,
+                TextEditingController textEditingController,
+                FocusNode fieldFocusNode,
+                VoidCallback onFieldSubmitted,
+              ) {
+                return TextFormField(
                   controller: textEditingController,
                   focusNode: fieldFocusNode,
                   onFieldSubmitted: (String value) {
@@ -769,69 +917,99 @@ class KeyValState extends State<KeyValWidget> with AutomaticKeepAliveClientMixin
                     if (isKey) setState(() {});
                     notifierChange();
                   },
-                  style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w500),
+                  style: const TextStyle(
+                    fontSize: 13,
+                    fontWeight: FontWeight.w500,
+                  ),
                   minLines: 1,
                   maxLines: 3,
                   decoration: InputDecoration(
-                      isDense: true,
-                      hintStyle: const TextStyle(color: Colors.grey),
-                      contentPadding: const EdgeInsets.fromLTRB(5, 13, 5, 13),
-                      focusedBorder: OutlineInputBorder(
-                          borderSide: BorderSide(color: Theme.of(context).colorScheme.primary, width: 1.5)),
-                      border: InputBorder.none,
-                      hintText: isKey ? "Key" : "Value"));
-            },
-            optionsViewBuilder:
-                (BuildContext context, AutocompleteOnSelected<String> onSelected, Iterable<String> options) {
-              return Align(
-                alignment: Alignment.topLeft,
-                child: Material(
-                  elevation: 4.0,
-                  child: ConstrainedBox(
-                    constraints: const BoxConstraints(maxHeight: 200, maxWidth: 300),
-                    child: ListView.builder(
-                      padding: EdgeInsets.zero,
-                      shrinkWrap: true,
-                      itemCount: options.length,
-                      itemBuilder: (BuildContext context, int index) {
-                        final String option = options.elementAt(index);
-                        return InkWell(
-                          onTap: () {
-                            onSelected(option);
-                          },
-                          child: Container(
-                            padding: const EdgeInsets.all(10.0),
-                            child: _buildHighlightText(option, textController.text),
-                          ),
-                        );
-                      },
+                    isDense: true,
+                    hintStyle: const TextStyle(color: Colors.grey),
+                    contentPadding: const EdgeInsets.fromLTRB(5, 13, 5, 13),
+                    focusedBorder: OutlineInputBorder(
+                      borderSide: BorderSide(
+                        color: Theme.of(context).colorScheme.primary,
+                        width: 1.5,
+                      ),
+                    ),
+                    border: InputBorder.none,
+                    hintText: isKey ? "Key" : "Value",
+                  ),
+                );
+              },
+          optionsViewBuilder:
+              (
+                BuildContext context,
+                AutocompleteOnSelected<String> onSelected,
+                Iterable<String> options,
+              ) {
+                return Align(
+                  alignment: Alignment.topLeft,
+                  child: Material(
+                    elevation: 4.0,
+                    child: ConstrainedBox(
+                      constraints: const BoxConstraints(
+                        maxHeight: 200,
+                        maxWidth: 300,
+                      ),
+                      child: ListView.builder(
+                        padding: EdgeInsets.zero,
+                        shrinkWrap: true,
+                        itemCount: options.length,
+                        itemBuilder: (BuildContext context, int index) {
+                          final String option = options.elementAt(index);
+                          return InkWell(
+                            onTap: () {
+                              onSelected(option);
+                            },
+                            child: Container(
+                              padding: const EdgeInsets.all(10.0),
+                              child: _buildHighlightText(
+                                option,
+                                textController.text,
+                              ),
+                            ),
+                          );
+                        },
+                      ),
                     ),
                   ),
-                ),
-              );
-            },
-          ));
+                );
+              },
+        ),
+      );
     }
 
     return Container(
-        padding: const EdgeInsets.only(right: 5),
-        child: TextFormField(
-            readOnly: widget.readOnly,
-            style: TextStyle(fontSize: 13, fontWeight: isKey ? FontWeight.w500 : null),
-            controller: textController,
-            onChanged: (val) => notifierChange(),
-            minLines: 1,
-            maxLines: 3,
-            decoration: InputDecoration(
-                isDense: true,
-                hintStyle: const TextStyle(color: Colors.grey),
-                contentPadding: const EdgeInsets.fromLTRB(5, 13, 5, 13),
-                focusedBorder: widget.readOnly
-                    ? null
-                    : OutlineInputBorder(
-                        borderSide: BorderSide(color: Theme.of(context).colorScheme.primary, width: 1.5)),
-                border: InputBorder.none,
-                hintText: isKey ? "Key" : "Value")));
+      padding: const EdgeInsets.only(right: 5),
+      child: TextFormField(
+        readOnly: widget.readOnly,
+        style: TextStyle(
+          fontSize: 13,
+          fontWeight: isKey ? FontWeight.w500 : null,
+        ),
+        controller: textController,
+        onChanged: (val) => notifierChange(),
+        minLines: 1,
+        maxLines: 3,
+        decoration: InputDecoration(
+          isDense: true,
+          hintStyle: const TextStyle(color: Colors.grey),
+          contentPadding: const EdgeInsets.fromLTRB(5, 13, 5, 13),
+          focusedBorder: widget.readOnly
+              ? null
+              : OutlineInputBorder(
+                  borderSide: BorderSide(
+                    color: Theme.of(context).colorScheme.primary,
+                    width: 1.5,
+                  ),
+                ),
+          border: InputBorder.none,
+          hintText: isKey ? "Key" : "Value",
+        ),
+      ),
+    );
   }
 
   Widget _row(KeyVal keyVal, Widget? op) {
@@ -845,24 +1023,42 @@ class KeyValState extends State<KeyValWidget> with AutomaticKeepAliveClientMixin
       valueSuggestions = HttpHeaders.commonHeaderValues;
     }
 
-    return Row(crossAxisAlignment: CrossAxisAlignment.center, children: [
-      if (op != null)
-        Checkbox(
+    return Row(
+      crossAxisAlignment: CrossAxisAlignment.center,
+      children: [
+        if (op != null)
+          Checkbox(
             value: keyVal.enabled,
             onChanged: (val) {
               setState(() {
                 keyVal.enabled = val!;
               });
               notifierChange();
-            }),
-      Container(width: 5),
-      Expanded(
-          flex: 4, child: _cell(keyVal, isKey: true, suggestions: widget.suggestions, focusNode: keyVal.keyFocusNode)),
-      const Text(":", style: TextStyle(color: Colors.deepOrangeAccent)),
-      const SizedBox(width: 8),
-      Expanded(flex: 6, child: _cell(keyVal, focusNode: keyVal.valueFocusNode, valueSuggestions: valueSuggestions)),
-      op ?? const SizedBox()
-    ]);
+            },
+          ),
+        Container(width: 5),
+        Expanded(
+          flex: 4,
+          child: _cell(
+            keyVal,
+            isKey: true,
+            suggestions: widget.suggestions,
+            focusNode: keyVal.keyFocusNode,
+          ),
+        ),
+        const Text(":", style: TextStyle(color: Colors.deepOrangeAccent)),
+        const SizedBox(width: 8),
+        Expanded(
+          flex: 6,
+          child: _cell(
+            keyVal,
+            focusNode: keyVal.valueFocusNode,
+            valueSuggestions: valueSuggestions,
+          ),
+        ),
+        op ?? const SizedBox(),
+      ],
+    );
   }
 
   Widget _buildHighlightText(String text, String query) {
@@ -875,12 +1071,20 @@ class KeyValState extends State<KeyValWidget> with AutomaticKeepAliveClientMixin
       return Text(text);
     }
 
-    return Text.rich(TextSpan(children: [
-      TextSpan(text: text.substring(0, index)),
+    return Text.rich(
       TextSpan(
-          text: text.substring(index, index + query.length),
-          style: TextStyle(color: Theme.of(context).colorScheme.primary, fontWeight: FontWeight.bold)),
-      TextSpan(text: text.substring(index + query.length))
-    ]));
+        children: [
+          TextSpan(text: text.substring(0, index)),
+          TextSpan(
+            text: text.substring(index, index + query.length),
+            style: TextStyle(
+              color: Theme.of(context).colorScheme.primary,
+              fontWeight: FontWeight.bold,
+            ),
+          ),
+          TextSpan(text: text.substring(index + query.length)),
+        ],
+      ),
+    );
   }
 }

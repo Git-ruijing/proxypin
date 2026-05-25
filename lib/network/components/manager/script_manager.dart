@@ -61,7 +61,8 @@ async function onResponse(context, request, response) {
   bool enabled = true;
   List<ScriptItem> list = [];
 
-  final ExpiringCache<ScriptItem, String> _scriptMap = ExpiringCache<ScriptItem, String>(Duration(minutes: 15));
+  final ExpiringCache<ScriptItem, String> _scriptMap =
+      ExpiringCache<ScriptItem, String>(Duration(minutes: 15));
 
   static late JavascriptRuntime flutterJs;
 
@@ -86,19 +87,24 @@ async function onResponse(context, request, response) {
 
   static void registerConsoleLog(int fromWindowId) {
     LogHandler logHandler = LogHandler(
-        channelId: fromWindowId,
-        handle: (logInfo) {
-          DesktopMultiWindow.invokeMethod(fromWindowId, "consoleLog", logInfo.toJson()).onError((e, t) {
-            logger.e("consoleLog error: $e");
-            removeLogHandler(fromWindowId);
-          });
+      channelId: fromWindowId,
+      handle: (logInfo) {
+        DesktopMultiWindow.invokeMethod(
+          fromWindowId,
+          "consoleLog",
+          logInfo.toJson(),
+        ).onError((e, t) {
+          logger.e("consoleLog error: $e");
+          removeLogHandler(fromWindowId);
         });
+      },
+    );
     registerLogHandler(logHandler);
   }
 
   static void registerLogHandler(LogHandler logHandler) {
     if (_logHandlers.any((it) => it.channelId == logHandler.channelId)) {
-       _logHandlers.removeWhere((it) => it.channelId == logHandler.channelId);
+      _logHandlers.removeWhere((it) => it.channelId == logHandler.channelId);
     }
     _logHandlers.add(logHandler);
   }
@@ -150,7 +156,10 @@ async function onResponse(context, request, response) {
     }
 
     if (Platform.isMacOS) {
-      _homePath = await DesktopMultiWindow.invokeMethod(0, "getApplicationSupportDirectory");
+      _homePath = await DesktopMultiWindow.invokeMethod(
+        0,
+        "getApplicationSupportDirectory",
+      );
     } else {
       _homePath = await getApplicationSupportDirectory().then((it) => it.path);
     }
@@ -219,7 +228,8 @@ async function onResponse(context, request, response) {
 
     script ??= template;
     final path = await homePath();
-    String scriptPath = "${separator}scripts$separator${RandomUtil.randomString(16)}.js";
+    String scriptPath =
+        "${separator}scripts$separator${RandomUtil.randomString(16)}.js";
     var file = File(path + scriptPath);
     await file.create(recursive: true);
     file.writeAsString(script);
@@ -270,14 +280,22 @@ async function onResponse(context, request, response) {
 
   ///刷新配置
   Future<void> flushConfig() async {
-    await _path.then((value) => value.writeAsString(jsonEncode({'enabled': enabled, 'list': list})));
+    await _path.then(
+      (value) =>
+          value.writeAsString(jsonEncode({'enabled': enabled, 'list': list})),
+    );
   }
 
   Map<dynamic, dynamic> scriptSession = {};
 
   ///脚本上下文
   Map<String, dynamic> scriptContext(ScriptItem item) {
-    return {'scriptName': item.name, 'os': Platform.operatingSystem, 'session': scriptSession, "deviceId": deviceId};
+    return {
+      'scriptName': item.name,
+      'os': Platform.operatingSystem,
+      'session': scriptSession,
+      "deviceId": deviceId,
+    };
   }
 
   ///运行脚本
@@ -289,15 +307,21 @@ async function onResponse(context, request, response) {
     for (var item in list) {
       if (item.enabled && item.match(url)) {
         var context = jsonEncode(scriptContext(item));
-        var jsRequest = jsonEncode(await JavaScriptEngine.convertJsRequest(request));
+        var jsRequest = jsonEncode(
+          await JavaScriptEngine.convertJsRequest(request),
+        );
         String? script = await getScript(item);
         if (script == null) {
           continue;
         }
 
         var jsResult = await flutterJs.evaluateAsync(
-            """var request = $jsRequest, context = $context;  request['scriptContext'] = context; $script\n  onRequest(context, request)""");
-        var result = await JavaScriptEngine.jsResultResolve(flutterJs, jsResult);
+          """var request = $jsRequest, context = $context;  request['scriptContext'] = context; $script\n  onRequest(context, request)""",
+        );
+        var result = await JavaScriptEngine.jsResultResolve(
+          flutterJs,
+          jsResult,
+        );
         if (result == null) {
           return null;
         }
@@ -319,19 +343,29 @@ async function onResponse(context, request, response) {
     var url = request.domainPath;
     for (var item in list) {
       if (item.enabled && item.match(url)) {
-        var context = jsonEncode(request.attributes['scriptContext'] ?? scriptContext(item));
-        var jsRequest = jsonEncode(await JavaScriptEngine.convertJsRequest(request));
-        var jsResponse = jsonEncode(await JavaScriptEngine.convertJsResponse(response));
+        var context = jsonEncode(
+          request.attributes['scriptContext'] ?? scriptContext(item),
+        );
+        var jsRequest = jsonEncode(
+          await JavaScriptEngine.convertJsRequest(request),
+        );
+        var jsResponse = jsonEncode(
+          await JavaScriptEngine.convertJsResponse(response),
+        );
         String? script = await getScript(item);
         if (script == null) {
           continue;
         }
 
         var jsResult = await flutterJs.evaluateAsync(
-            """var response = $jsResponse, context = $context;  response['scriptContext'] = context; $script
-            \n  onResponse(context, $jsRequest, response);""");
+          """var response = $jsResponse, context = $context;  response['scriptContext'] = context; $script
+            \n  onResponse(context, $jsRequest, response);""",
+        );
         // print("response: ${jsResult.isPromise} ${jsResult.isError} ${jsResult.rawResult}");
-        var result = await JavaScriptEngine.jsResultResolve(flutterJs, jsResult);
+        var result = await JavaScriptEngine.jsResultResolve(
+          flutterJs,
+          jsResult,
+        );
         if (result == null) {
           return null;
         }
@@ -355,14 +389,23 @@ class LogInfo {
   final String level;
   final String output;
 
-  LogInfo(this.level, this.output, {DateTime? time}) : time = time ?? DateTime.now();
+  LogInfo(this.level, this.output, {DateTime? time})
+    : time = time ?? DateTime.now();
 
   factory LogInfo.fromJson(Map<String, dynamic> json) {
-    return LogInfo(json['level'], json['output'], time: DateTime.fromMillisecondsSinceEpoch(json['time']));
+    return LogInfo(
+      json['level'],
+      json['output'],
+      time: DateTime.fromMillisecondsSinceEpoch(json['time']),
+    );
   }
 
   Map<String, dynamic> toJson() {
-    return {'time': time.millisecondsSinceEpoch, 'level': level, 'output': output};
+    return {
+      'time': time.millisecondsSinceEpoch,
+      'level': level,
+      'output': output,
+    };
   }
 
   @override
@@ -380,10 +423,17 @@ class ScriptItem {
 
   String? remoteUrl;
 
-  ScriptItem(this.enabled, this.name, dynamic urls, {this.scriptPath, this.remoteUrl})
-      : urls = urls is String
-            ? (urls.contains(',') ? urls.split(',').map((e) => e.trim()).toList() : [urls])
-            : (urls is List<String> ? urls : <String>[]);
+  ScriptItem(
+    this.enabled,
+    this.name,
+    dynamic urls, {
+    this.scriptPath,
+    this.remoteUrl,
+  }) : urls = urls is String
+           ? (urls.contains(',')
+                 ? urls.split(',').map((e) => e.trim()).toList()
+                 : [urls])
+           : (urls is List<String> ? urls : <String>[]);
 
   // 匹配url，任意一个规则匹配即可
   bool match(String url) {
@@ -400,7 +450,9 @@ class ScriptItem {
     if (urlField is List) {
       urls = urlField.cast<String>();
     } else if (urlField is String) {
-      urls = urlField.contains(',') ? urlField.split(',').map((e) => e.trim()).toList() : [urlField];
+      urls = urlField.contains(',')
+          ? urlField.split(',').map((e) => e.trim()).toList()
+          : [urlField];
     } else {
       urls = <String>[];
     }

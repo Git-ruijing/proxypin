@@ -5,11 +5,11 @@ import 'package:proxypin/network/util/cert/x509.dart';
 void main() async {
   // encoding();
   // Add ext key usage 2.5.29.37
-// // Add key usage  2.5.29.15
-//   var keyUsage = [KeyUsage.KEY_CERT_SIGN, KeyUsage.CRL_SIGN];
-//
-//   var encode = keyUsageSequence(keyUsage)?.encode();
-//   print(Int8List.view(encode!.buffer));
+  // // Add key usage  2.5.29.15
+  //   var keyUsage = [KeyUsage.KEY_CERT_SIGN, KeyUsage.CRL_SIGN];
+  //
+  //   var encode = keyUsageSequence(keyUsage)?.encode();
+  //   print(Int8List.view(encode!.buffer));
 
   var caPem = await File('assets/certs/ca.crt').readAsString();
 

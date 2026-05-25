@@ -48,12 +48,15 @@ class RequestCryptoManager {
 
   static Future<Map<String, dynamic>?> _loadRequestCryptoConfig() async {
     final home = await FileRead.homeDir();
-    final file = File('${home.path}${Platform.pathSeparator}request_crypto.json');
+    final file = File(
+      '${home.path}${Platform.pathSeparator}request_crypto.json',
+    );
     if (!await file.exists()) {
       return null;
     }
     try {
-      final json = jsonDecode(await file.readAsString()) as Map<String, dynamic>;
+      final json =
+          jsonDecode(await file.readAsString()) as Map<String, dynamic>;
       logger.i('加载请求加解密配置文件 [$file]');
       return json;
     } catch (e, stack) {
@@ -64,7 +67,9 @@ class RequestCryptoManager {
 
   Future<void> flushConfig() async {
     final home = await FileRead.homeDir();
-    final file = File('${home.path}${Platform.pathSeparator}request_crypto.json');
+    final file = File(
+      '${home.path}${Platform.pathSeparator}request_crypto.json',
+    );
     if (!await file.exists()) {
       await file.create(recursive: true);
     }
@@ -113,9 +118,9 @@ class RequestCryptoManager {
   }
 
   Map<String, Object> toJson() => {
-        'enabled': enabled,
-        'rules': rules.map((e) => e.toJson()).toList(),
-      };
+    'enabled': enabled,
+    'rules': rules.map((e) => e.toJson()).toList(),
+  };
 }
 
 class CryptoRule {
@@ -158,7 +163,9 @@ class CryptoRule {
       urlPattern: json['urlPattern'] ?? '',
       field: json['field'],
       enabled: json['enabled'] ?? true,
-      config: CryptoKeyConfig.fromJson(Map<String, dynamic>.from(json['config'] ?? {})),
+      config: CryptoKeyConfig.fromJson(
+        Map<String, dynamic>.from(json['config'] ?? {}),
+      ),
     );
   }
 
@@ -211,7 +218,14 @@ class CryptoKeyConfig {
 
   factory CryptoKeyConfig.defaults() {
     return const CryptoKeyConfig(
-        key: '', iv: '', ivSource: 'manual', ivPrefixLength: 16, mode: 'ECB', padding: 'PKCS7', keyLength: 128);
+      key: '',
+      iv: '',
+      ivSource: 'manual',
+      ivPrefixLength: 16,
+      mode: 'ECB',
+      padding: 'PKCS7',
+      keyLength: 128,
+    );
   }
 
   bool get isReady {

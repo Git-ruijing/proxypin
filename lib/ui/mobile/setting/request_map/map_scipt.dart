@@ -41,7 +41,10 @@ async function onRequest(context, request) {
   @override
   void initState() {
     super.initState();
-    script = CodeController(language: javascript, text: widget.script ?? template);
+    script = CodeController(
+      language: javascript,
+      text: widget.script ?? template,
+    );
   }
 
   @override
@@ -53,16 +56,19 @@ async function onRequest(context, request) {
   @override
   Widget build(BuildContext context) {
     return SizedBox(
-        // height: double.infinity,
-        child: CodeTheme(
-            data: CodeThemeData(styles: monokaiSublimeTheme),
-            child: SingleChildScrollView(
-              child: CodeField(
-                  textStyle: const TextStyle(fontSize: 13),
-                  enableSuggestions: true,
-                  gutterStyle: const GutterStyle(width: 50, margin: 0),
-                  onTapOutside: (event) => FocusScope.of(context).unfocus(),
-                  controller: script),
-            )));
+      // height: double.infinity,
+      child: CodeTheme(
+        data: CodeThemeData(styles: monokaiSublimeTheme),
+        child: SingleChildScrollView(
+          child: CodeField(
+            textStyle: const TextStyle(fontSize: 13),
+            enableSuggestions: true,
+            gutterStyle: const GutterStyle(width: 50, margin: 0),
+            onTapOutside: (event) => FocusScope.of(context).unfocus(),
+            controller: script,
+          ),
+        ),
+      ),
+    );
   }
 }

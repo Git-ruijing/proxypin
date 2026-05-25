@@ -41,13 +41,29 @@ class ChannelDispatcher extends ChannelHandler<Uint8List> {
   void listen(Channel channel, ChannelContext channelContext) {
     buffer.clear();
     channel.socket.done.onError((error, StackTrace trace) {
-      logger.e('[${channelContext.clientChannel?.id}] secureSocket done error', error: error, stackTrace: trace);
-      channel.dispatcher.exceptionCaught(channelContext, channel, error, trace: trace);
+      logger.e(
+        '[${channelContext.clientChannel?.id}] secureSocket done error',
+        error: error,
+        stackTrace: trace,
+      );
+      channel.dispatcher.exceptionCaught(
+        channelContext,
+        channel,
+        error,
+        trace: trace,
+      );
       return null;
     });
-    channel.socket.listen((data) => channel.dispatcher.channelRead(channelContext, channel, data),
-        onError: (error, trace) => channel.dispatcher.exceptionCaught(channelContext, channel, error, trace: trace),
-        onDone: () => channel.dispatcher.channelInactive(channelContext, channel));
+    channel.socket.listen(
+      (data) => channel.dispatcher.channelRead(channelContext, channel, data),
+      onError: (error, trace) => channel.dispatcher.exceptionCaught(
+        channelContext,
+        channel,
+        error,
+        trace: trace,
+      ),
+      onDone: () => channel.dispatcher.channelInactive(channelContext, channel),
+    );
   }
 
   @override
@@ -56,28 +72,53 @@ class ChannelDispatcher extends ChannelHandler<Uint8List> {
   }
 
   ///远程转发请求
-  Future<void> remoteForward(ChannelContext channelContext, HostAndPort remote) async {
+  Future<void> remoteForward(
+    ChannelContext channelContext,
+    HostAndPort remote,
+  ) async {
     var clientChannel = channelContext.clientChannel!;
     Channel? remoteChannel =
-        channelContext.serverChannel ?? await channelContext.connectServerChannel(remote, RelayHandler(clientChannel));
+        channelContext.serverChannel ??
+        await channelContext.connectServerChannel(
+          remote,
+          RelayHandler(clientChannel),
+        );
     ProxyInfo? proxyInfo = channelContext.getAttribute(AttributeKeys.proxyInfo);
     if (clientChannel.isSsl && !remoteChannel.isSsl) {
       //代理认证
       if (proxyInfo?.isAuthenticated == true) {
-        await HttpClients.connectRequest(channelContext, remote, remoteChannel, proxyInfo: proxyInfo);
+        await HttpClients.connectRequest(
+          channelContext,
+          remote,
+          remoteChannel,
+          proxyInfo: proxyInfo,
+        );
       }
 
-      await remoteChannel.secureSocket(channelContext, host: channelContext.getAttribute(AttributeKeys.domain));
+      await remoteChannel.secureSocket(
+        channelContext,
+        host: channelContext.getAttribute(AttributeKeys.domain),
+      );
     }
 
     relay(channelContext, clientChannel, remoteChannel);
   }
 
   /// 转发请求
-  void relay(ChannelContext channelContext, Channel clientChannel, Channel remoteChannel) {
+  void relay(
+    ChannelContext channelContext,
+    Channel clientChannel,
+    Channel remoteChannel,
+  ) {
     var rawCodec = RawCodec();
-    clientChannel.dispatcher.channelHandle(rawCodec, RelayHandler(remoteChannel));
-    remoteChannel.dispatcher.channelHandle(rawCodec, RelayHandler(clientChannel));
+    clientChannel.dispatcher.channelHandle(
+      rawCodec,
+      RelayHandler(remoteChannel),
+    );
+    remoteChannel.dispatcher.channelHandle(
+      rawCodec,
+      RelayHandler(clientChannel),
+    );
 
     var body = buffer.bytes;
     buffer.clear();
@@ -85,7 +126,11 @@ class ChannelDispatcher extends ChannelHandler<Uint8List> {
   }
 
   @override
-  Future<void> channelRead(ChannelContext channelContext, Channel channel, Uint8List msg) async {
+  Future<void> channelRead(
+    ChannelContext channelContext,
+    Channel channel,
+    Uint8List msg,
+  ) async {
     //手机扫码连接转发远程
     HostAndPort? remote = channelContext.getAttribute(AttributeKeys.remote);
     buffer.add(msg);
@@ -99,7 +144,9 @@ class ChannelDispatcher extends ChannelHandler<Uint8List> {
       Channel? remoteChannel = channelContext.getAttribute(channel.id);
 
       //大body 不解析直接转发
-      if (buffer.length > Codec.maxBodyLength && handler is! RelayHandler && remoteChannel != null) {
+      if (buffer.length > Codec.maxBodyLength &&
+          handler is! RelayHandler &&
+          remoteChannel != null) {
         logger.w("[$channel] forward large body");
         relay(channelContext, channel, remoteChannel);
         return;
@@ -143,16 +190,22 @@ class ChannelDispatcher extends ChannelHandler<Uint8List> {
 
       if (data is HttpRequest) {
         channelContext.currentRequest = data;
-        data.hostAndPort ??= channelContext.host ?? getHostAndPort(data, ssl: channel.isSsl);
-        if (data.headers.host != null && data.headers.host?.contains(":") == false) {
+        data.hostAndPort ??=
+            channelContext.host ?? getHostAndPort(data, ssl: channel.isSsl);
+        if (data.headers.host != null &&
+            data.headers.host?.contains(":") == false) {
           data.hostAndPort?.host = data.headers.host!;
         }
 
-        data.processInfo ??= await ProcessInfoUtils.getProcessByPort(channel.remoteSocketAddress, data.remoteDomain()!);
+        data.processInfo ??= await ProcessInfoUtils.getProcessByPort(
+          channel.remoteSocketAddress,
+          data.remoteDomain()!,
+        );
       }
 
       if (data is HttpResponse) {
-        data.requestId = channelContext.currentRequest?.requestId ?? data.requestId;
+        data.requestId =
+            channelContext.currentRequest?.requestId ?? data.requestId;
         data.request ??= channelContext.currentRequest;
       }
 
@@ -162,10 +215,15 @@ class ChannelDispatcher extends ChannelHandler<Uint8List> {
         return;
       }
 
-      if (data is HttpMessage && channelContext.containsStreamDependency(data.streamId)) {
-        taskQueue.add(data.streamId!, channelContext.getStreamDependency(data.streamId!)?.streamDependency,
-            () => handler.channelRead(channelContext, channel, data),
-            onError: (error, stackTrace) => onError(channelContext, channel, error, trace: stackTrace));
+      if (data is HttpMessage &&
+          channelContext.containsStreamDependency(data.streamId)) {
+        taskQueue.add(
+          data.streamId!,
+          channelContext.getStreamDependency(data.streamId!)?.streamDependency,
+          () => handler.channelRead(channelContext, channel, data),
+          onError: (error, stackTrace) =>
+              onError(channelContext, channel, error, trace: stackTrace),
+        );
       } else {
         await handler.channelRead(channelContext, channel, data!);
       }
@@ -174,22 +232,33 @@ class ChannelDispatcher extends ChannelHandler<Uint8List> {
     }
   }
 
-  void onError(ChannelContext channelContext, Channel channel, dynamic error, {StackTrace? trace}) {
+  void onError(
+    ChannelContext channelContext,
+    Channel channel,
+    dynamic error, {
+    StackTrace? trace,
+  }) {
     logger.e(
-        "[${channelContext.clientChannel?.id}] channelRead error isSsl:${channel.isSsl} client: ${channelContext.clientChannel?.selectedProtocol} server: ${channelContext.serverChannel?.selectedProtocol} ${String.fromCharCodes(buffer.bytes)}",
-        error: error,
-        stackTrace: trace);
+      "[${channelContext.clientChannel?.id}] channelRead error isSsl:${channel.isSsl} client: ${channelContext.clientChannel?.selectedProtocol} server: ${channelContext.serverChannel?.selectedProtocol} ${String.fromCharCodes(buffer.bytes)}",
+      error: error,
+      stackTrace: trace,
+    );
     buffer.clear();
     exceptionCaught(channelContext, channel, error, trace: trace);
   }
 
   /// websocket 处理
-  void onWebSocketHandle(ChannelContext channelContext, Channel channel, HttpResponse data) {
+  void onWebSocketHandle(
+    ChannelContext channelContext,
+    Channel channel,
+    HttpResponse data,
+  ) {
     Channel remoteChannel = channelContext.getAttribute(channel.id);
 
     data.request?.response = data;
-    channelContext.host =
-        channelContext.host?.copyWith(scheme: channel.isSsl ? HostAndPort.wssScheme : HostAndPort.wsScheme);
+    channelContext.host = channelContext.host?.copyWith(
+      scheme: channel.isSsl ? HostAndPort.wssScheme : HostAndPort.wsScheme,
+    );
     channelContext.currentRequest?.hostAndPort = channelContext.host;
 
     logger.d("webSocket ${data.request?.hostAndPort}");
@@ -198,12 +267,23 @@ class ChannelDispatcher extends ChannelHandler<Uint8List> {
     channelContext.listener?.onResponse(channelContext, data);
 
     var rawCodec = RawCodec();
-    channel.dispatcher.channelHandle(rawCodec, WebSocketChannelHandler(remoteChannel, data));
-    remoteChannel.dispatcher.channelHandle(rawCodec, WebSocketChannelHandler(channel, data.request!));
+    channel.dispatcher.channelHandle(
+      rawCodec,
+      WebSocketChannelHandler(remoteChannel, data),
+    );
+    remoteChannel.dispatcher.channelHandle(
+      rawCodec,
+      WebSocketChannelHandler(channel, data.request!),
+    );
   }
 
   /// SSE 处理 (text/event-stream)
-  void onSseHandle(ChannelContext channelContext, Channel channel, HttpResponse response, List<int>? initialBody) {
+  void onSseHandle(
+    ChannelContext channelContext,
+    Channel channel,
+    HttpResponse response,
+    List<int>? initialBody,
+  ) {
     Channel remoteChannel = channelContext.getAttribute(channel.id);
     channelContext.currentRequest?.response = response;
     response.request ??= channelContext.currentRequest;
@@ -213,7 +293,10 @@ class ChannelDispatcher extends ChannelHandler<Uint8List> {
 
     // Switch to raw streaming: server->client uses SseChannelHandler; client->server just relays
     var rawCodec = RawCodec();
-    channel.dispatcher.channelHandle(rawCodec, SseChannelHandler(remoteChannel, response));
+    channel.dispatcher.channelHandle(
+      rawCodec,
+      SseChannelHandler(remoteChannel, response),
+    );
     remoteChannel.dispatcher.channelHandle(rawCodec, RelayHandler(channel));
 
     // Flush any initial body bytes that were already read
@@ -226,13 +309,20 @@ class ChannelDispatcher extends ChannelHandler<Uint8List> {
     }
   }
 
-  void notSupportedForward(ChannelContext channelContext, Channel channel, DecoderResult decodeResult) {
+  void notSupportedForward(
+    ChannelContext channelContext,
+    Channel channel,
+    DecoderResult decodeResult,
+  ) {
     Channel? remoteChannel = channelContext.getAttribute(channel.id);
 
     // If this is an SSE response, switch to SSE streaming mode instead of generic relay
     if (decodeResult.data is HttpResponse) {
       var response = decodeResult.data as HttpResponse;
-      if (response.headers.contentType.toLowerCase().startsWith('text/event-stream') && remoteChannel != null) {
+      if (response.headers.contentType.toLowerCase().startsWith(
+            'text/event-stream',
+          ) &&
+          remoteChannel != null) {
         logger.d("[$channel] switch to SSE streaming");
         onSseHandle(channelContext, channel, response, decodeResult.forward);
         return;
@@ -245,7 +335,9 @@ class ChannelDispatcher extends ChannelHandler<Uint8List> {
 
     if (decodeResult.data is HttpResponse) {
       var response = decodeResult.data as HttpResponse;
-      logger.w("[$channel] not supported parse ${response.headers.contentType}");
+      logger.w(
+        "[$channel] not supported parse ${response.headers.contentType}",
+      );
       response.request ??= channelContext.currentRequest;
       channelContext.currentRequest?.response = response;
       channelContext.listener?.onResponse(channelContext, response);
@@ -253,7 +345,12 @@ class ChannelDispatcher extends ChannelHandler<Uint8List> {
   }
 
   @override
-  exceptionCaught(ChannelContext channelContext, Channel channel, dynamic error, {StackTrace? trace}) {
+  exceptionCaught(
+    ChannelContext channelContext,
+    Channel channel,
+    dynamic error, {
+    StackTrace? trace,
+  }) {
     handler.exceptionCaught(channelContext, channel, error, trace: trace);
   }
 
@@ -267,8 +364,13 @@ class ChannelDispatcher extends ChannelHandler<Uint8List> {
 
 class RawCodec extends Codec<Uint8List, List<int>> {
   @override
-  DecoderResult<Uint8List> decode(ChannelContext channelContext, ByteBuf byteBuf, {bool resolveBody = true}) {
-    var decoderResult = DecoderResult<Uint8List>()..data = byteBuf.readAvailableBytes();
+  DecoderResult<Uint8List> decode(
+    ChannelContext channelContext,
+    ByteBuf byteBuf, {
+    bool resolveBody = true,
+  }) {
+    var decoderResult = DecoderResult<Uint8List>()
+      ..data = byteBuf.readAvailableBytes();
     return decoderResult;
   }
 

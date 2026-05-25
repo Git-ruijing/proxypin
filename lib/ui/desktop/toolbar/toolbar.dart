@@ -56,19 +56,23 @@ class _ToolbarState extends State<Toolbar> {
       return false;
     }
 
-    if (HardwareKeyboard.instance.isLogicalKeyPressed(LogicalKeyboardKey.escape)) {
+    if (HardwareKeyboard.instance.isLogicalKeyPressed(
+      LogicalKeyboardKey.escape,
+    )) {
       if (ModalRoute.of(context)?.isCurrent == false) {
         Navigator.maybePop(context);
         return true;
       }
     }
 
-    if (HardwareKeyboard.instance.isMetaPressed && event.logicalKey == LogicalKeyboardKey.keyW) {
+    if (HardwareKeyboard.instance.isMetaPressed &&
+        event.logicalKey == LogicalKeyboardKey.keyW) {
       windowManager.blur();
       return true;
     }
 
-    if (HardwareKeyboard.instance.isMetaPressed && event.logicalKey == LogicalKeyboardKey.keyQ) {
+    if (HardwareKeyboard.instance.isMetaPressed &&
+        event.logicalKey == LogicalKeyboardKey.keyQ) {
       windowManager.close();
       windowManager.destroy();
       return true;
@@ -85,37 +89,45 @@ class _ToolbarState extends State<Toolbar> {
 
   @override
   Widget build(BuildContext context) {
-    return Row(children: [
-      Padding(padding: EdgeInsets.only(left: Platform.isMacOS ? 83 : 20)),
-      SocketLaunch(proxyServer: widget.proxyServer, startup: widget.proxyServer.configuration.startup),
-      const Padding(padding: EdgeInsets.only(left: 18)),
-      IconButton(
+    return Row(
+      children: [
+        Padding(padding: EdgeInsets.only(left: Platform.isMacOS ? 83 : 20)),
+        SocketLaunch(
+          proxyServer: widget.proxyServer,
+          startup: widget.proxyServer.configuration.startup,
+        ),
+        const Padding(padding: EdgeInsets.only(left: 18)),
+        IconButton(
           tooltip: localizations.clear,
           icon: const Icon(Icons.delete_outline, size: 21),
           onPressed: () {
             widget.requestListStateKey.currentState?.clean();
-          }),
-      const Padding(padding: EdgeInsets.only(left: 18)),
-      SslWidget(proxyServer: widget.proxyServer), // SSL配置
-      const Padding(padding: EdgeInsets.only(left: 18)),
-      Setting(proxyServer: widget.proxyServer), // 设置
-      const Padding(padding: EdgeInsets.only(left: 18)),
-      IconButton(
+          },
+        ),
+        const Padding(padding: EdgeInsets.only(left: 18)),
+        SslWidget(proxyServer: widget.proxyServer), // SSL配置
+        const Padding(padding: EdgeInsets.only(left: 18)),
+        Setting(proxyServer: widget.proxyServer), // 设置
+        const Padding(padding: EdgeInsets.only(left: 18)),
+        IconButton(
           tooltip: localizations.mobileConnect,
           icon: const Icon(Icons.phone_iphone_outlined, size: 21),
           onPressed: () async {
             final ips = await localIps(readCache: false);
             phoneConnect(ips, widget.proxyServer.port);
-          }),
-      const Padding(padding: EdgeInsets.only(left: 10)),
-    ]);
+          },
+        ),
+        const Padding(padding: EdgeInsets.only(left: 10)),
+      ],
+    );
   }
 
   void phoneConnect(List<String> hosts, int port) {
     showDialog(
-        context: context,
-        builder: (context) {
-          return PhoneConnect(proxyServer: widget.proxyServer, hosts: hosts);
-        });
+      context: context,
+      builder: (context) {
+        return PhoneConnect(proxyServer: widget.proxyServer, hosts: hosts);
+      },
+    );
   }
 }

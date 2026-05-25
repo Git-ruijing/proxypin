@@ -79,7 +79,10 @@ class ProxyServer {
 
   /// 启动代理服务
   Future<Server> start() async {
-    Server server = Server(configuration, listener: CombinedEventListener(listeners));
+    Server server = Server(
+      configuration,
+      listener: CombinedEventListener(listeners),
+    );
 
     List<Interceptor> interceptors = [
       Hosts(),
@@ -88,7 +91,7 @@ class ProxyServer {
       ScriptInterceptor(),
       RequestBlockInterceptor(),
       RequestBreakpointInterceptor.instance, // Register the interceptor
-      ReportServerInterceptor()
+      ReportServerInterceptor(),
     ];
 
     interceptors.sort((a, b) => a.priority.compareTo(b.priority));
@@ -97,7 +100,10 @@ class ProxyServer {
       channel.dispatcher.handle(
         HttpRequestCodec(),
         HttpResponseCodec(),
-        HttpProxyChannelHandler(listener: CombinedEventListener(listeners), interceptors: interceptors),
+        HttpProxyChannelHandler(
+          listener: CombinedEventListener(listeners),
+          interceptors: interceptors,
+        ),
       );
     });
 
@@ -136,11 +142,20 @@ class ProxyServer {
 
     //关闭系统代理 恢复成外部代理地址
     if (!enable && configuration.externalProxy?.enabled == true) {
-      await SystemProxy.setSystemProxy(configuration.externalProxy!.port!, enableSsl, configuration.proxyPassDomains);
+      await SystemProxy.setSystemProxy(
+        configuration.externalProxy!.port!,
+        enableSsl,
+        configuration.proxyPassDomains,
+      );
       return;
     }
 
-    await SystemProxy.setSystemProxyEnable(port, enable, enableSsl, passDomains: configuration.proxyPassDomains);
+    await SystemProxy.setSystemProxyEnable(
+      port,
+      enable,
+      enableSsl,
+      passDomains: configuration.proxyPassDomains,
+    );
   }
 
   /// 重启代理服务
@@ -151,7 +166,11 @@ class ProxyServer {
   ///检查是否监听端口 没有监听则启动
   Future<void> retryBind() async {
     try {
-      await Socket.connect('127.0.0.1', port, timeout: const Duration(milliseconds: 350));
+      await Socket.connect(
+        '127.0.0.1',
+        port,
+        timeout: const Duration(milliseconds: 350),
+      );
     } catch (e) {
       logger.d('端口未被占用，尝试重新绑定 $port');
       await restart();

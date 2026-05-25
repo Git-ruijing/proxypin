@@ -47,7 +47,10 @@ class HostsManager {
 
   static Future<String> homePath() async {
     if (Platform.isMacOS) {
-      return await DesktopMultiWindow.invokeMethod(0, "getApplicationSupportDirectory");
+      return await DesktopMultiWindow.invokeMethod(
+        0,
+        "getApplicationSupportDirectory",
+      );
     }
     return await getApplicationSupportDirectory().then((it) => it.path);
   }
@@ -166,11 +169,18 @@ class HostsItem {
   String? toAddress;
   RegExp? _hostReg;
 
-  HostsItem({String? id, required this.host, this.toAddress, required this.enabled, this.isFolder = false, this.parent})
-      : id = id ?? generateId();
+  HostsItem({
+    String? id,
+    required this.host,
+    this.toAddress,
+    required this.enabled,
+    this.isFolder = false,
+    this.parent,
+  }) : id = id ?? generateId();
 
   static String generateId() {
-    return DateTime.now().millisecondsSinceEpoch.toRadixString(36) + RandomUtil.randomString(4);
+    return DateTime.now().millisecondsSinceEpoch.toRadixString(36) +
+        RandomUtil.randomString(4);
   }
 
   //匹配url

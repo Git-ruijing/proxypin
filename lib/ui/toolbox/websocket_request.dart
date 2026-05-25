@@ -36,7 +36,9 @@ class _WebSocketRequestPageState extends State<WebSocketRequestPage> {
 
   // key for the input bar so we can position the jump button just above it
   final GlobalKey _inputBarKey = GlobalKey();
-  final TextEditingController _urlController = TextEditingController(text: 'ws://');
+  final TextEditingController _urlController = TextEditingController(
+    text: 'ws://',
+  );
   final TextEditingController _sendController = TextEditingController();
   final List<_WsMessage> _messages = [];
 
@@ -101,24 +103,39 @@ class _WebSocketRequestPageState extends State<WebSocketRequestPage> {
 
   void _listen() {
     _sub?.cancel();
-    _sub = _socket?.listen((data) {
-      // data can be String or List<int>
-      if (data is String) {
-        _messages.add(_WsMessage(false, utf8.encode(data), false, time: DateTime.now()));
-      } else if (data is List<int>) {
-        _messages.add(_WsMessage(false, List<int>.from(data), true, time: DateTime.now()));
-      } else {
-        _messages.add(_WsMessage(false, utf8.encode('$data'), false, time: DateTime.now()));
-      }
-      setState(() {});
-      _scheduleScroll();
-    }, onError: (error) {
-      _addSys('Error: $error');
-    }, onDone: () {
-      _connected = false;
-      setState(() {});
-      _addSys('Closed');
-    });
+    _sub = _socket?.listen(
+      (data) {
+        // data can be String or List<int>
+        if (data is String) {
+          _messages.add(
+            _WsMessage(false, utf8.encode(data), false, time: DateTime.now()),
+          );
+        } else if (data is List<int>) {
+          _messages.add(
+            _WsMessage(false, List<int>.from(data), true, time: DateTime.now()),
+          );
+        } else {
+          _messages.add(
+            _WsMessage(
+              false,
+              utf8.encode('$data'),
+              false,
+              time: DateTime.now(),
+            ),
+          );
+        }
+        setState(() {});
+        _scheduleScroll();
+      },
+      onError: (error) {
+        _addSys('Error: $error');
+      },
+      onDone: () {
+        _connected = false;
+        setState(() {});
+        _addSys('Closed');
+      },
+    );
   }
 
   Future<void> _disconnect() async {
@@ -134,7 +151,9 @@ class _WebSocketRequestPageState extends State<WebSocketRequestPage> {
     final text = _sendController.text.trim();
     if (!_connected || text.isEmpty) return;
     _socket?.add(text);
-    _messages.add(_WsMessage(true, utf8.encode(text), false, time: DateTime.now()));
+    _messages.add(
+      _WsMessage(true, utf8.encode(text), false, time: DateTime.now()),
+    );
     _sendController.clear();
     setState(() {});
     _scheduleScroll();
@@ -145,19 +164,24 @@ class _WebSocketRequestPageState extends State<WebSocketRequestPage> {
     try {
       String? path;
       if (Platforms.isMobile()) {
-        final result = await FilePicker.platform.pickFiles(allowMultiple: false);
+        final result = await FilePicker.platform.pickFiles(
+          allowMultiple: false,
+        );
         if (result == null || result.files.isEmpty) return;
         path = result.files.single.path;
       } else {
         path = path = await DesktopMultiWindow.invokeMethod(0, "pickFiles");
-        if (widget.windowId != null) WindowController.fromWindowId(widget.windowId!).show();
+        if (widget.windowId != null)
+          WindowController.fromWindowId(widget.windowId!).show();
       }
       if (path == null) return;
       final file = File(path);
       final bytes = await file.readAsBytes();
       if (bytes.isEmpty) return;
       _socket?.add(bytes);
-      _messages.add(_WsMessage(true, bytes.toList(), true, time: DateTime.now()));
+      _messages.add(
+        _WsMessage(true, bytes.toList(), true, time: DateTime.now()),
+      );
       setState(() {});
       _scheduleScroll();
       if (mounted) {
@@ -214,8 +238,12 @@ class _WebSocketRequestPageState extends State<WebSocketRequestPage> {
         final ctx = _lastMessageKey.currentContext;
         if (ctx != null) {
           // use alignment slightly above bottom to avoid being hidden by input controls
-          await Scrollable.ensureVisible(ctx,
-              duration: const Duration(milliseconds: 350), curve: Curves.easeInOut, alignment: 0.9);
+          await Scrollable.ensureVisible(
+            ctx,
+            duration: const Duration(milliseconds: 350),
+            curve: Curves.easeInOut,
+            alignment: 0.9,
+          );
           return;
         }
       } catch (_) {}
@@ -227,7 +255,11 @@ class _WebSocketRequestPageState extends State<WebSocketRequestPage> {
     if (!_scrollController.hasClients) return;
     final max = _scrollController.position.maxScrollExtent;
     try {
-      await _scrollController.animateTo(max - 10, duration: Duration(milliseconds: 350), curve: Curves.easeInOut);
+      await _scrollController.animateTo(
+        max - 10,
+        duration: Duration(milliseconds: 350),
+        curve: Curves.easeInOut,
+      );
     } catch (_) {
       try {
         _scrollController.jumpTo(_scrollController.position.maxScrollExtent);
@@ -241,176 +273,240 @@ class _WebSocketRequestPageState extends State<WebSocketRequestPage> {
     // Use a Stack so we can place a custom-styled "jump to latest" button
     return Scaffold(
       appBar: AppBar(
-          title: Text('WebSocket', style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w500)),
-          centerTitle: true,
-          actions: [
-            IconButton(
-              tooltip: 'Clear messages',
-              icon: const Icon(Icons.delete),
-              onPressed: () => _clearMessages(),
-            ),
-            SizedBox(width: 8),
-          ]),
-      body: Stack(children: [
-        // main content
-        Column(children: [
-          Padding(
-            padding: const EdgeInsets.all(10),
-            child: Row(children: [
-              Expanded(
-                child: TextField(
-                  controller: _urlController,
-                  decoration: InputDecoration(labelText: 'ws(s)://', border: const OutlineInputBorder(), isDense: true),
-                ),
-              ),
-              const SizedBox(width: 8),
-              ElevatedButton(
-                  onPressed: _connecting ? null : (_connected ? _disconnect : _connect),
-                  child: Text(_connected ? localizations.disconnect : localizations.connect)),
-            ]),
+        title: Text(
+          'WebSocket',
+          style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w500),
+        ),
+        centerTitle: true,
+        actions: [
+          IconButton(
+            tooltip: 'Clear messages',
+            icon: const Icon(Icons.delete),
+            onPressed: () => _clearMessages(),
           ),
-          const Divider(height: 0),
-          Expanded(child: _messageList(theme)),
-          const Divider(height: 0, thickness: 0.2),
-          Padding(
-            key: _inputBarKey,
-            padding: const EdgeInsets.all(10),
-            child: Row(children: [
-              IconButton(
-                icon: Icon(Icons.attach_file, color: theme.colorScheme.primary),
-                onPressed: _connected ? _sendFile : null,
-              ),
-
-              const SizedBox(width: 4),
-              Expanded(
-                child: Shortcuts(
-                  shortcuts: {
-                    // Enter sends
-                    SingleActivator(LogicalKeyboardKey.enter): const _SendIntent(),
-                    // Ctrl+Enter inserts newline (also meta/cmd on macOS)
-                    SingleActivator(LogicalKeyboardKey.enter, control: true): const _InsertNewlineIntent(),
-                    SingleActivator(LogicalKeyboardKey.enter, meta: true): const _InsertNewlineIntent(),
-                  },
-                  child: Actions(
-                    actions: {
-                      _SendIntent: CallbackAction<_SendIntent>(onInvoke: (intent) {
-                        if (_connected) _sendText();
-                        return null;
-                      }),
-                      _InsertNewlineIntent: CallbackAction<_InsertNewlineIntent>(onInvoke: (intent) {
-                        // Insert a newline at the current cursor position
-                        final controller = _sendController;
-                        final text = controller.text;
-                        final sel = controller.selection;
-                        final start = sel.start >= 0 ? sel.start : text.length;
-                        final end = sel.end >= 0 ? sel.end : text.length;
-                        final newText = text.replaceRange(start, end, '\n');
-                        controller.value = TextEditingValue(
-                          text: newText,
-                          selection: TextSelection.collapsed(offset: start + 1),
-                        );
-                        return null;
-                      }),
-                    },
-                    child: TextField(
-                      controller: _sendController,
-                      minLines: 1,
-                      maxLines: 4,
-                      keyboardType: TextInputType.multiline,
-                      textInputAction: TextInputAction.newline,
-                      decoration: InputDecoration(
-                        labelText: localizations.requestBody,
-                        border: const OutlineInputBorder(),
-                        isDense: true,
+          SizedBox(width: 8),
+        ],
+      ),
+      body: Stack(
+        children: [
+          // main content
+          Column(
+            children: [
+              Padding(
+                padding: const EdgeInsets.all(10),
+                child: Row(
+                  children: [
+                    Expanded(
+                      child: TextField(
+                        controller: _urlController,
+                        decoration: InputDecoration(
+                          labelText: 'ws(s)://',
+                          border: const OutlineInputBorder(),
+                          isDense: true,
+                        ),
                       ),
                     ),
-                  ),
-                ),
-              ),
-              const SizedBox(width: 8),
-
-              // Telegram-style circular send button
-              Tooltip(
-                message: localizations.send,
-                child: Opacity(
-                  opacity: _connected ? 1.0 : 0.5,
-                  child: InkWell(
-                    onTap: _connected ? _sendText : null,
-                    borderRadius: BorderRadius.circular(22),
-                    child: Container(
-                      width: 34,
-                      height: 34,
-                      decoration: BoxDecoration(
-                        color: Theme.of(context).colorScheme.primary,
-                        shape: BoxShape.circle,
-                        boxShadow: [
-                          BoxShadow(
-                              color: Colors.black.withValues(alpha: 0.2), blurRadius: 6, offset: const Offset(0, 3))
-                        ],
+                    const SizedBox(width: 8),
+                    ElevatedButton(
+                      onPressed: _connecting
+                          ? null
+                          : (_connected ? _disconnect : _connect),
+                      child: Text(
+                        _connected
+                            ? localizations.disconnect
+                            : localizations.connect,
                       ),
-                      child: const Icon(Icons.send, color: Colors.white, size: 20),
                     ),
-                  ),
+                  ],
                 ),
               ),
-            ]),
-          )
-        ]),
-        // positioned jump-to-latest button (custom style). It is placed above the input area and above
-        // the keyboard by using MediaQuery.viewInsets.bottom as extra offset.
-        if (!_isNearBottom)
-          // pill-shaped jump button placed just above the input bar, aligned to the right
-          Positioned(
-            right: 16,
-            bottom: () {
-              final inputContext = _inputBarKey.currentContext;
-              final viewInsets = MediaQuery.of(context).viewInsets.bottom;
-              if (inputContext != null) {
-                final renderBox = inputContext.findRenderObject() as RenderBox?;
-                if (renderBox != null) {
-                  final h = renderBox.size.height;
-                  return (h + 12.0 + viewInsets);
+              const Divider(height: 0),
+              Expanded(child: _messageList(theme)),
+              const Divider(height: 0, thickness: 0.2),
+              Padding(
+                key: _inputBarKey,
+                padding: const EdgeInsets.all(10),
+                child: Row(
+                  children: [
+                    IconButton(
+                      icon: Icon(
+                        Icons.attach_file,
+                        color: theme.colorScheme.primary,
+                      ),
+                      onPressed: _connected ? _sendFile : null,
+                    ),
+
+                    const SizedBox(width: 4),
+                    Expanded(
+                      child: Shortcuts(
+                        shortcuts: {
+                          // Enter sends
+                          SingleActivator(LogicalKeyboardKey.enter):
+                              const _SendIntent(),
+                          // Ctrl+Enter inserts newline (also meta/cmd on macOS)
+                          SingleActivator(
+                            LogicalKeyboardKey.enter,
+                            control: true,
+                          ): const _InsertNewlineIntent(),
+                          SingleActivator(LogicalKeyboardKey.enter, meta: true):
+                              const _InsertNewlineIntent(),
+                        },
+                        child: Actions(
+                          actions: {
+                            _SendIntent: CallbackAction<_SendIntent>(
+                              onInvoke: (intent) {
+                                if (_connected) _sendText();
+                                return null;
+                              },
+                            ),
+                            _InsertNewlineIntent:
+                                CallbackAction<_InsertNewlineIntent>(
+                                  onInvoke: (intent) {
+                                    // Insert a newline at the current cursor position
+                                    final controller = _sendController;
+                                    final text = controller.text;
+                                    final sel = controller.selection;
+                                    final start = sel.start >= 0
+                                        ? sel.start
+                                        : text.length;
+                                    final end = sel.end >= 0
+                                        ? sel.end
+                                        : text.length;
+                                    final newText = text.replaceRange(
+                                      start,
+                                      end,
+                                      '\n',
+                                    );
+                                    controller.value = TextEditingValue(
+                                      text: newText,
+                                      selection: TextSelection.collapsed(
+                                        offset: start + 1,
+                                      ),
+                                    );
+                                    return null;
+                                  },
+                                ),
+                          },
+                          child: TextField(
+                            controller: _sendController,
+                            minLines: 1,
+                            maxLines: 4,
+                            keyboardType: TextInputType.multiline,
+                            textInputAction: TextInputAction.newline,
+                            decoration: InputDecoration(
+                              labelText: localizations.requestBody,
+                              border: const OutlineInputBorder(),
+                              isDense: true,
+                            ),
+                          ),
+                        ),
+                      ),
+                    ),
+                    const SizedBox(width: 8),
+
+                    // Telegram-style circular send button
+                    Tooltip(
+                      message: localizations.send,
+                      child: Opacity(
+                        opacity: _connected ? 1.0 : 0.5,
+                        child: InkWell(
+                          onTap: _connected ? _sendText : null,
+                          borderRadius: BorderRadius.circular(22),
+                          child: Container(
+                            width: 34,
+                            height: 34,
+                            decoration: BoxDecoration(
+                              color: Theme.of(context).colorScheme.primary,
+                              shape: BoxShape.circle,
+                              boxShadow: [
+                                BoxShadow(
+                                  color: Colors.black.withValues(alpha: 0.2),
+                                  blurRadius: 6,
+                                  offset: const Offset(0, 3),
+                                ),
+                              ],
+                            ),
+                            child: const Icon(
+                              Icons.send,
+                              color: Colors.white,
+                              size: 20,
+                            ),
+                          ),
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+          // positioned jump-to-latest button (custom style). It is placed above the input area and above
+          // the keyboard by using MediaQuery.viewInsets.bottom as extra offset.
+          if (!_isNearBottom)
+            // pill-shaped jump button placed just above the input bar, aligned to the right
+            Positioned(
+              right: 16,
+              bottom: () {
+                final inputContext = _inputBarKey.currentContext;
+                final viewInsets = MediaQuery.of(context).viewInsets.bottom;
+                if (inputContext != null) {
+                  final renderBox =
+                      inputContext.findRenderObject() as RenderBox?;
+                  if (renderBox != null) {
+                    final h = renderBox.size.height;
+                    return (h + 12.0 + viewInsets);
+                  }
                 }
-              }
-              return 80.0 + viewInsets;
-            }(),
-            child: AnimatedOpacity(
-              duration: const Duration(milliseconds: 220),
-              opacity: !_isNearBottom ? 1.0 : 0.0,
-              child: Semantics(
-                label: 'Jump to latest messages',
-                button: true,
-                child: Material(
-                  elevation: 10,
-                  color: Colors.transparent,
-                  child: InkWell(
-                    onTap: () async {
-                      await _animateToBottom();
-                      if (!_isNearBottom) {
-                        setState(() {
-                          _isNearBottom = true;
-                        });
-                      }
-                    },
-                    borderRadius: BorderRadius.circular(20.0),
-                    child: Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-                      decoration: BoxDecoration(
-                        color: Theme.of(context).colorScheme.primary,
-                        borderRadius: BorderRadius.circular(20.0),
-                        boxShadow: [
-                          BoxShadow(
-                              color: Colors.black.withValues(alpha: 0.24), blurRadius: 8, offset: const Offset(0, 4))
-                        ],
+                return 80.0 + viewInsets;
+              }(),
+              child: AnimatedOpacity(
+                duration: const Duration(milliseconds: 220),
+                opacity: !_isNearBottom ? 1.0 : 0.0,
+                child: Semantics(
+                  label: 'Jump to latest messages',
+                  button: true,
+                  child: Material(
+                    elevation: 10,
+                    color: Colors.transparent,
+                    child: InkWell(
+                      onTap: () async {
+                        await _animateToBottom();
+                        if (!_isNearBottom) {
+                          setState(() {
+                            _isNearBottom = true;
+                          });
+                        }
+                      },
+                      borderRadius: BorderRadius.circular(20.0),
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 12,
+                          vertical: 8,
+                        ),
+                        decoration: BoxDecoration(
+                          color: Theme.of(context).colorScheme.primary,
+                          borderRadius: BorderRadius.circular(20.0),
+                          boxShadow: [
+                            BoxShadow(
+                              color: Colors.black.withValues(alpha: 0.24),
+                              blurRadius: 8,
+                              offset: const Offset(0, 4),
+                            ),
+                          ],
+                        ),
+                        child: const Icon(
+                          Icons.arrow_downward,
+                          color: Colors.white,
+                          size: 18,
+                        ),
                       ),
-                      child: const Icon(Icons.arrow_downward, color: Colors.white, size: 18),
                     ),
                   ),
                 ),
               ),
             ),
-          ),
-      ]),
+        ],
+      ),
     );
   }
 
@@ -437,59 +533,95 @@ class _WebSocketRequestPageState extends State<WebSocketRequestPage> {
         final m = _messages[index];
         if (m.isSystem) {
           return Center(
-              child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              SelectionContainer.disabled(
-                  child: Text(_formatTime(m.time), style: theme.textTheme.bodySmall?.copyWith(color: Colors.grey))),
-              const SizedBox(height: 4),
-              Text(m.textPreview(), style: theme.textTheme.bodySmall?.copyWith(color: Colors.grey)),
-            ],
-          ));
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                SelectionContainer.disabled(
+                  child: Text(
+                    _formatTime(m.time),
+                    style: theme.textTheme.bodySmall?.copyWith(
+                      color: Colors.grey,
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 4),
+                Text(
+                  m.textPreview(),
+                  style: theme.textTheme.bodySmall?.copyWith(
+                    color: Colors.grey,
+                  ),
+                ),
+              ],
+            ),
+          );
         }
         final displayOnLeft = !m.isClient;
         final avatar = CircleAvatar(
           backgroundColor: m.isClient ? Colors.green : Colors.blue,
-          child: Text(m.isClient ? 'C' : 'S', style: const TextStyle(color: Colors.white)),
+          child: Text(
+            m.isClient ? 'C' : 'S',
+            style: const TextStyle(color: Colors.white),
+          ),
         );
-        final bubbleText = m.isBinary ? '[binary ${_formatSize(m.bytes.length)}]' : m.textPreview();
+        final bubbleText = m.isBinary
+            ? '[binary ${_formatSize(m.bytes.length)}]'
+            : m.textPreview();
         final bubble = Container(
           padding: const EdgeInsets.all(8),
           decoration: BoxDecoration(
-            color: displayOnLeft ? Colors.green.withValues(alpha: 0.2) : Colors.blue.withValues(alpha: 0.2),
+            color: displayOnLeft
+                ? Colors.green.withValues(alpha: 0.2)
+                : Colors.blue.withValues(alpha: 0.2),
             borderRadius: BorderRadius.circular(8),
           ),
           child: SelectableText(bubbleText),
         );
         final previewButton = IconButton(
           onPressed: () {
-            showDialog(context: context, builder: (context) => _PreviewDialog(bytes: m.bytes));
+            showDialog(
+              context: context,
+              builder: (context) => _PreviewDialog(bytes: m.bytes),
+            );
           },
           icon: Icon(Icons.expand_more, color: ColorScheme.of(context).primary),
         );
         // attach key to the last message so we can ensureVisible it
-        final widgetKey = index == _messages.length - 1 ? _lastMessageKey : null;
+        final widgetKey = index == _messages.length - 1
+            ? _lastMessageKey
+            : null;
         return Padding(
           padding: const EdgeInsets.only(bottom: 8),
           key: widgetKey,
           child: Row(
-            mainAxisAlignment: displayOnLeft ? MainAxisAlignment.start : MainAxisAlignment.end,
+            mainAxisAlignment: displayOnLeft
+                ? MainAxisAlignment.start
+                : MainAxisAlignment.end,
             children: [
               if (displayOnLeft) avatar,
               const SizedBox(width: 8),
               Flexible(
                 child: Column(
-                  crossAxisAlignment: displayOnLeft ? CrossAxisAlignment.start : CrossAxisAlignment.end,
+                  crossAxisAlignment: displayOnLeft
+                      ? CrossAxisAlignment.start
+                      : CrossAxisAlignment.end,
                   children: [
                     SelectionContainer.disabled(
-                        child:
-                            Text(_formatTime(m.time), style: theme.textTheme.bodySmall?.copyWith(color: Colors.grey))),
+                      child: Text(
+                        _formatTime(m.time),
+                        style: theme.textTheme.bodySmall?.copyWith(
+                          color: Colors.grey,
+                        ),
+                      ),
+                    ),
                     const SizedBox(height: 4),
-                    Row(mainAxisSize: MainAxisSize.min, children: [
-                      if (!displayOnLeft) previewButton,
-                      Flexible(child: bubble),
-                      if (displayOnLeft) previewButton,
-                    ]),
+                    Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        if (!displayOnLeft) previewButton,
+                        Flexible(child: bubble),
+                        if (displayOnLeft) previewButton,
+                      ],
+                    ),
                   ],
                 ),
               ),
@@ -511,7 +643,8 @@ class _WsMessage {
   final bool isBinary;
   final DateTime time;
 
-  _WsMessage(this.isClient, this.bytes, this.isBinary, {DateTime? time}) : time = time ?? DateTime.now();
+  _WsMessage(this.isClient, this.bytes, this.isBinary, {DateTime? time})
+    : time = time ?? DateTime.now();
 
   bool get isSystem => bytes.isEmpty;
 
@@ -558,41 +691,55 @@ class _PreviewDialogState extends State<_PreviewDialog> {
         child: DefaultTabController(
           length: tabs.length,
           initialIndex: tabIndex,
-          child: Column(mainAxisSize: MainAxisSize.min, children: [
-            TabBar(
-              tabs: tabs,
-              onTap: (index) {
-                setState(() {
-                  tabIndex = index;
-                });
-              },
-            ),
-            Expanded(
-              child: TabBarView(children: [
-                if (isJsonText(widget.bytes))
-                  SingleChildScrollView(padding: const EdgeInsets.all(8.0), child: jsonText()),
-                if (isJsonText(widget.bytes))
-                  SingleChildScrollView(padding: const EdgeInsets.all(8.0), child: jsonView()),
-                // TEXT
-                SingleChildScrollView(
-                  padding: const EdgeInsets.all(8),
-                  child: SelectableText(safeTextPreview(widget.bytes)),
-                ),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              TabBar(
+                tabs: tabs,
+                onTap: (index) {
+                  setState(() {
+                    tabIndex = index;
+                  });
+                },
+              ),
+              Expanded(
+                child: TabBarView(
+                  children: [
+                    if (isJsonText(widget.bytes))
+                      SingleChildScrollView(
+                        padding: const EdgeInsets.all(8.0),
+                        child: jsonText(),
+                      ),
+                    if (isJsonText(widget.bytes))
+                      SingleChildScrollView(
+                        padding: const EdgeInsets.all(8.0),
+                        child: jsonView(),
+                      ),
+                    // TEXT
+                    SingleChildScrollView(
+                      padding: const EdgeInsets.all(8),
+                      child: SelectableText(safeTextPreview(widget.bytes)),
+                    ),
 
-                // HEX
-                SingleChildScrollView(
-                  padding: const EdgeInsets.all(8),
-                  child: SelectableText(widget.bytes.map(intToHex).join(" ")),
+                    // HEX
+                    SingleChildScrollView(
+                      padding: const EdgeInsets.all(8),
+                      child: SelectableText(
+                        widget.bytes.map(intToHex).join(" "),
+                      ),
+                    ),
+                  ],
                 ),
-              ]),
-            ),
-          ]),
+              ),
+            ],
+          ),
         ),
       ),
       actions: [
         TextButton(
-            onPressed: () => Navigator.of(context).pop(),
-            child: Text(MaterialLocalizations.of(context).closeButtonLabel))
+          onPressed: () => Navigator.of(context).pop(),
+          child: Text(MaterialLocalizations.of(context).closeButtonLabel),
+        ),
       ],
     );
   }
@@ -610,7 +757,11 @@ class _PreviewDialogState extends State<_PreviewDialog> {
       return SelectableText(safeTextPreview(widget.bytes));
     }
 
-    return JsonText(json: jsonData, indent: '    ', colorTheme: ColorTheme.of(context));
+    return JsonText(
+      json: jsonData,
+      indent: '    ',
+      colorTheme: ColorTheme.of(context),
+    );
   }
 
   Widget jsonView() {
@@ -641,7 +792,9 @@ class _PreviewDialogState extends State<_PreviewDialog> {
     try {
       return utf8.decode(bytes);
     } catch (_) {
-      return bytes.map((b) => b >= 32 && b <= 126 ? String.fromCharCode(b) : '.').join();
+      return bytes
+          .map((b) => b >= 32 && b <= 126 ? String.fromCharCode(b) : '.')
+          .join();
     }
   }
 }

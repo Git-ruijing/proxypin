@@ -45,7 +45,6 @@ String copyAsFetch(HttpRequest request) {
   return sb.toString();
 }
 
-
 ///复制cURL请求
 String curlRequest(HttpRequest request) {
   List<String> headers = [];
@@ -64,8 +63,11 @@ String curlRequest(HttpRequest request) {
 }
 
 main() {
-  print(Curl.parse(
-      "curl -X POST 'https://example.com/api' -H 'Content-Type: application/json' -d '{\"key\":\"value\"}'"));
+  print(
+    Curl.parse(
+      "curl -X POST 'https://example.com/api' -H 'Content-Type: application/json' -d '{\"key\":\"value\"}'",
+    ),
+  );
 }
 
 class Curl {
@@ -109,7 +111,9 @@ class Curl {
           currentPart = currentPart.substring(1, currentPart.length - 1);
         }
 
-        if (currentPart == '-d' || currentPart == '--data' || currentPart == '--data-raw') {
+        if (currentPart == '-d' ||
+            currentPart == '--data' ||
+            currentPart == '--data-raw') {
           inBody = true;
         } else {
           inBody = false;
@@ -155,7 +159,9 @@ class Curl {
         if (i + 1 < parts.length) {
           data = parts[++i];
         }
-      } else if (url == null && !part.startsWith('-') && part.contains("http")) {
+      } else if (url == null &&
+          !part.startsWith('-') &&
+          part.contains("http")) {
         // 解析请求 URL
         url = part.replaceAll("'", "").replaceAll('"', '');
       } else if ("--http2" == part) {
@@ -167,7 +173,11 @@ class Curl {
       method = HttpMethod.post;
     }
 
-    HttpRequest request = HttpRequest(method, url ?? '', protocolVersion: protocolVersion);
+    HttpRequest request = HttpRequest(
+      method,
+      url ?? '',
+      protocolVersion: protocolVersion,
+    );
     request.headers.addAll(headers);
     request.body = data?.codeUnits;
     return request;

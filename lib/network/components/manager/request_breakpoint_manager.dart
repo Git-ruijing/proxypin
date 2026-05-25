@@ -28,7 +28,8 @@ class RequestBreakpointRule {
 
   bool match(String url, {HttpMethod? method}) {
     if (!enabled) return false;
-    if (this.method != null && method != null && this.method != method) return false;
+    if (this.method != null && method != null && this.method != method)
+      return false;
     return RegExp(this.url).hasMatch(url);
   }
 
@@ -39,7 +40,10 @@ class RequestBreakpointRule {
         method = HttpMethod.valueOf(map['method']);
       }
     } catch (e) {
-      logger.e('Failed to parse HTTP method from request intercept rule', error: e);
+      logger.e(
+        'Failed to parse HTTP method from request intercept rule',
+        error: e,
+      );
     }
 
     return RequestBreakpointRule(
@@ -82,7 +86,10 @@ class RequestBreakpointManager {
 
   static Future<String> homePath() async {
     if (Platform.isMacOS) {
-      return await DesktopMultiWindow.invokeMethod(0, "getApplicationSupportDirectory");
+      return await DesktopMultiWindow.invokeMethod(
+        0,
+        "getApplicationSupportDirectory",
+      );
     }
     return await getApplicationSupportDirectory().then((it) => it.path);
   }
@@ -94,7 +101,9 @@ class RequestBreakpointManager {
       if (await file.exists()) {
         var json = jsonDecode(await file.readAsString());
         enabled = json['enabled'] ?? false;
-        list = (json['list'] as List? ?? []).map((e) => RequestBreakpointRule.fromJson(e)).toList();
+        list = (json['list'] as List? ?? [])
+            .map((e) => RequestBreakpointRule.fromJson(e))
+            .toList();
       }
     } catch (e) {
       logger.e('Failed to load request breakpoint config', error: e);

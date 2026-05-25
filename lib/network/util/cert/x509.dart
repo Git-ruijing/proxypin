@@ -40,7 +40,8 @@ class X509Utils {
     var derEncoded = issuerSeq.encode();
     // Convert the hash to a long value
     var hashBytes = md5.convert(derEncoded).bytes;
-    int hash = (hashBytes[0] & 0xff) |
+    int hash =
+        (hashBytes[0] & 0xff) |
         ((hashBytes[1] & 0xff) << 8) |
         ((hashBytes[2] & 0xff) << 16) |
         ((hashBytes[3] & 0xff) << 24);
@@ -51,7 +52,12 @@ class X509Utils {
   ///
   /// Encode the given [asn1Object] to PEM format and adding the [begin] and [end].
   ///
-  static String encodeASN1ObjectToPem(ASN1Object asn1Object, String begin, String end, {String newLine = '\n'}) {
+  static String encodeASN1ObjectToPem(
+    ASN1Object asn1Object,
+    String begin,
+    String end, {
+    String newLine = '\n',
+  }) {
     var bytes = asn1Object.encode();
     var chunks = Strings.chunk(base64.encode(bytes), 64);
     return '$begin$newLine${chunks.join(newLine)}$newLine$end';
@@ -72,8 +78,13 @@ class X509Utils {
   ///
   /// Each line will be delimited by the given [lineDelimiter]. The default value is '\n'.w
   ///
-  static String formatKeyString(String key, String begin, String end,
-      {int chunkSize = 64, String lineDelimiter = '\n'}) {
+  static String formatKeyString(
+    String key,
+    String begin,
+    String end, {
+    int chunkSize = 64,
+    String lineDelimiter = '\n',
+  }) {
     var sb = StringBuffer();
     var chunks = Strings.chunk(key, chunkSize);
     if (Strings.isNotEmpty(begin)) {
@@ -150,7 +161,9 @@ class X509Utils {
 
     // Add protocol
     var blockProtocol = ASN1Sequence();
-    blockProtocol.add(ASN1ObjectIdentifier.fromIdentifierString(caRoot.signatureAlgorithm));
+    blockProtocol.add(
+      ASN1ObjectIdentifier.fromIdentifierString(caRoot.signatureAlgorithm),
+    );
     blockProtocol.add(ASN1Null());
     data.add(blockProtocol);
 
@@ -166,8 +179,12 @@ class X509Utils {
 
     // Add Validity
     var validitySeq = ASN1Sequence();
-    validitySeq.add(ASN1UtcTime(DateTime.now().subtract(const Duration(days: 3)).toUtc()));
-    validitySeq.add(ASN1UtcTime(DateTime.now().add(Duration(days: days)).toUtc()));
+    validitySeq.add(
+      ASN1UtcTime(DateTime.now().subtract(const Duration(days: 3)).toUtc()),
+    );
+    validitySeq.add(
+      ASN1UtcTime(DateTime.now().add(Duration(days: days)).toUtc()),
+    );
     data.add(validitySeq);
 
     // Add Subject
@@ -186,7 +203,9 @@ class X509Utils {
 
     // Add Extensions
 
-    if (Lists.isNotEmpty(sans) || keyUsage != null || Lists.isNotEmpty(extKeyUsage)) {
+    if (Lists.isNotEmpty(sans) ||
+        keyUsage != null ||
+        Lists.isNotEmpty(extKeyUsage)) {
       var extensionTopSequence = ASN1Sequence();
 
       // Add basic constraints 2.5.29.19
@@ -194,9 +213,13 @@ class X509Utils {
         var basicConstraintsValue = ASN1Sequence();
         basicConstraintsValue.add(ASN1Boolean(basicConstraints.isCA));
         if (basicConstraints.pathLenConstraint != null) {
-          basicConstraintsValue.add(ASN1Integer(BigInt.from(basicConstraints.pathLenConstraint!)));
+          basicConstraintsValue.add(
+            ASN1Integer(BigInt.from(basicConstraints.pathLenConstraint!)),
+          );
         }
-        var octetString = ASN1OctetString(octets: basicConstraintsValue.encode());
+        var octetString = ASN1OctetString(
+          octets: basicConstraintsValue.encode(),
+        );
         var basicConstraintsSequence = ASN1Sequence();
         basicConstraintsSequence.add(Extension.basicConstraints);
         if (basicConstraints.critical) {
@@ -240,7 +263,11 @@ class X509Utils {
     var outer = ASN1Sequence();
     outer.add(data);
     outer.add(blockProtocol);
-    var encode = _rsaSign(data.encode(), privateKey, _getDigestFromOi(caRoot.signatureAlgorithm));
+    var encode = _rsaSign(
+      data.encode(),
+      privateKey,
+      _getDigestFromOi(caRoot.signatureAlgorithm),
+    );
     outer.add(ASN1BitString(stringValues: encode));
 
     var chunks = Strings.chunk(base64Encode(outer.encode()), 64);
@@ -250,7 +277,8 @@ class X509Utils {
 
   static X509CertificateData _x509FromAsn1Sequence(ASN1Sequence topLevelSeq) {
     var tbsCertificateSeq = topLevelSeq.elements!.elementAt(0) as ASN1Sequence;
-    var signatureAlgorithmSeq = topLevelSeq.elements!.elementAt(1) as ASN1Sequence;
+    var signatureAlgorithmSeq =
+        topLevelSeq.elements!.elementAt(1) as ASN1Sequence;
     var signateureSeq = topLevelSeq.elements!.elementAt(2) as ASN1BitString;
 
     // tbsCertificate
@@ -269,7 +297,8 @@ class X509Utils {
     }
 
     // Serial Number
-    var serialInteger = tbsCertificateSeq.elements!.elementAt(element + 1) as ASN1Integer;
+    var serialInteger =
+        tbsCertificateSeq.elements!.elementAt(element + 1) as ASN1Integer;
     var serialNumber = serialInteger.integer;
 
     // Signature
@@ -279,19 +308,23 @@ class X509Utils {
     // var signatureAlgorithmReadable = o.readableName!;
 
     // Issuer
-    var issuerSequence = tbsCertificateSeq.elements!.elementAt(element + 3) as ASN1Sequence;
+    var issuerSequence =
+        tbsCertificateSeq.elements!.elementAt(element + 3) as ASN1Sequence;
     var issuer = _getDnFromSeq(issuerSequence);
 
     // Validity
-    var validitySequence = tbsCertificateSeq.elements!.elementAt(element + 4) as ASN1Sequence;
+    var validitySequence =
+        tbsCertificateSeq.elements!.elementAt(element + 4) as ASN1Sequence;
     var validity = _getValidityFromSeq(validitySequence);
 
     // Subject
-    var subjectSequence = tbsCertificateSeq.elements!.elementAt(element + 5) as ASN1Sequence;
+    var subjectSequence =
+        tbsCertificateSeq.elements!.elementAt(element + 5) as ASN1Sequence;
     var subject = _getDnFromSeq(subjectSequence);
 
     // Subject Public Key Info
-    var pubKeySequence = tbsCertificateSeq.elements!.elementAt(element + 6) as ASN1Sequence;
+    var pubKeySequence =
+        tbsCertificateSeq.elements!.elementAt(element + 6) as ASN1Sequence;
     var subjectPublicKeyInfo = _getSubjectPublicKeyInfoFromSeq(pubKeySequence);
 
     X509CertificateDataExtensions? extensions;
@@ -303,7 +336,8 @@ class X509Utils {
     }
 
     // signatureAlgorithm
-    var pubKeyOid = signatureAlgorithmSeq.elements!.elementAt(0) as ASN1ObjectIdentifier;
+    var pubKeyOid =
+        signatureAlgorithmSeq.elements!.elementAt(0) as ASN1ObjectIdentifier;
 
     // signatureValue
     var sigAsString = _bytesAsString(signateureSeq.valueBytes!);
@@ -317,73 +351,85 @@ class X509Utils {
       issuer: issuer,
       validity: validity,
       subject: subject,
-      publicKeyData: X509CertificatePublicKeyData.fromSubjectPublicKeyInfo(subjectPublicKeyInfo),
+      publicKeyData: X509CertificatePublicKeyData.fromSubjectPublicKeyInfo(
+        subjectPublicKeyInfo,
+      ),
       subjectAlternativNames: extensions?.subjectAlternativNames,
       extKeyUsage: extensions?.extKeyUsage,
       extensions: extensions,
       // tbsCertificate: tbsCertificate,
-      tbsCertificateSeqAsString: base64.encode(
-        tbsCertificateSeq.encode(),
-      ),
+      tbsCertificateSeqAsString: base64.encode(tbsCertificateSeq.encode()),
     );
   }
 
-  static X509CertificateDataExtensions _getExtensionsFromSeq(ASN1Sequence extSequence) {
+  static X509CertificateDataExtensions _getExtensionsFromSeq(
+    ASN1Sequence extSequence,
+  ) {
     List<String>? sans;
     List<KeyUsage>? keyUsage;
     List<ExtendedKeyUsage>? extKeyUsage;
     List<dynamic> basicConstraints;
     var extensions = X509CertificateDataExtensions();
     for (var subseq in extSequence.elements!) {
-        var seq = subseq as ASN1Sequence;
-        var oi = seq.elements!.elementAt(0) as ASN1ObjectIdentifier;
-        if (oi.objectIdentifierAsString == '2.5.29.17') {
-          if (seq.elements!.length == 3) {
-            sans = _fetchSansFromExtension(seq.elements!.elementAt(2));
-          } else {
-            sans = _fetchSansFromExtension(seq.elements!.elementAt(1));
-          }
-          extensions.subjectAlternativNames = sans;
+      var seq = subseq as ASN1Sequence;
+      var oi = seq.elements!.elementAt(0) as ASN1ObjectIdentifier;
+      if (oi.objectIdentifierAsString == '2.5.29.17') {
+        if (seq.elements!.length == 3) {
+          sans = _fetchSansFromExtension(seq.elements!.elementAt(2));
+        } else {
+          sans = _fetchSansFromExtension(seq.elements!.elementAt(1));
         }
-
-        var keyUsageSequence = ASN1Sequence();
-        keyUsageSequence.add(ASN1ObjectIdentifier.fromIdentifierString('2.5.29.15'));
-
-        if (oi.objectIdentifierAsString == '2.5.29.15') {
-          if (seq.elements!.length == 3) {
-            keyUsage = _fetchKeyUsageFromExtension(seq.elements!.elementAt(2));
-          } else {
-            keyUsage = _fetchKeyUsageFromExtension(seq.elements!.elementAt(1));
-          }
-          extensions.keyUsage = keyUsage;
-        }
-        if (oi.objectIdentifierAsString == '2.5.29.37') {
-          if (seq.elements!.length == 3) {
-            extKeyUsage = _fetchExtendedKeyUsageFromExtension(seq.elements!.elementAt(2));
-          } else {
-            extKeyUsage = _fetchExtendedKeyUsageFromExtension(seq.elements!.elementAt(1));
-          }
-          extensions.extKeyUsage = extKeyUsage;
-        }
-        if (oi.objectIdentifierAsString == '2.5.29.19') {
-          if (seq.elements!.length == 3) {
-            basicConstraints = _fetchBasicConstraintsFromExtension(seq.elements!.elementAt(2));
-          } else {
-            basicConstraints = [null, null];
-          }
-
-          extensions.cA = basicConstraints[0];
-          extensions.pathLenConstraint = basicConstraints[1];
-        }
-        if (oi.objectIdentifierAsString == '1.3.6.1.5.5.7.1.12') {
-          var vmcData = _fetchVmcLogo(seq.elements!.elementAt(1));
-          extensions.vmc = vmcData;
-        }
-        if (oi.objectIdentifierAsString == '2.5.29.31') {
-          var cRLDistributionPoints = _fetchCrlDistributionPoints(seq.elements!.elementAt(1));
-          extensions.cRLDistributionPoints = cRLDistributionPoints;
-        }
+        extensions.subjectAlternativNames = sans;
       }
+
+      var keyUsageSequence = ASN1Sequence();
+      keyUsageSequence.add(
+        ASN1ObjectIdentifier.fromIdentifierString('2.5.29.15'),
+      );
+
+      if (oi.objectIdentifierAsString == '2.5.29.15') {
+        if (seq.elements!.length == 3) {
+          keyUsage = _fetchKeyUsageFromExtension(seq.elements!.elementAt(2));
+        } else {
+          keyUsage = _fetchKeyUsageFromExtension(seq.elements!.elementAt(1));
+        }
+        extensions.keyUsage = keyUsage;
+      }
+      if (oi.objectIdentifierAsString == '2.5.29.37') {
+        if (seq.elements!.length == 3) {
+          extKeyUsage = _fetchExtendedKeyUsageFromExtension(
+            seq.elements!.elementAt(2),
+          );
+        } else {
+          extKeyUsage = _fetchExtendedKeyUsageFromExtension(
+            seq.elements!.elementAt(1),
+          );
+        }
+        extensions.extKeyUsage = extKeyUsage;
+      }
+      if (oi.objectIdentifierAsString == '2.5.29.19') {
+        if (seq.elements!.length == 3) {
+          basicConstraints = _fetchBasicConstraintsFromExtension(
+            seq.elements!.elementAt(2),
+          );
+        } else {
+          basicConstraints = [null, null];
+        }
+
+        extensions.cA = basicConstraints[0];
+        extensions.pathLenConstraint = basicConstraints[1];
+      }
+      if (oi.objectIdentifierAsString == '1.3.6.1.5.5.7.1.12') {
+        var vmcData = _fetchVmcLogo(seq.elements!.elementAt(1));
+        extensions.vmc = vmcData;
+      }
+      if (oi.objectIdentifierAsString == '2.5.29.31') {
+        var cRLDistributionPoints = _fetchCrlDistributionPoints(
+          seq.elements!.elementAt(1),
+        );
+        extensions.cRLDistributionPoints = cRLDistributionPoints;
+      }
+    }
     return extensions;
   }
 
@@ -400,7 +446,9 @@ class X509Utils {
     return keyUsageSequence;
   }
 
-  static ASN1Sequence? extendedKeyUsageEncodings(List<ExtendedKeyUsage>? extKeyUsage) {
+  static ASN1Sequence? extendedKeyUsageEncodings(
+    List<ExtendedKeyUsage>? extKeyUsage,
+  ) {
     if (extKeyUsage == null || extKeyUsage.isEmpty) {
       return null;
     }
@@ -442,7 +490,9 @@ class X509Utils {
     return extKeyUsageSequence;
   }
 
-  static SubjectPublicKeyInfo _getSubjectPublicKeyInfoFromSeq(ASN1Sequence pubKeySequence) {
+  static SubjectPublicKeyInfo _getSubjectPublicKeyInfoFromSeq(
+    ASN1Sequence pubKeySequence,
+  ) {
     var algSeq = pubKeySequence.elements!.elementAt(0) as ASN1Sequence;
     var algOi = algSeq.elements!.elementAt(0) as ASN1ObjectIdentifier;
     var asn1AlgParameters = algSeq.elements!.elementAt(1);
@@ -481,14 +531,22 @@ class X509Utils {
       pubKeyLength = length! * 8;
     }
 
-    var pubKeyThumbprint = CryptoUtils.getHash(pubKeySequence.encodedBytes!, algorithmName: 'SHA-1');
-    var pubKeySha256Thumbprint = CryptoUtils.getHash(pubKeySequence.encodedBytes!, algorithmName: 'SHA-256');
+    var pubKeyThumbprint = CryptoUtils.getHash(
+      pubKeySequence.encodedBytes!,
+      algorithmName: 'SHA-1',
+    );
+    var pubKeySha256Thumbprint = CryptoUtils.getHash(
+      pubKeySequence.encodedBytes!,
+      algorithmName: 'SHA-256',
+    );
 
     return SubjectPublicKeyInfo(
       algorithm: algOi.objectIdentifierAsString,
       algorithmReadableName: algOi.readableName,
       parameter: algParameters != '' ? algParameters : null,
-      parameterReadableName: algParametersReadable != '' ? algParametersReadable : null,
+      parameterReadableName: algParametersReadable != ''
+          ? algParametersReadable
+          : null,
       length: pubKeyLength,
       bytes: _bytesAsString(pubKeyAsBytes!),
       sha1Thumbprint: pubKeyThumbprint,
@@ -574,7 +632,11 @@ class X509Utils {
     final int lastBitsToSkip = bytes.first;
     final int amountOfBytes = bytes.length - 1; //don't count the first byte
 
-    for (int bitCounter = 0; bitCounter < amountOfBytes * 8 - lastBitsToSkip; ++bitCounter) {
+    for (
+      int bitCounter = 0;
+      bitCounter < amountOfBytes * 8 - lastBitsToSkip;
+      ++bitCounter
+    ) {
       final int byteIndex = bitCounter ~/ 8; // the current byte
       final int bitIndex = bitCounter % 8; // the current bit
       if (byteIndex >= amountOfBytes) {
@@ -605,7 +667,9 @@ class X509Utils {
   ///
   /// Parses the given object identifier values to the internal enum
   ///
-  static List<ExtendedKeyUsage> _fetchExtendedKeyUsageFromExtension(ASN1Object extData) {
+  static List<ExtendedKeyUsage> _fetchExtendedKeyUsageFromExtension(
+    ASN1Object extData,
+  ) {
     var extKeyUsage = <ExtendedKeyUsage>[];
     var octet = extData as ASN1OctetString;
     var keyUsageParser = ASN1Parser(octet.valueBytes);
@@ -742,21 +806,25 @@ class X509Utils {
     return cRLDistributionPoints;
   }
 
-  static X509CertificateValidity _getValidityFromSeq(ASN1Sequence validitySequence) {
+  static X509CertificateValidity _getValidityFromSeq(
+    ASN1Sequence validitySequence,
+  ) {
     DateTime? asn1FromDateTime;
     DateTime? asn1ToDateTime;
     if (validitySequence.elements!.elementAt(0) is ASN1UtcTime) {
       var asn1From = validitySequence.elements!.elementAt(0) as ASN1UtcTime;
       asn1FromDateTime = asn1From.time;
     } else {
-      var asn1From = validitySequence.elements!.elementAt(0) as ASN1GeneralizedTime;
+      var asn1From =
+          validitySequence.elements!.elementAt(0) as ASN1GeneralizedTime;
       asn1FromDateTime = asn1From.dateTimeValue;
     }
     if (validitySequence.elements!.elementAt(1) is ASN1UtcTime) {
       var asn1To = validitySequence.elements!.elementAt(1) as ASN1UtcTime;
       asn1ToDateTime = asn1To.time;
     } else {
-      var asn1To = validitySequence.elements!.elementAt(1) as ASN1GeneralizedTime;
+      var asn1To =
+          validitySequence.elements!.elementAt(1) as ASN1GeneralizedTime;
       asn1ToDateTime = asn1To.dateTimeValue;
     }
 
@@ -800,7 +868,9 @@ class X509Utils {
 
     ASN1Object pString;
     var identifier = oIdentifier.objectIdentifierAsString;
-    if (identifier == COUNTRY_NAME || SERIAL_NUMBER == identifier || identifier == DN_QUALIFIER) {
+    if (identifier == COUNTRY_NAME ||
+        SERIAL_NUMBER == identifier ||
+        identifier == DN_QUALIFIER) {
       pString = ASN1PrintableString(stringValue: value);
     } else {
       pString = ASN1UTF8String(utf8StringValue: value);
@@ -810,7 +880,11 @@ class X509Utils {
     return ASN1Set(elements: [innerSequence]);
   }
 
-  static Uint8List _rsaSign(Uint8List inBytes, RSAPrivateKey privateKey, String signingAlgorithm) {
+  static Uint8List _rsaSign(
+    Uint8List inBytes,
+    RSAPrivateKey privateKey,
+    String signingAlgorithm,
+  ) {
     var signer = Signer('$signingAlgorithm/RSA');
     signer.init(true, PrivateKeyParameter<RSAPrivateKey>(privateKey));
 
@@ -831,7 +905,9 @@ class X509Utils {
     publicKeySequence.add(ASN1Integer(publicKey.modulus));
     publicKeySequence.add(ASN1Integer(publicKey.exponent));
 
-    var blockPublicKey = ASN1BitString(stringValues: publicKeySequence.encode());
+    var blockPublicKey = ASN1BitString(
+      stringValues: publicKeySequence.encode(),
+    );
 
     var outer = ASN1Sequence();
     outer.add(blockEncryptionType);

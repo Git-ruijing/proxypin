@@ -12,7 +12,6 @@ abstract class EventListener {
   void onMessage(Channel channel, HttpMessage message, WebSocketFrame frame) {}
 }
 
-
 class CombinedEventListener extends EventListener {
   final List<EventListener> listeners;
 

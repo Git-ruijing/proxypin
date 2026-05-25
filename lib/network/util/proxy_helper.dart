@@ -36,26 +36,38 @@ import '../components/host_filter.dart';
 
 class ProxyHelper {
   static const Duration _remoteHistoryBatchTtl = Duration(minutes: 5);
-  static final Map<String, _RemoteHistoryBatchState> _remoteHistoryBatchStates = {};
+  static final Map<String, _RemoteHistoryBatchState> _remoteHistoryBatchStates =
+      {};
 
   //请求本服务
-  static Future<void> localRequest(ChannelContext channelContext, HttpRequest msg, Channel channel,
-      {EventListener? listener}) async {
+  static Future<void> localRequest(
+    ChannelContext channelContext,
+    HttpRequest msg,
+    Channel channel, {
+    EventListener? listener,
+  }) async {
     //获取配置
     if (msg.path == '/config') {
       final requestRewrites = await RequestRewriteManager.instance;
-      var response = HttpResponse(HttpStatus.ok, protocolVersion: msg.protocolVersion);
+      var response = HttpResponse(
+        HttpStatus.ok,
+        protocolVersion: msg.protocolVersion,
+      );
       var body = {
         "requestRewrites": await requestRewrites.toFullJson(),
         'whitelist': HostFilter.whitelist.toJson(),
         'blacklist': HostFilter.blacklist.toJson(),
         'scripts': await ScriptManager.instance.then((script) {
           var list = script.list.map((e) async {
-            return {'name': e.name, 'enabled': e.enabled, 'url': e.urls, 'script': await script.getScript(e)};
+            return {
+              'name': e.name,
+              'enabled': e.enabled,
+              'url': e.urls,
+              'script': await script.getScript(e),
+            };
           });
           return Future.wait(list);
         }),
-
       };
       response.body = utf8.encode(json.encode(body));
       channel.writeAndClose(channelContext, response);
@@ -64,7 +76,10 @@ class ProxyHelper {
 
     // 快捷分享：支持单条请求注入，以及历史记录直接导入历史列表。
     if (msg.path == '/share/quick' && msg.method == HttpMethod.post) {
-      final response = HttpResponse(HttpStatus.ok, protocolVersion: msg.protocolVersion);
+      final response = HttpResponse(
+        HttpStatus.ok,
+        protocolVersion: msg.protocolVersion,
+      );
       try {
         final payload = jsonDecode(msg.bodyAsString);
         final shareType = payload is Map ? payload['shareType'] : null;
@@ -83,11 +98,18 @@ class ProxyHelper {
           final batchId = payload['batchId']?.toString();
           final batchIndex = _toPositiveInt(payload['batchIndex']);
           final batchTotal = _toPositiveInt(payload['batchTotal']);
-          final isBatched = batchId != null && batchId.isNotEmpty && batchIndex != null && batchTotal != null;
+          final isBatched =
+              batchId != null &&
+              batchId.isNotEmpty &&
+              batchIndex != null &&
+              batchTotal != null;
 
           if (!isBatched || batchTotal <= 1) {
-            await (await HistoryStorage.instance)
-                .addRequests(entries, name: historyName, notifyRemoteImported: true);
+            await (await HistoryStorage.instance).addRequests(
+              entries,
+              name: historyName,
+              notifyRemoteImported: true,
+            );
             response.body = utf8.encode('ok');
             channel.writeAndClose(channelContext, response);
             return;
@@ -96,14 +118,20 @@ class ProxyHelper {
           _cleanupExpiredRemoteHistoryBatchStates();
           final state = _remoteHistoryBatchStates.putIfAbsent(
             batchId,
-            () => _RemoteHistoryBatchState(historyName: historyName, batchTotal: batchTotal),
+            () => _RemoteHistoryBatchState(
+              historyName: historyName,
+              batchTotal: batchTotal,
+            ),
           );
           if (state.batchTotal != batchTotal) {
-            _remoteHistoryBatchStates[batchId] = _RemoteHistoryBatchState(historyName: historyName, batchTotal: batchTotal)
-              ..addBatch(batchIndex, entries);
+            _remoteHistoryBatchStates[batchId] = _RemoteHistoryBatchState(
+              historyName: historyName,
+              batchTotal: batchTotal,
+            )..addBatch(batchIndex, entries);
           } else {
             state.addBatch(batchIndex, entries);
-            if ((state.historyName == null || state.historyName!.trim().isEmpty) &&
+            if ((state.historyName == null ||
+                    state.historyName!.trim().isEmpty) &&
                 historyName != null &&
                 historyName.trim().isNotEmpty) {
               state.historyName = historyName;
@@ -114,15 +142,20 @@ class ProxyHelper {
           if (currentState.isCompleted) {
             final merged = currentState.mergedRequests;
             _remoteHistoryBatchStates.remove(batchId);
-            await (await HistoryStorage.instance)
-                .addRequests(merged, name: currentState.historyName, notifyRemoteImported: true);
+            await (await HistoryStorage.instance).addRequests(
+              merged,
+              name: currentState.historyName,
+              notifyRemoteImported: true,
+            );
           }
           response.body = utf8.encode('ok');
           channel.writeAndClose(channelContext, response);
           return;
         }
 
-        final entry = payload is Map && payload['entry'] != null ? payload['entry'] : payload;
+        final entry = payload is Map && payload['entry'] != null
+            ? payload['entry']
+            : payload;
         if (entry is! Map) {
           throw const FormatException('invalid share payload');
         }
@@ -135,7 +168,11 @@ class ProxyHelper {
         }
         response.body = utf8.encode('ok');
       } catch (e, st) {
-        logger.e('Failed to process quick share payload', error: e, stackTrace: st);
+        logger.e(
+          'Failed to process quick share payload',
+          error: e,
+          stackTrace: st,
+        );
         response.status = HttpStatus.badRequest;
         response.body = utf8.encode('invalid payload');
       }
@@ -143,10 +180,16 @@ class ProxyHelper {
       return;
     }
 
-    var response = HttpResponse(HttpStatus.ok, protocolVersion: msg.protocolVersion);
+    var response = HttpResponse(
+      HttpStatus.ok,
+      protocolVersion: msg.protocolVersion,
+    );
     response.body = utf8.encode('pong');
     response.headers.set("os", Platform.operatingSystem);
-    response.headers.set("hostname", Platform.isAndroid ? Platform.operatingSystem : Platform.localHostname);
+    response.headers.set(
+      "hostname",
+      Platform.isAndroid ? Platform.operatingSystem : Platform.localHostname,
+    );
     channel.writeAndClose(channelContext, response);
   }
 
@@ -163,15 +206,24 @@ class ProxyHelper {
 
   static void _cleanupExpiredRemoteHistoryBatchStates() {
     final now = DateTime.now();
-    _remoteHistoryBatchStates.removeWhere((_, state) => now.difference(state.updatedAt) > _remoteHistoryBatchTtl);
+    _remoteHistoryBatchStates.removeWhere(
+      (_, state) => now.difference(state.updatedAt) > _remoteHistoryBatchTtl,
+    );
   }
 
   /// 下载证书
-  static void crtDownload(ChannelContext channelContext, Channel channel, HttpRequest request) async {
+  static void crtDownload(
+    ChannelContext channelContext,
+    Channel channel,
+    HttpRequest request,
+  ) async {
     const String fileMimeType = 'application/x-x509-ca-cert';
     var response = HttpResponse(HttpStatus.ok);
     response.headers.set(HttpHeaders.CONTENT_TYPE, fileMimeType);
-    response.headers.set("Content-Disposition", 'inline;filename=ProxyPinCA.crt');
+    response.headers.set(
+      "Content-Disposition",
+      'inline;filename=ProxyPinCA.crt',
+    );
     response.headers.set("Connection", 'close');
 
     var caFile = await CertificateManager.certificateFile();
@@ -188,18 +240,27 @@ class ProxyHelper {
 
   ///异常处理
   static Future<void> exceptionHandler(
-      ChannelContext channelContext, Channel channel, EventListener? listener, HttpRequest? request, error) async {
+    ChannelContext channelContext,
+    Channel channel,
+    EventListener? listener,
+    HttpRequest? request,
+    error,
+  ) async {
     HostAndPort? hostAndPort = channelContext.host;
     hostAndPort ??= HostAndPort.host(
-        scheme: HostAndPort.httpScheme, channel.remoteSocketAddress.host, channel.remoteSocketAddress.port);
+      scheme: HostAndPort.httpScheme,
+      channel.remoteSocketAddress.host,
+      channel.remoteSocketAddress.port,
+    );
     String message = error.toString();
     HttpStatus status = HttpStatus(-1, message);
     if (error is HandshakeException) {
       status = HttpStatus(
-          -2,
-          Localizations.isZH
-              ? 'SSL handshake failed, 请检查证书安装是否正确'
-              : 'SSL handshake failed, please check the certificate');
+        -2,
+        Localizations.isZH
+            ? 'SSL handshake failed, 请检查证书安装是否正确'
+            : 'SSL handshake failed, please check the certificate',
+      );
     } else if (error is ParserException) {
       status = HttpStatus(-3, error.message);
     } else if (error is SocketException) {
@@ -214,7 +275,8 @@ class ProxyHelper {
       ..hostAndPort = hostAndPort;
     request.processInfo ??= channelContext.processInfo;
 
-    if (request.method == HttpMethod.connect && !request.uri.startsWith("http")) {
+    if (request.method == HttpMethod.connect &&
+        !request.uri.startsWith("http")) {
       request.uri = hostAndPort.domain;
     }
 
@@ -240,7 +302,10 @@ class _RemoteHistoryBatchState {
   final Map<int, List<HttpRequest>> _batches = {};
   DateTime updatedAt = DateTime.now();
 
-  _RemoteHistoryBatchState({required this.historyName, required this.batchTotal});
+  _RemoteHistoryBatchState({
+    required this.historyName,
+    required this.batchTotal,
+  });
 
   void addBatch(int batchIndex, List<HttpRequest> requests) {
     if (batchIndex <= 0 || batchIndex > batchTotal) {
@@ -263,4 +328,3 @@ class _RemoteHistoryBatchState {
     return merged;
   }
 }
-

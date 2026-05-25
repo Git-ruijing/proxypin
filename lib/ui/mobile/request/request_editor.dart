@@ -59,7 +59,8 @@ class MobileRequestEditor extends StatefulWidget {
   }
 }
 
-class RequestEditorState extends State<MobileRequestEditor> with SingleTickerProviderStateMixin {
+class RequestEditorState extends State<MobileRequestEditor>
+    with SingleTickerProviderStateMixin {
   final UrlQueryNotifier _queryNotifier = UrlQueryNotifier();
   final requestLineKey = GlobalKey<_RequestLineState>();
   final requestKey = GlobalKey<_HttpState>();
@@ -76,10 +77,7 @@ class RequestEditorState extends State<MobileRequestEditor> with SingleTickerPro
 
   AppLocalizations get localizations => AppLocalizations.of(context)!;
 
-  var tabs = const [
-    Tab(text: "请求"),
-    Tab(text: "响应"),
-  ];
+  var tabs = const [Tab(text: "请求"), Tab(text: "响应")];
 
   @override
   void dispose() {
@@ -104,9 +102,12 @@ class RequestEditorState extends State<MobileRequestEditor> with SingleTickerPro
     super.initState();
 
     tabController = TabController(
-        length: tabs.length,
-        vsync: this,
-        initialIndex: widget.source == RequestEditorSource.breakpointResponse ? 1 : 0);
+      length: tabs.length,
+      vsync: this,
+      initialIndex: widget.source == RequestEditorSource.breakpointResponse
+          ? 1
+          : 0,
+    );
     request = widget.request;
     response = widget.response;
     if (widget.request == null) {
@@ -121,7 +122,8 @@ class RequestEditorState extends State<MobileRequestEditor> with SingleTickerPro
       return;
     }
     var text = data.text;
-    if (text?.startsWith("http://") == true || text?.startsWith("https://") == true) {
+    if (text?.startsWith("http://") == true ||
+        text?.startsWith("https://") == true) {
       requestLineKey.currentState?.requestUrl.text = text!;
       return;
     }
@@ -130,25 +132,33 @@ class RequestEditorState extends State<MobileRequestEditor> with SingleTickerPro
         context: context,
         builder: (BuildContext context) {
           return AlertDialog(
-              title: Text(localizations.prompt),
-              content: Text(localizations.curlSchemeRequest),
-              actions: [
-                TextButton(child: Text(localizations.cancel), onPressed: () => Navigator.of(context).pop()),
-                TextButton(
-                    child: Text(localizations.confirm),
-                    onPressed: () {
-                      try {
-                        setState(() {
-                          request = Curl.parse(text!);
-                          requestKey.currentState?.change(request!);
-                          requestLineKey.currentState?.change(request?.requestUrl, request?.method);
-                        });
-                      } catch (e) {
-                        FlutterToastr.show(localizations.fail, context);
-                      }
-                      Navigator.of(context).pop();
-                    }),
-              ]);
+            title: Text(localizations.prompt),
+            content: Text(localizations.curlSchemeRequest),
+            actions: [
+              TextButton(
+                child: Text(localizations.cancel),
+                onPressed: () => Navigator.of(context).pop(),
+              ),
+              TextButton(
+                child: Text(localizations.confirm),
+                onPressed: () {
+                  try {
+                    setState(() {
+                      request = Curl.parse(text!);
+                      requestKey.currentState?.change(request!);
+                      requestLineKey.currentState?.change(
+                        request?.requestUrl,
+                        request?.method,
+                      );
+                    });
+                  } catch (e) {
+                    FlutterToastr.show(localizations.fail, context);
+                  }
+                  Navigator.of(context).pop();
+                },
+              ),
+            ],
+          );
         },
       );
     }
@@ -156,7 +166,9 @@ class RequestEditorState extends State<MobileRequestEditor> with SingleTickerPro
 
   @override
   Widget build(BuildContext context) {
-    bool isCN = Localizations.localeOf(context) == const Locale.fromSubtags(languageCode: 'zh');
+    bool isCN =
+        Localizations.localeOf(context) ==
+        const Locale.fromSubtags(languageCode: 'zh');
     if (!isCN) {
       tabs = [
         Tab(text: localizations.request),
@@ -173,62 +185,95 @@ class RequestEditorState extends State<MobileRequestEditor> with SingleTickerPro
     }
 
     return Scaffold(
-        appBar: AppBar(
-            title: Text(localizations.httpRequest, style: const TextStyle(fontSize: 16)),
-            centerTitle: true,
-            leadingWidth: 72,
-            leading: TextButton(
-                onPressed: () => Navigator.pop(context),
-                child: Text(localizations.cancel, style: Theme.of(context).textTheme.bodyMedium)),
-            actions: [
-              TextButton.icon(
-                  icon: Icon(icon),
-                  label: Text(buttonText),
-                  onPressed: () {
-                    if (widget.source == RequestEditorSource.editor) {
-                      sendRequest();
-                    } else {
-                      executeBreakpoint();
-                    }
-                  })
-            ],
-            bottom: TabBar(controller: tabController, tabs: tabs)),
-        body: GestureDetector(
-            onTap: () => FocusManager.instance.primaryFocus?.unfocus(),
-            child: TabBarView(
-              controller: tabController,
-              children: [
-                _HttpWidget(
-                  title: _RequestLine(request: request, key: requestLineKey, urlQueryNotifier: _queryNotifier),
-                  message: request,
-                  key: requestKey,
-                  urlQueryNotifier: _queryNotifier,
-                  readOnly: widget.source == RequestEditorSource.breakpointResponse,
-                ),
-                ValueListenableBuilder(
-                    valueListenable: responseChange,
-                    builder: (_, value, __) {
-                      if (value == 0) {
-                        return const Center(child: CircularProgressIndicator());
-                      }
+      appBar: AppBar(
+        title: Text(
+          localizations.httpRequest,
+          style: const TextStyle(fontSize: 16),
+        ),
+        centerTitle: true,
+        leadingWidth: 72,
+        leading: TextButton(
+          onPressed: () => Navigator.pop(context),
+          child: Text(
+            localizations.cancel,
+            style: Theme.of(context).textTheme.bodyMedium,
+          ),
+        ),
+        actions: [
+          TextButton.icon(
+            icon: Icon(icon),
+            label: Text(buttonText),
+            onPressed: () {
+              if (widget.source == RequestEditorSource.editor) {
+                sendRequest();
+              } else {
+                executeBreakpoint();
+              }
+            },
+          ),
+        ],
+        bottom: TabBar(controller: tabController, tabs: tabs),
+      ),
+      body: GestureDetector(
+        onTap: () => FocusManager.instance.primaryFocus?.unfocus(),
+        child: TabBarView(
+          controller: tabController,
+          children: [
+            _HttpWidget(
+              title: _RequestLine(
+                request: request,
+                key: requestLineKey,
+                urlQueryNotifier: _queryNotifier,
+              ),
+              message: request,
+              key: requestKey,
+              urlQueryNotifier: _queryNotifier,
+              readOnly: widget.source == RequestEditorSource.breakpointResponse,
+            ),
+            ValueListenableBuilder(
+              valueListenable: responseChange,
+              builder: (_, value, __) {
+                if (value == 0) {
+                  return const Center(child: CircularProgressIndicator());
+                }
 
-                      return _HttpWidget(
-                          key: responseKey,
-                          title: Row(children: [
-                            Text(response?.protocolVersion ?? '',
-                                style: const TextStyle(fontWeight: FontWeight.w500, color: Colors.blue)),
-                            const SizedBox(width: 10),
-                            Text("${localizations.statusCode}: ", style: const TextStyle(fontWeight: FontWeight.w500)),
-                            const SizedBox(width: 10),
-                            Text(response?.status.toString() ?? "",
-                                style: TextStyle(
-                                    color: response?.status.isSuccessful() == true ? Colors.blue : Colors.red))
-                          ]),
-                          readOnly: widget.source != RequestEditorSource.breakpointResponse,
-                          message: response);
-                    }),
-              ],
-            )));
+                return _HttpWidget(
+                  key: responseKey,
+                  title: Row(
+                    children: [
+                      Text(
+                        response?.protocolVersion ?? '',
+                        style: const TextStyle(
+                          fontWeight: FontWeight.w500,
+                          color: Colors.blue,
+                        ),
+                      ),
+                      const SizedBox(width: 10),
+                      Text(
+                        "${localizations.statusCode}: ",
+                        style: const TextStyle(fontWeight: FontWeight.w500),
+                      ),
+                      const SizedBox(width: 10),
+                      Text(
+                        response?.status.toString() ?? "",
+                        style: TextStyle(
+                          color: response?.status.isSuccessful() == true
+                              ? Colors.blue
+                              : Colors.red,
+                        ),
+                      ),
+                    ],
+                  ),
+                  readOnly:
+                      widget.source != RequestEditorSource.breakpointResponse,
+                  message: response,
+                );
+              },
+            ),
+          ],
+        ),
+      ),
+    );
   }
 
   ///发送请求
@@ -238,28 +283,39 @@ class RequestEditorState extends State<MobileRequestEditor> with SingleTickerPro
     var requestBody = requestKey.currentState?.getBody();
     String url = currentState.requestUrl.text;
 
-    HttpRequest request = HttpRequest(currentState.requestMethod, Uri.parse(url).toString(),
-        protocolVersion: this.request?.protocolVersion ?? "HTTP/1.1");
+    HttpRequest request = HttpRequest(
+      currentState.requestMethod,
+      Uri.parse(url).toString(),
+      protocolVersion: this.request?.protocolVersion ?? "HTTP/1.1",
+    );
 
     request.headers.addAll(headers);
     request.body = requestBody == null ? null : utf8.encode(requestBody);
 
-    var proxyInfo = widget.proxyServer?.isRunning == true ? ProxyInfo.of("127.0.0.1", widget.proxyServer?.port) : null;
+    var proxyInfo = widget.proxyServer?.isRunning == true
+        ? ProxyInfo.of("127.0.0.1", widget.proxyServer?.port)
+        : null;
 
     responseKey.currentState?.change(null);
     responseChange.value = 0;
 
-    HttpClients.proxyRequest(proxyInfo: proxyInfo, request, timeout: Duration(seconds: 15)).then((response) {
-      this.response = response;
-      this.response?.request = request;
-      responseKey.currentState?.change(response);
-      responseChange.value = 1;
+    HttpClients.proxyRequest(
+          proxyInfo: proxyInfo,
+          request,
+          timeout: Duration(seconds: 15),
+        )
+        .then((response) {
+          this.response = response;
+          this.response?.request = request;
+          responseKey.currentState?.change(response);
+          responseChange.value = 1;
 
-      // FlutterToastr.show(localizations.requestSuccess, context);
-    }).catchError((e) {
-      responseChange.value = -1;
-      FlutterToastr.show('${localizations.fail}$e', context);
-    });
+          // FlutterToastr.show(localizations.requestSuccess, context);
+        })
+        .catchError((e) {
+          responseChange.value = -1;
+          FlutterToastr.show('${localizations.fail}$e', context);
+        });
 
     tabController.animateTo(1);
   }
@@ -286,7 +342,9 @@ class RequestEditorState extends State<MobileRequestEditor> with SingleTickerPro
       HttpResponse newResponse = response!.copy();
       newResponse.headers.clear();
       newResponse.headers.addAll(headers);
-      newResponse.body = responseBody == null ? null : utf8.encode(responseBody);
+      newResponse.body = responseBody == null
+          ? null
+          : utf8.encode(responseBody);
       widget.onExecuteResponse?.call(newResponse);
     }
   }
@@ -300,7 +358,8 @@ class UrlQueryNotifier {
 
   ParamCallback urlListener(ParamCallback listener) => _urlNotifier = listener;
 
-  ParamCallback paramListener(ParamCallback listener) => _paramNotifier = listener;
+  ParamCallback paramListener(ParamCallback listener) =>
+      _paramNotifier = listener;
 
   void onUrlChange(String url) => _urlNotifier?.call(url);
 
@@ -313,7 +372,13 @@ class _HttpWidget extends StatefulWidget {
   final Widget title;
   final UrlQueryNotifier? urlQueryNotifier;
 
-  const _HttpWidget({this.message, this.readOnly = false, super.key, required this.title, this.urlQueryNotifier});
+  const _HttpWidget({
+    this.message,
+    this.readOnly = false,
+    super.key,
+    required this.title,
+    this.urlQueryNotifier,
+  });
 
   @override
   State<StatefulWidget> createState() {
@@ -368,28 +433,38 @@ class _HttpState extends State<_HttpWidget> with AutomaticKeepAliveClientMixin {
     }
 
     return SingleChildScrollView(
-        padding: const EdgeInsets.all(15),
-        child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+      padding: const EdgeInsets.all(15),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
           widget.title,
           if (widget.urlQueryNotifier != null)
             KeyValWidget(
               title: 'URL${localizations.param}',
               paramNotifier: widget.urlQueryNotifier,
-              params: message is HttpRequest ? (message as HttpRequest).requestUri?.queryParametersAll : null,
+              params: message is HttpRequest
+                  ? (message as HttpRequest).requestUri?.queryParametersAll
+                  : null,
               expanded: false,
             ),
           KeyValWidget(
-              title: "Headers",
-              params: message?.headers.getHeaders() ?? initHeader,
-              key: headerKey,
-              suggestions: HttpHeaders.commonHeaderKeys,
-              readOnly: widget.readOnly),
+            title: "Headers",
+            params: message?.headers.getHeaders() ?? initHeader,
+            key: headerKey,
+            suggestions: HttpHeaders.commonHeaderKeys,
+            readOnly: widget.readOnly,
+          ),
           // 请求头
           const SizedBox(height: 10),
-          const Text("Body", style: TextStyle(fontWeight: FontWeight.w500, color: Colors.blue)),
+          const Text(
+            "Body",
+            style: TextStyle(fontWeight: FontWeight.w500, color: Colors.blue),
+          ),
           _body(),
           const SizedBox(height: 10),
-        ]));
+        ],
+      ),
+    );
   }
 
   Widget _body() {
@@ -398,11 +473,12 @@ class _HttpState extends State<_HttpWidget> with AutomaticKeepAliveClientMixin {
     }
 
     return TextField(
-        controller: TextEditingController(text: body),
-        readOnly: widget.readOnly,
-        onChanged: (value) => body = value,
-        minLines: 3,
-        maxLines: 15);
+      controller: TextEditingController(text: body),
+      readOnly: widget.readOnly,
+      onChanged: (value) => body = value,
+      minLines: 3,
+      maxLines: 15,
+    );
   }
 }
 
@@ -450,7 +526,9 @@ class _RequestLineState extends State<_RequestLine> {
 
   void urlNotifier() {
     var splitFirst = requestUrl.text.splitFirst("?".codeUnits.first);
-    widget.urlQueryNotifier?.onUrlChange(splitFirst.length > 1 ? splitFirst.last : '');
+    widget.urlQueryNotifier?.onUrlChange(
+      splitFirst.length > 1 ? splitFirst.last : '',
+    );
   }
 
   void onQueryChange(String query) {
@@ -468,28 +546,32 @@ class _RequestLineState extends State<_RequestLine> {
   Widget build(BuildContext context) {
     TextInput;
     return TextField(
-        style: const TextStyle(fontSize: 14),
-        minLines: 1,
-        maxLines: 5,
-        autofocus: false,
-        controller: requestUrl,
-        decoration: InputDecoration(
-            prefixIcon: Padding(
-              padding: const EdgeInsets.only(left: 6, right: 6),
-              child: MethodPopupMenu(
-                value: requestMethod,
-                showSeparator: true,
-                onChanged: (val) {
-                  setState(() => requestMethod = val!);
-                },
-              ),
-            ),
-            isDense: true,
-            border: const OutlineInputBorder(borderSide: BorderSide()),
-            enabledBorder: const OutlineInputBorder(borderSide: BorderSide(color: Colors.grey, width: 0.3))),
-        onChanged: (value) {
-          urlNotifier();
-        });
+      style: const TextStyle(fontSize: 14),
+      minLines: 1,
+      maxLines: 5,
+      autofocus: false,
+      controller: requestUrl,
+      decoration: InputDecoration(
+        prefixIcon: Padding(
+          padding: const EdgeInsets.only(left: 6, right: 6),
+          child: MethodPopupMenu(
+            value: requestMethod,
+            showSeparator: true,
+            onChanged: (val) {
+              setState(() => requestMethod = val!);
+            },
+          ),
+        ),
+        isDense: true,
+        border: const OutlineInputBorder(borderSide: BorderSide()),
+        enabledBorder: const OutlineInputBorder(
+          borderSide: BorderSide(color: Colors.grey, width: 0.3),
+        ),
+      ),
+      onChanged: (value) {
+        urlNotifier();
+      },
+    );
   }
 }
 
@@ -510,14 +592,15 @@ class KeyValWidget extends StatefulWidget {
   final bool expanded;
   final List<String>? suggestions;
 
-  const KeyValWidget(
-      {super.key,
-      this.params,
-      this.readOnly = false,
-      this.paramNotifier,
-      required this.title,
-      this.expanded = true,
-      this.suggestions});
+  const KeyValWidget({
+    super.key,
+    this.params,
+    this.readOnly = false,
+    this.paramNotifier,
+    required this.title,
+    this.expanded = true,
+    this.suggestions,
+  });
 
   @override
   State<StatefulWidget> createState() {
@@ -605,7 +688,10 @@ class KeyValState extends State<KeyValWidget> {
   @override
   Widget build(BuildContext context) {
     return ExpansionTile(
-      title: Text(widget.title, style: const TextStyle(fontWeight: FontWeight.w500, color: Colors.blue)),
+      title: Text(
+        widget.title,
+        style: const TextStyle(fontWeight: FontWeight.w500, color: Colors.blue),
+      ),
       tilePadding: const EdgeInsets.only(left: 0, top: 10, bottom: 10),
       initiallyExpanded: _expanded[widget.title] ?? widget.expanded,
       onExpansionChanged: (value) => _expanded[widget.title] = value,
@@ -617,12 +703,14 @@ class KeyValState extends State<KeyValWidget> {
             : Container(
                 alignment: Alignment.center,
                 child: TextButton(
-                    onPressed: () {
-                      var keyVal = KeyVal("", "");
-                      _params.add(keyVal);
-                      modifyParam(keyVal);
-                    },
-                    child: Text(localizations.add, textAlign: TextAlign.center))) //添加按钮
+                  onPressed: () {
+                    var keyVal = KeyVal("", "");
+                    _params.add(keyVal);
+                    modifyParam(keyVal);
+                  },
+                  child: Text(localizations.add, textAlign: TextAlign.center),
+                ),
+              ), //添加按钮
       ],
     );
   }
@@ -631,10 +719,16 @@ class KeyValState extends State<KeyValWidget> {
     List<Widget> list = [];
 
     for (var element in _params) {
-      Widget headerWidget = Padding(padding: const EdgeInsets.only(top: 5, bottom: 5), child: row(element));
+      Widget headerWidget = Padding(
+        padding: const EdgeInsets.only(top: 5, bottom: 5),
+        child: row(element),
+      );
       if (!widget.readOnly) {
-        headerWidget =
-            InkWell(onTap: () => modifyParam(element), onLongPress: () => deleteHeader(element), child: headerWidget);
+        headerWidget = InkWell(
+          onTap: () => modifyParam(element),
+          onLongPress: () => deleteHeader(element),
+          child: headerWidget,
+        );
       }
 
       list.add(headerWidget);
@@ -659,13 +753,17 @@ class KeyValState extends State<KeyValWidget> {
     String headerName = keyVal.key;
     String val = keyVal.value;
     showDialog(
-        context: context,
-        builder: (ctx) {
-          return StatefulBuilder(builder: (context, setState) {
+      context: context,
+      builder: (ctx) {
+        return StatefulBuilder(
+          builder: (context, setState) {
             return AlertDialog(
               titlePadding: const EdgeInsets.only(left: 25, top: 10),
               actionsPadding: const EdgeInsets.only(right: 10, bottom: 10),
-              title: Text(localizations.modifyRequestHeader, style: const TextStyle(fontSize: 18)),
+              title: Text(
+                localizations.modifyRequestHeader,
+                style: const TextStyle(fontSize: 18),
+              ),
               content: Wrap(
                 children: [
                   if (widget.suggestions != null)
@@ -675,7 +773,9 @@ class KeyValState extends State<KeyValWidget> {
                           return const Iterable<String>.empty();
                         }
                         return widget.suggestions!.where((String option) {
-                          return option.toLowerCase().contains(textEditingValue.text.toLowerCase());
+                          return option.toLowerCase().contains(
+                            textEditingValue.text.toLowerCase(),
+                          );
                         });
                       },
                       onSelected: (String selection) {
@@ -683,57 +783,80 @@ class KeyValState extends State<KeyValWidget> {
                           headerName = selection;
                         });
                       },
-                      fieldViewBuilder: (BuildContext context, TextEditingController textEditingController,
-                          FocusNode focusNode, VoidCallback onFieldSubmitted) {
-                        return TextFormField(
-                          controller: textEditingController,
-                          focusNode: focusNode,
-                          minLines: 1,
-                          maxLines: 3,
-                          decoration: InputDecoration(labelText: localizations.headerName),
-                          onChanged: (value) {
-                            headerName = value;
-                            setState(() {});
+                      fieldViewBuilder:
+                          (
+                            BuildContext context,
+                            TextEditingController textEditingController,
+                            FocusNode focusNode,
+                            VoidCallback onFieldSubmitted,
+                          ) {
+                            return TextFormField(
+                              controller: textEditingController,
+                              focusNode: focusNode,
+                              minLines: 1,
+                              maxLines: 3,
+                              decoration: InputDecoration(
+                                labelText: localizations.headerName,
+                              ),
+                              onChanged: (value) {
+                                headerName = value;
+                                setState(() {});
+                              },
+                            );
                           },
-                        );
-                      },
                       initialValue: TextEditingValue(text: headerName),
                       optionsViewBuilder:
-                          (BuildContext context, AutocompleteOnSelected<String> onSelected, Iterable<String> options) {
-                        return Align(
-                          alignment: Alignment.topLeft,
-                          child: Material(
-                            elevation: 4.0,
-                            child: ConstrainedBox(
-                              constraints: const BoxConstraints(maxHeight: 200, maxWidth: 300),
-                              child: ListView.builder(
-                                padding: EdgeInsets.zero,
-                                shrinkWrap: true,
-                                itemCount: options.length,
-                                itemBuilder: (BuildContext context, int index) {
-                                  final String option = options.elementAt(index);
-                                  return InkWell(
-                                    onTap: () {
-                                      onSelected(option);
-                                    },
-                                    child: Container(
-                                      padding: const EdgeInsets.all(10.0),
-                                      child: _buildHighlightText(option, headerName),
-                                    ),
-                                  );
-                                },
+                          (
+                            BuildContext context,
+                            AutocompleteOnSelected<String> onSelected,
+                            Iterable<String> options,
+                          ) {
+                            return Align(
+                              alignment: Alignment.topLeft,
+                              child: Material(
+                                elevation: 4.0,
+                                child: ConstrainedBox(
+                                  constraints: const BoxConstraints(
+                                    maxHeight: 200,
+                                    maxWidth: 300,
+                                  ),
+                                  child: ListView.builder(
+                                    padding: EdgeInsets.zero,
+                                    shrinkWrap: true,
+                                    itemCount: options.length,
+                                    itemBuilder:
+                                        (BuildContext context, int index) {
+                                          final String option = options
+                                              .elementAt(index);
+                                          return InkWell(
+                                            onTap: () {
+                                              onSelected(option);
+                                            },
+                                            child: Container(
+                                              padding: const EdgeInsets.all(
+                                                10.0,
+                                              ),
+                                              child: _buildHighlightText(
+                                                option,
+                                                headerName,
+                                              ),
+                                            ),
+                                          );
+                                        },
+                                  ),
+                                ),
                               ),
-                            ),
-                          ),
-                        );
-                      },
+                            );
+                          },
                     )
                   else
                     TextFormField(
                       minLines: 1,
                       maxLines: 3,
                       initialValue: headerName,
-                      decoration: InputDecoration(labelText: localizations.headerName),
+                      decoration: InputDecoration(
+                        labelText: localizations.headerName,
+                      ),
                       onChanged: (value) {
                         headerName = value;
                         setState(() {});
@@ -745,123 +868,180 @@ class KeyValState extends State<KeyValWidget> {
                         if (textEditingValue.text.isEmpty) {
                           return const Iterable<String>.empty();
                         }
-                        return HttpHeaders.commonHeaderValues[headerName]!.where((String option) {
-                          return option.toLowerCase().contains(textEditingValue.text.toLowerCase());
-                        });
+                        return HttpHeaders.commonHeaderValues[headerName]!
+                            .where((String option) {
+                              return option.toLowerCase().contains(
+                                textEditingValue.text.toLowerCase(),
+                              );
+                            });
                       },
                       onSelected: (String selection) {
                         val = selection;
                       },
-                      fieldViewBuilder: (BuildContext context, TextEditingController textEditingController,
-                          FocusNode focusNode, VoidCallback onFieldSubmitted) {
-                        return TextFormField(
-                          controller: textEditingController,
-                          focusNode: focusNode,
-                          minLines: 1,
-                          maxLines: 8,
-                          decoration: InputDecoration(labelText: localizations.value),
-                          onChanged: (value) => val = value,
-                        );
-                      },
+                      fieldViewBuilder:
+                          (
+                            BuildContext context,
+                            TextEditingController textEditingController,
+                            FocusNode focusNode,
+                            VoidCallback onFieldSubmitted,
+                          ) {
+                            return TextFormField(
+                              controller: textEditingController,
+                              focusNode: focusNode,
+                              minLines: 1,
+                              maxLines: 8,
+                              decoration: InputDecoration(
+                                labelText: localizations.value,
+                              ),
+                              onChanged: (value) => val = value,
+                            );
+                          },
                       initialValue: TextEditingValue(text: val),
                       optionsViewBuilder:
-                          (BuildContext context, AutocompleteOnSelected<String> onSelected, Iterable<String> options) {
-                        return Align(
-                          alignment: Alignment.topLeft,
-                          child: Material(
-                            elevation: 4.0,
-                            child: ConstrainedBox(
-                              constraints: const BoxConstraints(maxHeight: 200, maxWidth: 300),
-                              child: ListView.builder(
-                                padding: EdgeInsets.zero,
-                                shrinkWrap: true,
-                                itemCount: options.length,
-                                itemBuilder: (BuildContext context, int index) {
-                                  final String option = options.elementAt(index);
-                                  return InkWell(
-                                    onTap: () {
-                                      onSelected(option);
-                                    },
-                                    child: Container(
-                                      padding: const EdgeInsets.all(10.0),
-                                      child: _buildHighlightText(option, val),
-                                    ),
-                                  );
-                                },
+                          (
+                            BuildContext context,
+                            AutocompleteOnSelected<String> onSelected,
+                            Iterable<String> options,
+                          ) {
+                            return Align(
+                              alignment: Alignment.topLeft,
+                              child: Material(
+                                elevation: 4.0,
+                                child: ConstrainedBox(
+                                  constraints: const BoxConstraints(
+                                    maxHeight: 200,
+                                    maxWidth: 300,
+                                  ),
+                                  child: ListView.builder(
+                                    padding: EdgeInsets.zero,
+                                    shrinkWrap: true,
+                                    itemCount: options.length,
+                                    itemBuilder:
+                                        (BuildContext context, int index) {
+                                          final String option = options
+                                              .elementAt(index);
+                                          return InkWell(
+                                            onTap: () {
+                                              onSelected(option);
+                                            },
+                                            child: Container(
+                                              padding: const EdgeInsets.all(
+                                                10.0,
+                                              ),
+                                              child: _buildHighlightText(
+                                                option,
+                                                val,
+                                              ),
+                                            ),
+                                          );
+                                        },
+                                  ),
+                                ),
                               ),
-                            ),
-                          ),
-                        );
-                      },
+                            );
+                          },
                     )
                   else
                     TextFormField(
                       minLines: 1,
                       maxLines: 8,
                       initialValue: val,
-                      decoration: InputDecoration(labelText: localizations.value),
+                      decoration: InputDecoration(
+                        labelText: localizations.value,
+                      ),
                       onChanged: (value) => val = value,
-                    )
+                    ),
                 ],
               ),
               actions: [
-                TextButton(onPressed: () => Navigator.pop(ctx), child: Text(localizations.cancel)),
                 TextButton(
-                    onPressed: () {
-                      this.setState(() {
-                        keyVal.key = headerName;
-                        keyVal.value = val;
-                      });
-                      notifierChange();
-                      Navigator.pop(ctx);
-                    },
-                    child: Text(localizations.modify)),
+                  onPressed: () => Navigator.pop(ctx),
+                  child: Text(localizations.cancel),
+                ),
+                TextButton(
+                  onPressed: () {
+                    this.setState(() {
+                      keyVal.key = headerName;
+                      keyVal.value = val;
+                    });
+                    notifierChange();
+                    Navigator.pop(ctx);
+                  },
+                  child: Text(localizations.modify),
+                ),
               ],
             );
-          });
-        });
+          },
+        );
+      },
+    );
   }
 
   //删除
   deleteHeader(KeyVal keyVal) {
     showDialog(
-        context: context,
-        builder: (ctx) {
-          return AlertDialog(
-            title: Text(localizations.deleteHeaderConfirm, style: const TextStyle(fontSize: 18)),
-            actions: [
-              TextButton(onPressed: () => Navigator.pop(ctx), child: Text(localizations.cancel)),
-              TextButton(
-                  onPressed: () {
-                    setState(() => _params.remove(keyVal));
-                    notifierChange();
-                    Navigator.pop(ctx);
-                  },
-                  child: Text(localizations.delete)),
-            ],
-          );
-        });
+      context: context,
+      builder: (ctx) {
+        return AlertDialog(
+          title: Text(
+            localizations.deleteHeaderConfirm,
+            style: const TextStyle(fontSize: 18),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(ctx),
+              child: Text(localizations.cancel),
+            ),
+            TextButton(
+              onPressed: () {
+                setState(() => _params.remove(keyVal));
+                notifierChange();
+                Navigator.pop(ctx);
+              },
+              child: Text(localizations.delete),
+            ),
+          ],
+        );
+      },
+    );
   }
 
   Widget row(KeyVal keyVal) {
-    return Row(children: [
-      if (!widget.readOnly)
-        Checkbox(
+    return Row(
+      children: [
+        if (!widget.readOnly)
+          Checkbox(
             value: keyVal.enabled,
             onChanged: (val) {
               setState(() {
                 keyVal.enabled = val!;
               });
               notifierChange();
-            }),
-      Expanded(flex: 4, child: Text(keyVal.key, style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w500))),
-      const Text(":", style: TextStyle(color: Colors.orange, fontWeight: FontWeight.w600)),
-      const SizedBox(width: 8),
-      Expanded(
-        flex: 6,
-        child: Text(keyVal.value, style: const TextStyle(fontSize: 13), maxLines: 5, overflow: TextOverflow.ellipsis),
-      ),
-    ]);
+            },
+          ),
+        Expanded(
+          flex: 4,
+          child: Text(
+            keyVal.key,
+            style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w500),
+          ),
+        ),
+        const Text(
+          ":",
+          style: TextStyle(color: Colors.orange, fontWeight: FontWeight.w600),
+        ),
+        const SizedBox(width: 8),
+        Expanded(
+          flex: 6,
+          child: Text(
+            keyVal.value,
+            style: const TextStyle(fontSize: 13),
+            maxLines: 5,
+            overflow: TextOverflow.ellipsis,
+          ),
+        ),
+      ],
+    );
   }
 
   Widget _buildHighlightText(String text, String query) {
@@ -874,12 +1054,20 @@ class KeyValState extends State<KeyValWidget> {
       return Text(text);
     }
 
-    return Text.rich(TextSpan(children: [
-      TextSpan(text: text.substring(0, index)),
+    return Text.rich(
       TextSpan(
-          text: text.substring(index, index + query.length),
-          style: TextStyle(color: Theme.of(context).colorScheme.primary, fontWeight: FontWeight.bold)),
-      TextSpan(text: text.substring(index + query.length))
-    ]));
+        children: [
+          TextSpan(text: text.substring(0, index)),
+          TextSpan(
+            text: text.substring(index, index + query.length),
+            style: TextStyle(
+              color: Theme.of(context).colorScheme.primary,
+              fontWeight: FontWeight.bold,
+            ),
+          ),
+          TextSpan(text: text.substring(index + query.length)),
+        ],
+      ),
+    );
   }
 }

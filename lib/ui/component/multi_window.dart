@@ -1,4 +1,4 @@
-﻿/*
+/*
  * Copyright 2023 Hongen Wang
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -64,33 +64,42 @@ Widget multiWindow(int windowId, Map<dynamic, dynamic> argument) {
   //请求编辑器
   if (argument['name'] == 'RequestEditor') {
     return RequestEditor(
-        windowController: WindowController.fromWindowId(windowId),
-        request: argument['request'] == null ? null : HttpRequest.fromJson(argument['request']));
+      windowController: WindowController.fromWindowId(windowId),
+      request: argument['request'] == null
+          ? null
+          : HttpRequest.fromJson(argument['request']),
+    );
   }
 
   //请求详情
   if (argument['name'] == 'RequestDetailPage') {
     return NetworkTabController(
       windowId: windowId,
-      httpRequest: argument['request'] == null ? null : HttpRequest.fromJson(argument['request']),
-      httpResponse: argument['response'] == null ? null : HttpResponse.fromJson(argument['response']),
+      httpRequest: argument['request'] == null
+          ? null
+          : HttpRequest.fromJson(argument['request']),
+      httpResponse: argument['response'] == null
+          ? null
+          : HttpResponse.fromJson(argument['response']),
     );
   }
 
   //请求体
   if (argument['name'] == 'HttpBodyWidget') {
     return HttpBodyWidget(
-        windowController: WindowController.fromWindowId(windowId),
-        httpMessage: HttpMessage.fromJson(argument['httpMessage']),
-        inNewWindow: true,
-        hideRequestRewrite: true);
+      windowController: WindowController.fromWindowId(windowId),
+      httpMessage: HttpMessage.fromJson(argument['httpMessage']),
+      inNewWindow: true,
+      hideRequestRewrite: true,
+    );
   }
   //编码
   if (argument['name'] == 'EncoderWidget') {
     return EncoderWidget(
-        type: EncoderType.nameOf(argument['type']),
-        text: argument['text'],
-        windowController: WindowController.fromWindowId(windowId));
+      type: EncoderType.nameOf(argument['type']),
+      text: argument['text'],
+      windowController: WindowController.fromWindowId(windowId),
+    );
   }
   //脚本
   if (argument['name'] == 'ScriptWidget') {
@@ -99,12 +108,17 @@ Widget multiWindow(int windowId, Map<dynamic, dynamic> argument) {
   //请求重写
   if (argument['name'] == 'RequestRewriteWidget') {
     return futureWidget(
-        RequestRewriteManager.instance, (data) => RequestRewriteWidget(windowId: windowId, requestRewrites: data));
+      RequestRewriteManager.instance,
+      (data) => RequestRewriteWidget(windowId: windowId, requestRewrites: data),
+    );
   }
 
   // 请求加密
   if (argument['name'] == 'RequestCryptoPage') {
-    return futureWidget(RequestCryptoManager.instance, (data) => RequestCryptoPage(windowId: windowId, manager: data));
+    return futureWidget(
+      RequestCryptoManager.instance,
+      (data) => RequestCryptoPage(windowId: windowId, manager: data),
+    );
   }
   // 请求映射
   if (argument['name'] == 'RequestMapPage') {
@@ -114,7 +128,9 @@ Widget multiWindow(int windowId, Map<dynamic, dynamic> argument) {
   // 请求拦截
   if (argument['name'] == 'RequestBreakpointPage') {
     return futureWidget(
-        RequestBreakpointManager.instance, (manager) => RequestBreakpointPage(windowId: windowId, manager: manager));
+      RequestBreakpointManager.instance,
+      (manager) => RequestBreakpointPage(windowId: windowId, manager: manager),
+    );
   }
 
   if (argument['name'] == 'QrCodePage') {
@@ -153,7 +169,9 @@ Widget multiWindow(int windowId, Map<dynamic, dynamic> argument) {
     return BreakpointExecutor(
       windowId: windowId,
       request: HttpRequest.fromJson(argument['request']),
-      response: argument['response'] == null ? null : HttpResponse.fromJson(argument['response']),
+      response: argument['response'] == null
+          ? null
+          : HttpResponse.fromJson(argument['response']),
       isResponse: argument['type'] == 'response',
       requestId: argument['requestId'],
     );
@@ -178,19 +196,28 @@ class MultiWindow {
   static Function(String widgetName, Map<String, dynamic>? args)? onOpenWindow;
 
   /// 刷新请求重写
-  static Future<void> invokeRefreshRewrite(Operation operation,
-      {int? index, RequestRewriteRule? rule, List<RewriteItem>? items, bool? enabled}) async {
+  static Future<void> invokeRefreshRewrite(
+    Operation operation, {
+    int? index,
+    RequestRewriteRule? rule,
+    List<RewriteItem>? items,
+    bool? enabled,
+  }) async {
     await DesktopMultiWindow.invokeMethod(0, "refreshRequestRewrite", {
       "enabled": enabled,
       "operation": operation.name,
       'index': index,
       'rule': rule?.toJson(),
-      'items': items?.map((e) => e.toJson()).toList()
+      'items': items?.map((e) => e.toJson()).toList(),
     });
   }
 
-  static Future<WindowController> openWindow(String title, String widgetName,
-      {Size size = const Size(800, 680), Map<String, dynamic>? args}) async {
+  static Future<WindowController> openWindow(
+    String title,
+    String widgetName, {
+    Size size = const Size(800, 680),
+    Map<String, dynamic>? args,
+  }) async {
     if (Platform.isAndroid || Platform.isIOS) {
       onOpenWindow?.call(widgetName, args);
       return WindowController.fromWindowId(0); // Dummy controller
@@ -201,12 +228,14 @@ class MultiWindow {
       ratio = WindowManager.instance.getDevicePixelRatio();
     }
     registerMethodHandler();
-    final window = await DesktopMultiWindow.createWindow(jsonEncode(
-      {'name': widgetName, ...?args},
-    ));
+    final window = await DesktopMultiWindow.createWindow(
+      jsonEncode({'name': widgetName, ...?args}),
+    );
     window.setTitle(title);
     window
-      ..setFrame(const Offset(50, -10) & Size(size.width * ratio, size.height * ratio))
+      ..setFrame(
+        const Offset(50, -10) & Size(size.width * ratio, size.height * ratio),
+      )
       ..center();
     window.show();
 
@@ -215,15 +244,21 @@ class MultiWindow {
 
   static bool _refreshRewrite = false;
 
-  static Future<void> _handleRefreshRewrite(Operation operation, Map<dynamic, dynamic> arguments) async {
-    RequestRewriteManager requestRewrites = await RequestRewriteManager.instance;
+  static Future<void> _handleRefreshRewrite(
+    Operation operation,
+    Map<dynamic, dynamic> arguments,
+  ) async {
+    RequestRewriteManager requestRewrites =
+        await RequestRewriteManager.instance;
 
     switch (operation) {
       case Operation.add:
       case Operation.update:
         var rule = RequestRewriteRule.formJson(arguments['rule']);
         List<dynamic>? list = arguments['items'] as List<dynamic>?;
-        List<RewriteItem>? items = list?.map((e) => RewriteItem.fromJson(e)).toList();
+        List<RewriteItem>? items = list
+            ?.map((e) => RewriteItem.fromJson(e))
+            .toList();
 
         if (operation == Operation.add) {
           await requestRewrites.addRule(rule, items!);
@@ -263,10 +298,15 @@ void registerMethodHandler() {
     logger.d('${call.method} $fromWindowId');
 
     if (call.method == 'getProxyInfo') {
-      return ProxyServer.current?.isRunning == true ? {'host': '127.0.0.1', 'port': ProxyServer.current!.port} : null;
+      return ProxyServer.current?.isRunning == true
+          ? {'host': '127.0.0.1', 'port': ProxyServer.current!.port}
+          : null;
     }
     if (call.method == 'refreshRequestRewrite') {
-      await MultiWindow._handleRefreshRewrite(Operation.of(call.arguments['operation']), call.arguments);
+      await MultiWindow._handleRefreshRewrite(
+        Operation.of(call.arguments['operation']),
+        call.arguments,
+      );
       return 'done';
     }
 
@@ -299,17 +339,22 @@ void registerMethodHandler() {
     }
 
     if (call.method == 'pickFiles') {
-      var extensions = call.arguments != null ? call.arguments['allowedExtensions'] : null;
+      var extensions = call.arguments != null
+          ? call.arguments['allowedExtensions']
+          : null;
       FilePickerResult? result = await FilePicker.platform.pickFiles(
-          type: extensions == null ? FileType.any : FileType.custom,
-          allowedExtensions: extensions == null ? null : List.from(extensions),
-          initialDirectory: "/Downloads");
+        type: extensions == null ? FileType.any : FileType.custom,
+        allowedExtensions: extensions == null ? null : List.from(extensions),
+        initialDirectory: "/Downloads",
+      );
       if (result == null || result.files.isEmpty) return null;
       return result.files.single.path;
     }
 
     if (call.method == 'saveFile') {
-      return await FilePicker.platform.saveFile(fileName: call.arguments['fileName']);
+      return await FilePicker.platform.saveFile(
+        fileName: call.arguments['fileName'],
+      );
     }
 
     if (call.method == 'getApplicationSupportDirectory') {
@@ -332,19 +377,29 @@ void registerMethodHandler() {
     if (call.method == 'resumeRequest') {
       var request = call.arguments['request'] == null
           ? null
-          : HttpRequest.fromJson(jsonDecode(jsonEncode(call.arguments['request'])));
-      RequestBreakpointInterceptor.instance.resumeRequest(call.arguments['requestId'], request);
+          : HttpRequest.fromJson(
+              jsonDecode(jsonEncode(call.arguments['request'])),
+            );
+      RequestBreakpointInterceptor.instance.resumeRequest(
+        call.arguments['requestId'],
+        request,
+      );
       return 'done';
     }
 
     if (call.method == 'resumeResponse') {
       var response = call.arguments['response'] == null
           ? null
-          : HttpResponse.fromJson(jsonDecode(jsonEncode(call.arguments['response'])));
+          : HttpResponse.fromJson(
+              jsonDecode(jsonEncode(call.arguments['response'])),
+            );
       if (response != null) {
         response.requestId = call.arguments['requestId'];
       }
-      RequestBreakpointInterceptor.instance.resumeResponse(call.arguments['requestId'], response);
+      RequestBreakpointInterceptor.instance.resumeResponse(
+        call.arguments['requestId'],
+        response,
+      );
       return 'done';
     }
 
@@ -353,9 +408,17 @@ void registerMethodHandler() {
 }
 
 ///打开编码窗口
-Future<void> encodeWindow(EncoderType type, BuildContext context, [String? text]) async {
+Future<void> encodeWindow(
+  EncoderType type,
+  BuildContext context, [
+  String? text,
+]) async {
   if (Platforms.isMobile()) {
-    Navigator.of(context).push(MaterialPageRoute(builder: (context) => EncoderWidget(type: type, text: text)));
+    Navigator.of(context).push(
+      MaterialPageRoute(
+        builder: (context) => EncoderWidget(type: type, text: text),
+      ),
+    );
     return;
   }
 
@@ -363,9 +426,9 @@ Future<void> encodeWindow(EncoderType type, BuildContext context, [String? text]
   if (Platform.isWindows) {
     ratio = WindowManager.instance.getDevicePixelRatio();
   }
-  final window = await DesktopMultiWindow.createWindow(jsonEncode(
-    {'name': 'EncoderWidget', 'type': type.name, 'text': text},
-  ));
+  final window = await DesktopMultiWindow.createWindow(
+    jsonEncode({'name': 'EncoderWidget', 'type': type.name, 'text': text}),
+  );
   if (!context.mounted) return;
   window.setTitle(AppLocalizations.of(context)!.encode);
   window
@@ -379,9 +442,9 @@ Future<void> openScriptConsoleWindow() async {
   if (Platform.isWindows) {
     ratio = WindowManager.instance.getDevicePixelRatio();
   }
-  final window = await DesktopMultiWindow.createWindow(jsonEncode(
-    {'name': 'ScriptConsoleWidget'},
-  ));
+  final window = await DesktopMultiWindow.createWindow(
+    jsonEncode({'name': 'ScriptConsoleWidget'}),
+  );
   window.setTitle('Script Console');
   window
     ..setFrame(const Offset(50, 0) & Size(900 * ratio, 650 * ratio))

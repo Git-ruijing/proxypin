@@ -30,7 +30,10 @@ class ChannelContext {
   ChannelContext();
 
   //创建服务端连接
-  Future<Channel> connectServerChannel(HostAndPort hostAndPort, ChannelHandler channelHandler) async {
+  Future<Channel> connectServerChannel(
+    HostAndPort hostAndPort,
+    ChannelHandler channelHandler,
+  ) async {
     serverChannel = await startConnect(hostAndPort, channelHandler, this);
     putAttribute(clientChannel!.id, serverChannel);
     putAttribute(serverChannel!.id, clientChannel);
@@ -39,8 +42,15 @@ class ChannelContext {
 
   /// 建立连接
   static Future<Channel> startConnect(
-      HostAndPort hostAndPort, ChannelHandler handler, ChannelContext channelContext) async {
-    var client = Client()..initChannel((channel) => channel.dispatcher.channelHandle(HttpClientCodec(), handler));
+    HostAndPort hostAndPort,
+    ChannelHandler handler,
+    ChannelContext channelContext,
+  ) async {
+    var client = Client()
+      ..initChannel(
+        (channel) =>
+            channel.dispatcher.channelHandle(HttpClientCodec(), handler),
+      );
 
     return client.connect(hostAndPort, channelContext);
   }
@@ -66,9 +76,11 @@ class ChannelContext {
 
   HttpRequest? get currentRequest => getAttribute(AttributeKeys.request);
 
-  set currentRequest(HttpRequest? request) => putAttribute(AttributeKeys.request, request);
+  set currentRequest(HttpRequest? request) =>
+      putAttribute(AttributeKeys.request, request);
 
-  set processInfo(ProcessInfo? processInfo) => putAttribute(AttributeKeys.processInfo, processInfo);
+  set processInfo(ProcessInfo? processInfo) =>
+      putAttribute(AttributeKeys.processInfo, processInfo);
 
   ProcessInfo? get processInfo => getAttribute(AttributeKeys.processInfo);
 

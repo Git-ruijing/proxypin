@@ -631,7 +631,8 @@ class AppLocalizationsZh extends AppLocalizations {
   String get downloadRootCa => '下载根证书';
 
   @override
-  String get downloadRootCaNote => '注意：如果您将默认浏览器设置为 Safari 以外的浏览器，请单击此行复制并粘贴 Safari 浏览器的链接';
+  String get downloadRootCaNote =>
+      '注意：如果您将默认浏览器设置为 Safari 以外的浏览器，请单击此行复制并粘贴 Safari 浏览器的链接';
 
   @override
   String get generateCA => '重新生成根证书';
@@ -643,7 +644,8 @@ class AppLocalizationsZh extends AppLocalizations {
   String get resetDefaultCA => '重置默认根证书';
 
   @override
-  String get resetDefaultCADescribe => '确定要重置为默认根证书吗? ProxyPin默认\n根证书对所有用户都是相同的.';
+  String get resetDefaultCADescribe =>
+      '确定要重置为默认根证书吗? ProxyPin默认\n根证书对所有用户都是相同的.';
 
   @override
   String get exportCaP12 => '导出根证书 (.p12)';
@@ -905,7 +907,8 @@ class AppLocalizationsZh extends AppLocalizations {
   String get material3 => 'Material3是谷歌开源设计系统的最新版本';
 
   @override
-  String get iosVpnBackgroundAudio => '开启抓包后，退出到后台。为了维护主UI线程的网络通信，将启用静音音频播放以保持主线程运行。否则，它将只在后台运行30秒。您同意在启用抓包后在后台播放音频吗?';
+  String get iosVpnBackgroundAudio =>
+      '开启抓包后，退出到后台。为了维护主UI线程的网络通信，将启用静音音频播放以保持主线程运行。否则，它将只在后台运行30秒。您同意在启用抓包后在后台播放音频吗?';
 
   @override
   String get markRead => '标记已读';
@@ -1725,7 +1728,8 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
   String get downloadRootCa => '下載根憑證';
 
   @override
-  String get downloadRootCaNote => '注意：如果您將預設瀏覽器設定為 Safari 以外的瀏覽器，請點選此行複製並貼上 Safari 瀏覽器的連結';
+  String get downloadRootCaNote =>
+      '注意：如果您將預設瀏覽器設定為 Safari 以外的瀏覽器，請點選此行複製並貼上 Safari 瀏覽器的連結';
 
   @override
   String get generateCA => '重新產生根憑證';
@@ -1737,7 +1741,8 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
   String get resetDefaultCA => '重置預設根憑證';
 
   @override
-  String get resetDefaultCADescribe => '確定要重置為預設根憑證嗎? ProxyPin預設\n根憑證對所有使用者都是相同的.';
+  String get resetDefaultCADescribe =>
+      '確定要重置為預設根憑證嗎? ProxyPin預設\n根憑證對所有使用者都是相同的.';
 
   @override
   String get exportCaP12 => '匯出根憑證 (.p12)';

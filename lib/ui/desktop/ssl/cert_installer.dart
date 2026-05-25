@@ -15,7 +15,9 @@ class CertInstaller {
           '${Platform.environment['HOME']}/Library/Keychains/login.keychain-db',
           certFile.path,
         ]);
-        logger.d('security add-trusted-cert result: \\${result.stdout} \\${result.stderr}');
+        logger.d(
+          'security add-trusted-cert result: \\${result.stdout} \\${result.stderr}',
+        );
         return result.exitCode == 0;
       }
 
@@ -27,7 +29,9 @@ class CertInstaller {
           'Root',
           certFile.path,
         ]);
-        logger.d('certutil addstore result: \\${result.stdout} \\${result.stderr}');
+        logger.d(
+          'certutil addstore result: \\${result.stdout} \\${result.stderr}',
+        );
         return result.exitCode == 0;
       }
 
@@ -39,7 +43,9 @@ class CertInstaller {
         final destPath = '/usr/local/share/ca-certificates/$certName';
         await certFile.copy(destPath);
         final result = await Process.run('update-ca-certificates', []);
-        logger.d('update-ca-certificates result: \\${result.stdout} \\${result.stderr}');
+        logger.d(
+          'update-ca-certificates result: \\${result.stdout} \\${result.stderr}',
+        );
         return result.exitCode == 0;
       }
 
@@ -52,10 +58,15 @@ class CertInstaller {
   }
 
   /// 检查证书是否已安装
-  static Future<bool> isCertInstalled(File filePath, X509CertificateData caCert) async {
+  static Future<bool> isCertInstalled(
+    File filePath,
+    X509CertificateData caCert,
+  ) async {
     String commonName = caCert.subject['2.5.4.3'] ?? 'ProxyPin CA';
     String? sha1 = caCert.sha1Thumbprint;
-    logger.d('Checking if certificate is installed: CN=$commonName, SHA1=$sha1');
+    logger.d(
+      'Checking if certificate is installed: CN=$commonName, SHA1=$sha1',
+    );
     try {
       if (Platform.isWindows) {
         List<String> args = ['-user', '-store', 'root'];
@@ -63,16 +74,30 @@ class CertInstaller {
           args.add(sha1);
         }
         var res = await Process.run('certutil', args);
-        return res.stdout.toString().toLowerCase().contains(commonName.toLowerCase());
+        return res.stdout.toString().toLowerCase().contains(
+          commonName.toLowerCase(),
+        );
       } else if (Platform.isMacOS) {
-        var res = await Process.run('security', ['find-certificate', '-c', commonName]);
+        var res = await Process.run('security', [
+          'find-certificate',
+          '-c',
+          commonName,
+        ]);
 
         if ((res.stdout as String).isNotEmpty) {
           // check if trusted
-          var trustRes = await Process.run('security', ['verify-cert', '-c', filePath.path]);
+          var trustRes = await Process.run('security', [
+            'verify-cert',
+            '-c',
+            filePath.path,
+          ]);
 
-          logger.d('security verify-cert $commonName result: ${trustRes.stdout} ${trustRes.stderr}');
-          return (trustRes.stdout as String).contains('certificate verification successful');
+          logger.d(
+            'security verify-cert $commonName result: ${trustRes.stdout} ${trustRes.stderr}',
+          );
+          return (trustRes.stdout as String).contains(
+            'certificate verification successful',
+          );
         }
         return false;
       } else if (Platform.isLinux) {

@@ -38,8 +38,15 @@ void main(List<String> args) async {
   //多窗口
   if (args.firstOrNull == 'multi_window') {
     final windowId = int.parse(args[1]);
-    final argument = args[2].isEmpty ? const {} : jsonDecode(args[2]) as Map<String, dynamic>;
-    runApp(FluentApp(multiWindow(windowId, argument), (await AppConfiguration.instance)));
+    final argument = args[2].isEmpty
+        ? const {}
+        : jsonDecode(args[2]) as Map<String, dynamic>;
+    runApp(
+      FluentApp(
+        multiWindow(windowId, argument),
+        (await AppConfiguration.instance),
+      ),
+    );
     return;
   }
 
@@ -48,7 +55,12 @@ void main(List<String> args) async {
   //移动端
   if (Platforms.isMobile()) {
     var appConfiguration = await instance;
-    runApp(FluentApp(MobileHomePage((await configuration), appConfiguration), appConfiguration));
+    runApp(
+      FluentApp(
+        MobileHomePage((await configuration), appConfiguration),
+        appConfiguration,
+      ),
+    );
     return;
   }
 
@@ -57,7 +69,12 @@ void main(List<String> args) async {
     await DesktopSupport.initialize(appConfiguration);
   }
 
-  runApp(FluentApp(DesktopHomePage(await configuration, appConfiguration), appConfiguration));
+  runApp(
+    FluentApp(
+      DesktopHomePage(await configuration, appConfiguration),
+      appConfiguration,
+    ),
+  );
 }
 
 class FluentApp extends StatelessWidget {
@@ -69,28 +86,31 @@ class FluentApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return ValueListenableBuilder<bool>(
-        valueListenable: appConfiguration.globalChange,
-        builder: (_, current, __) {
-          return MaterialApp(
-            title: 'ProxyPin',
-            debugShowCheckedModeBanner: false,
-            navigatorKey: navigatorHelper.navigatorKey,
-            theme: theme(Brightness.light),
-            darkTheme: theme(Brightness.dark),
-            themeMode: appConfiguration.themeMode,
-            locale: appConfiguration.language,
-            localizationsDelegates: AppLocalizations.localizationsDelegates,
-            supportedLocales: AppLocalizations.supportedLocales,
-            home: home,
-          );
-        });
+      valueListenable: appConfiguration.globalChange,
+      builder: (_, current, __) {
+        return MaterialApp(
+          title: 'ProxyPin',
+          debugShowCheckedModeBanner: false,
+          navigatorKey: navigatorHelper.navigatorKey,
+          theme: theme(Brightness.light),
+          darkTheme: theme(Brightness.dark),
+          themeMode: appConfiguration.themeMode,
+          locale: appConfiguration.language,
+          localizationsDelegates: AppLocalizations.localizationsDelegates,
+          supportedLocales: AppLocalizations.supportedLocales,
+          home: home,
+        );
+      },
+    );
   }
 
   ThemeData theme(Brightness brightness) {
     bool useMaterial3 = appConfiguration.useMaterial3;
     bool isDark = brightness == Brightness.dark;
 
-    Color? themeColor = isDark ? appConfiguration.themeColor : appConfiguration.themeColor;
+    Color? themeColor = isDark
+        ? appConfiguration.themeColor
+        : appConfiguration.themeColor;
     Color? cardColor = isDark ? Color(0XFF3C3C3C) : Colors.white;
     Color? surfaceContainer = isDark ? Colors.grey[800] : Colors.white;
 
@@ -110,8 +130,11 @@ class FluentApp extends StatelessWidget {
       surfaceContainerHigh: surfaceContainer,
     );
 
-    var themeData =
-        ThemeData(brightness: brightness, useMaterial3: appConfiguration.useMaterial3, colorScheme: colorScheme);
+    var themeData = ThemeData(
+      brightness: brightness,
+      useMaterial3: appConfiguration.useMaterial3,
+      colorScheme: colorScheme,
+    );
 
     if (!appConfiguration.useMaterial3) {
       themeData = themeData.copyWith(
@@ -134,7 +157,9 @@ class FluentApp extends StatelessWidget {
     }
 
     return themeData.copyWith(
-        dialogTheme:
-            themeData.dialogTheme.copyWith(shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10))));
+      dialogTheme: themeData.dialogTheme.copyWith(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+      ),
+    );
   }
 }

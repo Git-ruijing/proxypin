@@ -38,11 +38,16 @@ class ScriptInterceptor extends Interceptor {
   }
 
   @override
-  Future<HttpResponse?> onResponse(HttpRequest request, HttpResponse response) async {
+  Future<HttpResponse?> onResponse(
+    HttpRequest request,
+    HttpResponse response,
+  ) async {
     //脚本替换
     var scriptManager = await ScriptManager.instance;
     try {
-      HttpResponse? httpResponse = await scriptManager.runResponseScript(response);
+      HttpResponse? httpResponse = await scriptManager.runResponseScript(
+        response,
+      );
       if (httpResponse == null) {
         return null;
       }

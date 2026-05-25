@@ -49,7 +49,12 @@ class DesktopRequestListWidget extends StatefulWidget {
   final ListenableList<HttpRequest>? list;
   final NetworkTabController panel;
 
-  const DesktopRequestListWidget({super.key, required this.proxyServer, this.list, required this.panel});
+  const DesktopRequestListWidget({
+    super.key,
+    required this.proxyServer,
+    this.list,
+    required this.panel,
+  });
 
   @override
   State<StatefulWidget> createState() {
@@ -57,9 +62,12 @@ class DesktopRequestListWidget extends StatefulWidget {
   }
 }
 
-class DesktopRequestListState extends State<DesktopRequestListWidget> with AutomaticKeepAliveClientMixin {
-  final GlobalKey<RequestSequenceState> requestSequenceKey = GlobalKey<RequestSequenceState>();
-  final GlobalKey<DomainWidgetState> domainListKey = GlobalKey<DomainWidgetState>();
+class DesktopRequestListState extends State<DesktopRequestListWidget>
+    with AutomaticKeepAliveClientMixin {
+  final GlobalKey<RequestSequenceState> requestSequenceKey =
+      GlobalKey<RequestSequenceState>();
+  final GlobalKey<DomainWidgetState> domainListKey =
+      GlobalKey<DomainWidgetState>();
   final GlobalKey<SearchState> searchKey = GlobalKey<SearchState>();
   TabController? _tabController;
 
@@ -88,7 +96,9 @@ class DesktopRequestListState extends State<DesktopRequestListWidget> with Autom
 
   @override
   void dispose() {
-    RequestWidget.removeAutoReadByIds(container.map((request) => request.requestId));
+    RequestWidget.removeAutoReadByIds(
+      container.map((request) => request.requestId),
+    );
     selectionController.clear();
     super.dispose();
   }
@@ -98,17 +108,29 @@ class DesktopRequestListState extends State<DesktopRequestListWidget> with Autom
     super.build(context);
 
     List<Tab> tabs = [
-      Tab(child: Text(localizations.domainList, style: const TextStyle(fontSize: 13))),
-      Tab(child: Text(localizations.sequence, style: const TextStyle(fontSize: 13))),
+      Tab(
+        child: Text(
+          localizations.domainList,
+          style: const TextStyle(fontSize: 13),
+        ),
+      ),
+      Tab(
+        child: Text(
+          localizations.sequence,
+          style: const TextStyle(fontSize: 13),
+        ),
+      ),
     ];
 
     return FocusableActionDetector(
-        autofocus: true,
-        shortcuts: {
-          SingleActivator(LogicalKeyboardKey.escape): const _ClearSelectionIntent(),
-        },
-        actions: {
-          _ClearSelectionIntent: CallbackAction<_ClearSelectionIntent>(onInvoke: (intent) {
+      autofocus: true,
+      shortcuts: {
+        SingleActivator(LogicalKeyboardKey.escape):
+            const _ClearSelectionIntent(),
+      },
+      actions: {
+        _ClearSelectionIntent: CallbackAction<_ClearSelectionIntent>(
+          onInvoke: (intent) {
             if (_isTextInputFocused()) {
               return null;
             }
@@ -116,32 +138,43 @@ class DesktopRequestListState extends State<DesktopRequestListWidget> with Autom
               selectionController.clear();
             }
             return null;
-          }),
-        },
-        child: DefaultTabController(
-            length: tabs.length,
-            child: Builder(builder: (tabContext) {
-              _tabController = DefaultTabController.of(tabContext);
-              return Scaffold(
-                  appBar: AppBar(
-                    toolbarHeight: 40,
-                    title: SizedBox(height: 40, child: TabBar(tabs: tabs, dividerColor: Colors.transparent)),
-                    automaticallyImplyLeading: false,
-                    actions: [popupMenus()],
-                  ),
-                  bottomNavigationBar: Search(key: searchKey, onSearch: search),
-                  body: Padding(
-                      padding: const EdgeInsets.only(right: 5),
-                      child: Column(children: [
-                        Obx(() => selectionController.selectionMode.value
-                            ? SelectionActionBar(
-                                selectionController: selectionController,
-                                onRepeat: repeatSelected,
-                                onExport: exportSelected,
-                                onDelete: deleteSelected)
-                            : SizedBox()),
-                        Expanded(
-                            child: TabBarView(physics: const NeverScrollableScrollPhysics(), children: [
+          },
+        ),
+      },
+      child: DefaultTabController(
+        length: tabs.length,
+        child: Builder(
+          builder: (tabContext) {
+            _tabController = DefaultTabController.of(tabContext);
+            return Scaffold(
+              appBar: AppBar(
+                toolbarHeight: 40,
+                title: SizedBox(
+                  height: 40,
+                  child: TabBar(tabs: tabs, dividerColor: Colors.transparent),
+                ),
+                automaticallyImplyLeading: false,
+                actions: [popupMenus()],
+              ),
+              bottomNavigationBar: Search(key: searchKey, onSearch: search),
+              body: Padding(
+                padding: const EdgeInsets.only(right: 5),
+                child: Column(
+                  children: [
+                    Obx(
+                      () => selectionController.selectionMode.value
+                          ? SelectionActionBar(
+                              selectionController: selectionController,
+                              onRepeat: repeatSelected,
+                              onExport: exportSelected,
+                              onDelete: deleteSelected,
+                            )
+                          : SizedBox(),
+                    ),
+                    Expanded(
+                      child: TabBarView(
+                        physics: const NeverScrollableScrollPhysics(),
+                        children: [
                           DomainList(
                             key: domainListKey,
                             list: container,
@@ -169,9 +202,17 @@ class DesktopRequestListState extends State<DesktopRequestListWidget> with Autom
                             ),
                             onRemove: sequenceRemove,
                           ),
-                        ])),
-                      ])));
-            })));
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            );
+          },
+        ),
+      ),
+    );
   }
 
   bool _isTextInputFocused() {
@@ -180,32 +221,60 @@ class DesktopRequestListState extends State<DesktopRequestListWidget> with Autom
 
   Widget popupMenus() {
     return PopupMenuButton<_RequestListMenuAction>(
-        offset: const Offset(0, 32),
-        icon: const Icon(Icons.more_vert_outlined, size: 20),
-        onSelected: _onMenuSelected,
-        itemBuilder: (BuildContext context) {
-          return <PopupMenuEntry<_RequestListMenuAction>>[
-            _menuItem(_RequestListMenuAction.search,
-                icon: const Icon(Icons.search, size: 17), text: localizations.search),
-            _menuItem(_RequestListMenuAction.export,
-                icon: const Icon(Icons.share, size: 16), text: localizations.viewExport),
-            _menuItem(_RequestListMenuAction.repeat,
-                icon: const Icon(Icons.repeat, size: 16), text: localizations.repeatAllRequests),
-            _menuItem(_RequestListMenuAction.select,
-                icon: const Icon(Icons.checklist_outlined, size: 16), text: localizations.selectAction),
-            _menuItem(_RequestListMenuAction.sort,
-                icon: const Icon(Icons.sort, size: 16),
-                text: sortDesc ? localizations.timeAsc : localizations.timeDesc),
-            _menuItem(_RequestListMenuAction.report,
-                icon: const Icon(Icons.cloud_upload_outlined, size: 16), text: localizations.reportServers),
-          ];
-        });
+      offset: const Offset(0, 32),
+      icon: const Icon(Icons.more_vert_outlined, size: 20),
+      onSelected: _onMenuSelected,
+      itemBuilder: (BuildContext context) {
+        return <PopupMenuEntry<_RequestListMenuAction>>[
+          _menuItem(
+            _RequestListMenuAction.search,
+            icon: const Icon(Icons.search, size: 17),
+            text: localizations.search,
+          ),
+          _menuItem(
+            _RequestListMenuAction.export,
+            icon: const Icon(Icons.share, size: 16),
+            text: localizations.viewExport,
+          ),
+          _menuItem(
+            _RequestListMenuAction.repeat,
+            icon: const Icon(Icons.repeat, size: 16),
+            text: localizations.repeatAllRequests,
+          ),
+          _menuItem(
+            _RequestListMenuAction.select,
+            icon: const Icon(Icons.checklist_outlined, size: 16),
+            text: localizations.selectAction,
+          ),
+          _menuItem(
+            _RequestListMenuAction.sort,
+            icon: const Icon(Icons.sort, size: 16),
+            text: sortDesc ? localizations.timeAsc : localizations.timeDesc,
+          ),
+          _menuItem(
+            _RequestListMenuAction.report,
+            icon: const Icon(Icons.cloud_upload_outlined, size: 16),
+            text: localizations.reportServers,
+          ),
+        ];
+      },
+    );
   }
 
-  PopupMenuEntry<_RequestListMenuAction> _menuItem(_RequestListMenuAction value,
-      {required Icon icon, required String text}) {
+  PopupMenuEntry<_RequestListMenuAction> _menuItem(
+    _RequestListMenuAction value, {
+    required Icon icon,
+    required String text,
+  }) {
     return CustomPopupMenuItem<_RequestListMenuAction>(
-        value: value, height: 37, child: IconText(icon: icon, text: text, textStyle: const TextStyle(fontSize: 13)));
+      value: value,
+      height: 37,
+      child: IconText(
+        icon: icon,
+        text: text,
+        textStyle: const TextStyle(fontSize: 13),
+      ),
+    );
   }
 
   void _onMenuSelected(_RequestListMenuAction action) {
@@ -283,7 +352,9 @@ class DesktopRequestListState extends State<DesktopRequestListWidget> with Autom
   ///清理
   void clean() {
     setState(() {
-      RequestWidget.removeAutoReadByIds(container.map((request) => request.requestId));
+      RequestWidget.removeAutoReadByIds(
+        container.map((request) => request.requestId),
+      );
       container.clear();
       domainListKey.currentState?.clean();
       requestSequenceKey.currentState?.clean();
@@ -303,7 +374,9 @@ class DesktopRequestListState extends State<DesktopRequestListWidget> with Autom
     domainListKey.currentState?.clean();
     requestSequenceKey.currentState?.clean();
 
-    RequestWidget.removeAutoReadByIds(removeRange.map((request) => request.requestId));
+    RequestWidget.removeAutoReadByIds(
+      removeRange.map((request) => request.requestId),
+    );
     selectionController.prune(container.map((request) => request.requestId));
   }
 
@@ -313,16 +386,20 @@ class DesktopRequestListState extends State<DesktopRequestListWidget> with Autom
       return;
     }
 
-    showConfirmDialog(context, content: '${localizations.delete} ${selectedRequests.length} ${localizations.request}?',
-        onConfirm: () {
-      setState(() {
-        remove(selectedRequests);
-        selectionController.clear();
-      });
-      if (mounted) {
-        FlutterToastr.show(localizations.deleteSuccess, context);
-      }
-    });
+    showConfirmDialog(
+      context,
+      content:
+          '${localizations.delete} ${selectedRequests.length} ${localizations.request}?',
+      onConfirm: () {
+        setState(() {
+          remove(selectedRequests);
+          selectionController.clear();
+        });
+        if (mounted) {
+          FlutterToastr.show(localizations.deleteSuccess, context);
+        }
+      },
+    );
   }
 
   void rangeSelectRequest(HttpRequest request) {
@@ -370,7 +447,8 @@ class DesktopRequestListState extends State<DesktopRequestListWidget> with Autom
     var file = await File(path).create();
     await Har.writeFile(requests, file, title: fileName);
 
-    if (mounted) FlutterToastr.show(AppLocalizations.of(context)!.exportSuccess, context);
+    if (mounted)
+      FlutterToastr.show(AppLocalizations.of(context)!.exportSuccess, context);
   }
 
   ///重发所有请求
@@ -387,15 +465,29 @@ class DesktopRequestListState extends State<DesktopRequestListWidget> with Autom
 
     for (var request in requests) {
       var httpRequest = request.copy(uri: request.requestUrl);
-      var proxyInfo = proxyServer.isRunning ? ProxyInfo.of("127.0.0.1", proxyServer.port) : null;
+      var proxyInfo = proxyServer.isRunning
+          ? ProxyInfo.of("127.0.0.1", proxyServer.port)
+          : null;
       try {
-        await HttpClients.proxyRequest(httpRequest, proxyInfo: proxyInfo, timeout: const Duration(seconds: 3));
+        await HttpClients.proxyRequest(
+          httpRequest,
+          proxyInfo: proxyInfo,
+          timeout: const Duration(seconds: 3),
+        );
         if (mounted) {
-          FlutterToastr.show(localizations!.reSendRequest, rootNavigator: true, context);
+          FlutterToastr.show(
+            localizations!.reSendRequest,
+            rootNavigator: true,
+            context,
+          );
         }
       } catch (e) {
         if (mounted) {
-          FlutterToastr.show('${localizations!.fail} $e', rootNavigator: true, context);
+          FlutterToastr.show(
+            '${localizations!.fail} $e',
+            rootNavigator: true,
+            context,
+          );
         }
       }
     }

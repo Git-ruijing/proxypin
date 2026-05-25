@@ -1,6 +1,1 @@
-enum RequestEditorSource {
-  editor,
-  breakpointRequest,
-  breakpointResponse,
-}
-
+enum RequestEditorSource { editor, breakpointRequest, breakpointResponse }

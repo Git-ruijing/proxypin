@@ -64,7 +64,8 @@ class _CertHashPageState extends State<CertHashPage> {
 
   bool onKeyEvent(KeyEvent event) {
     if (widget.windowId == null) return false;
-    if ((HardwareKeyboard.instance.isMetaPressed || HardwareKeyboard.instance.isControlPressed) &&
+    if ((HardwareKeyboard.instance.isMetaPressed ||
+            HardwareKeyboard.instance.isControlPressed) &&
         event.logicalKey == LogicalKeyboardKey.keyW) {
       HardwareKeyboard.instance.removeHandler(onKeyEvent);
       WindowController.fromWindowId(widget.windowId!).close();
@@ -77,65 +78,101 @@ class _CertHashPageState extends State<CertHashPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-        appBar: AppBar(title: Text(localizations.systemCertName, style: TextStyle(fontSize: 16)), centerTitle: true),
-        resizeToAvoidBottomInset: false,
-        body: ListView(children: [
-          Wrap(alignment: WrapAlignment.end, children: [
-            ElevatedButton.icon(
+      appBar: AppBar(
+        title: Text(
+          localizations.systemCertName,
+          style: TextStyle(fontSize: 16),
+        ),
+        centerTitle: true,
+      ),
+      resizeToAvoidBottomInset: false,
+      body: ListView(
+        children: [
+          Wrap(
+            alignment: WrapAlignment.end,
+            children: [
+              ElevatedButton.icon(
                 onPressed: () async {
                   FilePickerResult? result = await FilePicker.platform
-                      .pickFiles(type: FileType.custom, allowedExtensions: ['crt', 'pem', 'cer', 'der']);
+                      .pickFiles(
+                        type: FileType.custom,
+                        allowedExtensions: ['crt', 'pem', 'cer', 'der'],
+                      );
                   if (result == null) return;
 
                   File file = File(result.files.single.path!);
                   var bytes = await file.readAsBytes();
-                  input.text = tryDerFormat(bytes) ?? String.fromCharCodes(bytes);
+                  input.text =
+                      tryDerFormat(bytes) ?? String.fromCharCodes(bytes);
                   getSubjectName();
                 },
                 style: Buttons.buttonStyle,
                 icon: const Icon(Icons.folder_open),
-                label: Text("File")),
-            const SizedBox(width: 15),
-            ElevatedButton.icon(
+                label: Text("File"),
+              ),
+              const SizedBox(width: 15),
+              ElevatedButton.icon(
                 onPressed: () => input.clear(),
                 style: Buttons.buttonStyle,
                 icon: const Icon(Icons.clear),
-                label: const Text("Clear")),
-            const SizedBox(width: 15),
-            FilledButton.icon(
+                label: const Text("Clear"),
+              ),
+              const SizedBox(width: 15),
+              FilledButton.icon(
                 onPressed: () {
                   getSubjectName();
                   FocusScope.of(context).unfocus();
                 },
                 style: Buttons.buttonStyle,
                 icon: const Icon(Icons.play_arrow_rounded),
-                label: const Text("Run")),
-            const SizedBox(width: 15),
-          ]),
+                label: const Text("Run"),
+              ),
+              const SizedBox(width: 15),
+            ],
+          ),
           const SizedBox(width: 10),
           Container(
-              padding: const EdgeInsets.all(10),
-              height: 350,
-              child: TextFormField(
-                  maxLines: 50,
-                  controller: input,
-                  onTapOutside: (event) => FocusManager.instance.primaryFocus?.unfocus(),
-                  keyboardType: TextInputType.text,
-                  decoration: decoration(context, label: localizations.inputContent))),
+            padding: const EdgeInsets.all(10),
+            height: 350,
+            child: TextFormField(
+              maxLines: 50,
+              controller: input,
+              onTapOutside: (event) =>
+                  FocusManager.instance.primaryFocus?.unfocus(),
+              keyboardType: TextInputType.text,
+              decoration: decoration(
+                context,
+                label: localizations.inputContent,
+              ),
+            ),
+          ),
           Align(
-              alignment: Alignment.bottomLeft,
-              child: TextButton(
-                  onPressed: () {}, child: Text("${localizations.output}:", style: TextStyle(fontSize: 16)))),
+            alignment: Alignment.bottomLeft,
+            child: TextButton(
+              onPressed: () {},
+              child: Text(
+                "${localizations.output}:",
+                style: TextStyle(fontSize: 16),
+              ),
+            ),
+          ),
           Container(
-              width: double.infinity,
-              padding: const EdgeInsets.all(10),
-              height: 150,
-              child: TextFormField(
-                  maxLines: 30,
-                  readOnly: true,
-                  controller: decodeData,
-                  decoration: decoration(context, label: 'Android ${localizations.systemCertName}'))),
-        ]));
+            width: double.infinity,
+            padding: const EdgeInsets.all(10),
+            height: 150,
+            child: TextFormField(
+              maxLines: 30,
+              readOnly: true,
+              controller: decodeData,
+              decoration: decoration(
+                context,
+                label: 'Android ${localizations.systemCertName}',
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
   }
 
   getSubjectName() {
@@ -147,7 +184,12 @@ class _CertHashPageState extends State<CertHashPage> {
       var subjectHashName = X509Utils.getSubjectHashName(subject);
       decodeData.text = '$subjectHashName.0';
     } catch (e) {
-      FlutterToastr.show(localizations.decodeFail, context, duration: 3, backgroundColor: Colors.red);
+      FlutterToastr.show(
+        localizations.decodeFail,
+        context,
+        duration: 3,
+        backgroundColor: Colors.red,
+      );
     }
   }
 

@@ -17,7 +17,8 @@ class DesktopTrayManager with TrayListener {
     _quitHandler = handler;
   }
 
-  String _text(String zh, String en) => Platform.localeName.startsWith('zh') ? zh : en;
+  String _text(String zh, String en) =>
+      Platform.localeName.startsWith('zh') ? zh : en;
 
   Future<void> ensureInitialized() async {
     if (_initialized) {
@@ -31,15 +32,9 @@ class DesktopTrayManager with TrayListener {
     await trayManager.setContextMenu(
       Menu(
         items: [
-          MenuItem(
-            key: 'show_window',
-            label: _text('显示窗口', 'Show window'),
-          ),
+          MenuItem(key: 'show_window', label: _text('显示窗口', 'Show window')),
           MenuItem.separator(),
-          MenuItem(
-            key: 'quit_app',
-            label: _text('退出', 'Quit'),
-          ),
+          MenuItem(key: 'quit_app', label: _text('退出', 'Quit')),
         ],
       ),
     );
@@ -88,4 +83,3 @@ class DesktopTrayManager with TrayListener {
     }
   }
 }
-

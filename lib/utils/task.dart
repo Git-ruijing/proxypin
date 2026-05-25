@@ -14,11 +14,7 @@ class DelayedTask {
 
   /// 执行防抖任务 (Debounce)
   /// 如果在 [duration] 时间内再次调用相同 [tag] 的任务，前一个任务会被自动取消
-  void debounce(
-    String tag,
-    Duration duration,
-    void Function() action,
-  ) {
+  void debounce(String tag, Duration duration, void Function() action) {
     // 1. 如果旧任务还在运行，直接取消
     _taskPool[tag]?.cancel();
 

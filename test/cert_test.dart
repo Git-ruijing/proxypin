@@ -34,7 +34,10 @@ NQIDAQAB
   // var rsaPrivateKeyFromPem = CryptoUtils.rsaPrivateKeyFromPem(serverPriKeyPem);
   // print(rsaPrivateKeyFromPem);
   var crt = generate(
-      caRoot, CryptoUtils.rsaPublicKeyFromPem(serverPublicKeyPem), CryptoUtils.rsaPrivateKeyFromPem(readAsString));
+    caRoot,
+    CryptoUtils.rsaPublicKeyFromPem(serverPublicKeyPem),
+    CryptoUtils.rsaPrivateKeyFromPem(readAsString),
+  );
   print(crt);
 
   // await File('assets/certs/server.crt').writeAsString(crt);
@@ -69,8 +72,12 @@ NQIDAQAB
 }
 
 /// 生成证书
-String generate(X509CertificateData caRoot, RSAPublicKey serverPubKey, RSAPrivateKey caPriKey) {
-//根据CA证书subject来动态生成目标服务器证书的issuer和subject
+String generate(
+  X509CertificateData caRoot,
+  RSAPublicKey serverPubKey,
+  RSAPrivateKey caPriKey,
+) {
+  //根据CA证书subject来动态生成目标服务器证书的issuer和subject
   Map<String, String> x509Subject = {
     'C': 'CN',
     'ST': 'BJ',
@@ -80,12 +87,19 @@ String generate(X509CertificateData caRoot, RSAPublicKey serverPubKey, RSAPrivat
   };
   x509Subject['CN'] = 'ProxyPin CA (wanghongen)';
 
-  var csrPem = X509Utils.generateSelfSignedCertificate(caRoot, serverPubKey, caPriKey, 365,
-      keyUsage: x509.ExtensionKeyUsage(x509.ExtensionKeyUsage.keyCertSign | x509.ExtensionKeyUsage.cRLSign),
-      extKeyUsage: [ExtendedKeyUsage.SERVER_AUTH],
-      basicConstraints: BasicConstraints(isCA: true),
-      sans: [x509Subject['CN']!],
-      serialNumber: Random().nextInt(1000000).toString(),
-      subject: x509Subject);
+  var csrPem = X509Utils.generateSelfSignedCertificate(
+    caRoot,
+    serverPubKey,
+    caPriKey,
+    365,
+    keyUsage: x509.ExtensionKeyUsage(
+      x509.ExtensionKeyUsage.keyCertSign | x509.ExtensionKeyUsage.cRLSign,
+    ),
+    extKeyUsage: [ExtendedKeyUsage.SERVER_AUTH],
+    basicConstraints: BasicConstraints(isCA: true),
+    sans: [x509Subject['CN']!],
+    serialNumber: Random().nextInt(1000000).toString(),
+    subject: x509Subject,
+  );
   return csrPem;
 }

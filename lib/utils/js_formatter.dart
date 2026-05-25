@@ -75,7 +75,10 @@ class _JsFormatter {
       _i++;
       _skipWs();
       // Don't add newline if followed by ; , )
-      if (_i < _src.length && _src[_i] != ';' && _src[_i] != ',' && _src[_i] != ')') {
+      if (_i < _src.length &&
+          _src[_i] != ';' &&
+          _src[_i] != ',' &&
+          _src[_i] != ')') {
         _buf.writeln();
         if (_depth > 0 && _i < _src.length) _writeIndent();
       }
@@ -194,7 +197,10 @@ class _JsFormatter {
 
   void _skipWs() {
     while (_i < _src.length &&
-        (_src[_i] == ' ' || _src[_i] == '\t' || _src[_i] == '\n' || _src[_i] == '\r')) {
+        (_src[_i] == ' ' ||
+            _src[_i] == '\t' ||
+            _src[_i] == '\n' ||
+            _src[_i] == '\r')) {
       _i++;
     }
   }
@@ -208,4 +214,3 @@ class _JsFormatter {
     return idx < _src.length ? _src[idx] : null;
   }
 }
-

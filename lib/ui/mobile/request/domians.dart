@@ -29,7 +29,6 @@ import 'package:proxypin/network/components/host_filter.dart';
 import 'package:proxypin/network/channel/host_port.dart';
 import 'package:proxypin/network/http/http.dart';
 import 'package:proxypin/network/http/http_client.dart';
-import 'package:proxypin/ui/component/multi_select_controller.dart';
 import 'package:proxypin/ui/component/widgets.dart';
 import 'package:proxypin/ui/mobile/request/request_sequence.dart';
 import 'package:proxypin/utils/har.dart';
@@ -43,7 +42,12 @@ class DomainList extends StatefulWidget {
   final ProxyServer proxyServer;
   final Function(List<HttpRequest>)? onRemove;
 
-  const DomainList({super.key, required this.list, required this.proxyServer, this.onRemove});
+  const DomainList({
+    super.key,
+    required this.list,
+    required this.proxyServer,
+    this.onRemove,
+  });
 
   @override
   State<StatefulWidget> createState() {
@@ -51,10 +55,12 @@ class DomainList extends StatefulWidget {
   }
 }
 
-class DomainListState extends State<DomainList> with AutomaticKeepAliveClientMixin {
+class DomainListState extends State<DomainList>
+    with AutomaticKeepAliveClientMixin {
   final ScrollController _scrollController = ScrollController();
 
-  GlobalKey<RequestSequenceState> requestSequenceKey = GlobalKey<RequestSequenceState>();
+  GlobalKey<RequestSequenceState> requestSequenceKey =
+      GlobalKey<RequestSequenceState>();
   late Configuration configuration;
 
   //域名和对应请求列表的映射
@@ -208,138 +214,187 @@ class DomainListState extends State<DomainList> with AutomaticKeepAliveClientMix
     super.build(context);
 
     return Scrollbar(
+      controller: _scrollController,
+      child: ListView.separated(
         controller: _scrollController,
-        child: ListView.separated(
-            controller: _scrollController,
-            padding: EdgeInsets.zero,
-            separatorBuilder: (context, index) =>
-                Divider(thickness: 0.2, height: 0.5, color: Theme.of(context).dividerColor),
-            itemCount: view.length,
-            itemBuilder: (ctx, index) => title(index)));
+        padding: EdgeInsets.zero,
+        separatorBuilder: (context, index) => Divider(
+          thickness: 0.2,
+          height: 0.5,
+          color: Theme.of(context).dividerColor,
+        ),
+        itemCount: view.length,
+        itemBuilder: (ctx, index) => title(index),
+      ),
+    );
   }
 
   Widget title(int index) {
     var value = containerMap[view.elementAt(index)];
-    var time = value == null ? '' : formatDate(value.last.requestTime, [m, '/', d, ' ', HH, ':', nn, ':', ss]);
+    var time = value == null
+        ? ''
+        : formatDate(value.last.requestTime, [
+            m,
+            '/',
+            d,
+            ' ',
+            HH,
+            ':',
+            nn,
+            ':',
+            ss,
+          ]);
 
     return ListTile(
-        visualDensity: const VisualDensity(vertical: -4),
-        title: Text(view.elementAt(index).domain, maxLines: 1, overflow: TextOverflow.ellipsis),
-        trailing: const Icon(Icons.chevron_right),
-        subtitle: Text(localizations.domainListSubtitle(value?.length ?? '', time),
-            maxLines: 1, overflow: TextOverflow.ellipsis),
-        onLongPress: () => menu(index),
-        // show menus
-        contentPadding: const EdgeInsets.only(left: 10),
-        onTap: () {
-          Navigator.push(context, MaterialPageRoute(builder: (context) {
-            showHostAndPort = view.elementAt(index);
-            var list = containerMap[view.elementAt(index)];
+      visualDensity: const VisualDensity(vertical: -4),
+      title: Text(
+        view.elementAt(index).domain,
+        maxLines: 1,
+        overflow: TextOverflow.ellipsis,
+      ),
+      trailing: const Icon(Icons.chevron_right),
+      subtitle: Text(
+        localizations.domainListSubtitle(value?.length ?? '', time),
+        maxLines: 1,
+        overflow: TextOverflow.ellipsis,
+      ),
+      onLongPress: () => menu(index),
+      // show menus
+      contentPadding: const EdgeInsets.only(left: 10),
+      onTap: () {
+        Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (context) {
+              showHostAndPort = view.elementAt(index);
+              var list = containerMap[view.elementAt(index)];
 
-            return Scaffold(
-                appBar: AppBar(title: Text(view.elementAt(index).domain, style: const TextStyle(fontSize: 16))),
+              return Scaffold(
+                appBar: AppBar(
+                  title: Text(
+                    view.elementAt(index).domain,
+                    style: const TextStyle(fontSize: 16),
+                  ),
+                ),
                 body: RequestSequence(
                   key: requestSequenceKey,
                   displayDomain: false,
-                  container: ListenableList(sortDesc ? list : list?.reversed.toList()),
+                  container: ListenableList(
+                    sortDesc ? list : list?.reversed.toList(),
+                  ),
                   sortDesc: sortDesc,
                   onRemove: widget.onRemove,
                   proxyServer: widget.proxyServer,
-                  selectionController: MultiSelectController(),
-                ));
-          }));
-        });
+                ),
+              );
+            },
+          ),
+        );
+      },
+    );
   }
 
-  void scrollToTop() {
-    _scrollController.animateTo(0, duration: const Duration(milliseconds: 300), curve: Curves.easeInOut);
+  scrollToTop() {
+    _scrollController.animateTo(
+      0,
+      duration: const Duration(milliseconds: 300),
+      curve: Curves.easeInOut,
+    );
   }
 
   ///菜单
-  void menu(int index) {
+  menu(int index) {
     var hostAndPort = view.elementAt(index);
 
     showModalBottomSheet(
-        shape: const RoundedRectangleBorder(borderRadius: BorderRadius.vertical(top: Radius.circular(10))),
-        context: context,
-        enableDrag: true,
-        builder: (ctx) {
-          return Wrap(
-            alignment: WrapAlignment.center,
-            children: [
-              BottomSheetItem(
-                  text: localizations.copyHost,
-                  onPressed: () {
-                    Clipboard.setData(ClipboardData(text: hostAndPort.host));
-                    FlutterToastr.show(localizations.copied, context);
-                  }),
-              const Divider(thickness: 0.5, height: 5),
-              BottomSheetItem(
-                  text: localizations.addBlacklist,
-                  onPressed: () {
-                    HostFilter.blacklist.add(hostAndPort.host);
-                    configuration.flushConfig();
-                    FlutterToastr.show(localizations.addSuccess, context);
-                  }),
-              const Divider(thickness: 0.5, height: 5),
-              BottomSheetItem(
-                  text: localizations.addWhitelist,
-                  onPressed: () {
-                    HostFilter.whitelist.add(hostAndPort.host);
-                    configuration.flushConfig();
-                    FlutterToastr.show(localizations.addSuccess, context);
-                  }),
-              const Divider(thickness: 0.5, height: 5),
-              BottomSheetItem(
-                  text: localizations.deleteWhitelist,
-                  onPressed: () {
-                    HostFilter.whitelist.remove(hostAndPort.host);
-                    configuration.flushConfig();
-                    FlutterToastr.show(localizations.deleteSuccess, context);
-                  }),
-              const Divider(thickness: 0.5, height: 5),
-              BottomSheetItem(
-                  text: localizations.repeatDomainRequests,
-                  onPressed: () {
-                    repeatDomainRequests(hostAndPort);
-                  }),
-              const Divider(thickness: 0.5, height: 5),
-              BottomSheetItem(
-                  text: localizations.exportDomainHar,
-                  onPressed: () {
-                    exportDomainHar(hostAndPort);
-                  }),
-              const Divider(thickness: 0.5, height: 5),
-              BottomSheetItem(
-                  text: localizations.delete,
-                  onPressed: () {
-                    setState(() {
-                      var requests = containerMap.remove(hostAndPort);
-                      domainList.remove(hostAndPort);
-                      view.removeAt(index);
-                      if (requests != null) {
-                        widget.onRemove?.call(requests);
-                      }
-                      FlutterToastr.show(localizations.deleteSuccess, context);
-                    });
-                  }),
-              Container(
-                color: Theme.of(context).hoverColor,
-                height: 8,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(10)),
+      ),
+      context: context,
+      enableDrag: true,
+      builder: (ctx) {
+        return Wrap(
+          alignment: WrapAlignment.center,
+          children: [
+            BottomSheetItem(
+              text: localizations.copyHost,
+              onPressed: () {
+                Clipboard.setData(ClipboardData(text: hostAndPort.host));
+                FlutterToastr.show(localizations.copied, context);
+              },
+            ),
+            const Divider(thickness: 0.5, height: 5),
+            BottomSheetItem(
+              text: localizations.addBlacklist,
+              onPressed: () {
+                HostFilter.blacklist.add(hostAndPort.host);
+                configuration.flushConfig();
+                FlutterToastr.show(localizations.addSuccess, context);
+              },
+            ),
+            const Divider(thickness: 0.5, height: 5),
+            BottomSheetItem(
+              text: localizations.addWhitelist,
+              onPressed: () {
+                HostFilter.whitelist.add(hostAndPort.host);
+                configuration.flushConfig();
+                FlutterToastr.show(localizations.addSuccess, context);
+              },
+            ),
+            const Divider(thickness: 0.5, height: 5),
+            BottomSheetItem(
+              text: localizations.deleteWhitelist,
+              onPressed: () {
+                HostFilter.whitelist.remove(hostAndPort.host);
+                configuration.flushConfig();
+                FlutterToastr.show(localizations.deleteSuccess, context);
+              },
+            ),
+            const Divider(thickness: 0.5, height: 5),
+            BottomSheetItem(
+              text: localizations.repeatDomainRequests,
+              onPressed: () {
+                repeatDomainRequests(hostAndPort);
+              },
+            ),
+            const Divider(thickness: 0.5, height: 5),
+            BottomSheetItem(
+              text: localizations.exportDomainHar,
+              onPressed: () {
+                exportDomainHar(hostAndPort);
+              },
+            ),
+            const Divider(thickness: 0.5, height: 5),
+            BottomSheetItem(
+              text: localizations.delete,
+              onPressed: () {
+                setState(() {
+                  var requests = containerMap.remove(hostAndPort);
+                  domainList.remove(hostAndPort);
+                  view.removeAt(index);
+                  if (requests != null) {
+                    widget.onRemove?.call(requests);
+                  }
+                  FlutterToastr.show(localizations.deleteSuccess, context);
+                });
+              },
+            ),
+            Container(color: Theme.of(context).hoverColor, height: 8),
+            TextButton(
+              child: Container(
+                height: 45,
+                width: double.infinity,
+                padding: const EdgeInsets.only(top: 10),
+                child: Text(localizations.cancel, textAlign: TextAlign.center),
               ),
-              TextButton(
-                child: Container(
-                    height: 45,
-                    width: double.infinity,
-                    padding: const EdgeInsets.only(top: 10),
-                    child: Text(localizations.cancel, textAlign: TextAlign.center)),
-                onPressed: () {
-                  Navigator.of(ctx).pop();
-                },
-              ),
-            ],
-          );
-        });
+              onPressed: () {
+                Navigator.of(ctx).pop();
+              },
+            ),
+          ],
+        );
+      },
+    );
   }
 
   //重复域名下请求
@@ -349,12 +404,24 @@ class DomainListState extends State<DomainList> with AutomaticKeepAliveClientMix
 
     for (var httpRequest in requests.toList()) {
       var request = httpRequest.copy(uri: httpRequest.requestUrl);
-      var proxyInfo = widget.proxyServer.isRunning ? ProxyInfo.of("127.0.0.1", widget.proxyServer.port) : null;
+      var proxyInfo = widget.proxyServer.isRunning
+          ? ProxyInfo.of("127.0.0.1", widget.proxyServer.port)
+          : null;
       try {
         await HttpClients.proxyRequest(request, proxyInfo: proxyInfo);
-        if (mounted) FlutterToastr.show(localizations.reSendRequest, rootNavigator: true, context);
+        if (mounted)
+          FlutterToastr.show(
+            localizations.reSendRequest,
+            rootNavigator: true,
+            context,
+          );
       } catch (e) {
-        if (mounted) FlutterToastr.show('${localizations.fail}$e', rootNavigator: true, context);
+        if (mounted)
+          FlutterToastr.show(
+            '${localizations.fail}$e',
+            rootNavigator: true,
+            context,
+          );
       }
     }
   }
@@ -370,7 +437,10 @@ class DomainListState extends State<DomainList> with AutomaticKeepAliveClientMix
     var json = await Har.writeJson(requests, title: fileName);
     var bytes = utf8.encode(json);
 
-    var path = await FilePicker.platform.saveFile(fileName: fileName, bytes: bytes);
+    var path = await FilePicker.platform.saveFile(
+      fileName: fileName,
+      bytes: bytes,
+    );
     if (path == null) {
       return;
     }
@@ -379,8 +449,13 @@ class DomainListState extends State<DomainList> with AutomaticKeepAliveClientMix
   }
 
   String _domainHarFileName(HostAndPort hostAndPort) {
-    var suffix = (hostAndPort.port == 80 || hostAndPort.port == 443) ? '' : '_${hostAndPort.port}';
-    var safeDomain = '${hostAndPort.host}$suffix'.replaceAll(RegExp(r'[^A-Za-z0-9._-]'), '_');
+    var suffix = (hostAndPort.port == 80 || hostAndPort.port == 443)
+        ? ''
+        : '_${hostAndPort.port}';
+    var safeDomain = '${hostAndPort.host}$suffix'.replaceAll(
+      RegExp(r'[^A-Za-z0-9._-]'),
+      '_',
+    );
     if (safeDomain.isEmpty) {
       safeDomain = 'domain';
     }

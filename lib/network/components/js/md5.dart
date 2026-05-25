@@ -31,7 +31,8 @@ class Md5Bridge {
 
   ///注册js md5
   static void registerMd5(JavascriptRuntime flutterJs) {
-    var channels = JavascriptRuntime.channelFunctionsRegistered[flutterJs.getEngineInstanceId()];
+    var channels = JavascriptRuntime
+        .channelFunctionsRegistered[flutterJs.getEngineInstanceId()];
     if (channels != null && channels.containsKey('md5')) {
       return;
     }

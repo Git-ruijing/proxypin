@@ -32,12 +32,13 @@ enum ContentType {
   image,
   video,
   http,
-  sse
-
-  ;
+  sse;
 
   static ContentType valueOf(String name) {
-    return ContentType.values.firstWhere((element) => element.name == name.toLowerCase(), orElse: () => http);
+    return ContentType.values.firstWhere(
+      (element) => element.name == name.toLowerCase(),
+      orElse: () => http,
+    );
   }
 
   //是否是二进制
@@ -70,8 +71,12 @@ class MediaType {
   final String subtype;
   final Map<String, String> parameters;
 
-  MediaType(this.type, this.subtype, {Map<String, String>? parameters, String? charset})
-      : parameters = parameters ?? {} {
+  MediaType(
+    this.type,
+    this.subtype, {
+    Map<String, String>? parameters,
+    String? charset,
+  }) : parameters = parameters ?? {} {
     if (charset != null) {
       this.parameters["charset"] = charset;
     }
@@ -79,7 +84,10 @@ class MediaType {
 
   static MediaType? valueOf(String mediaType) {
     if (mediaType.isEmpty) {
-      throw InvalidMediaTypeException(mediaType, "'mediaType' must not be empty");
+      throw InvalidMediaTypeException(
+        mediaType,
+        "'mediaType' must not be empty",
+      );
     }
     // do not cache multipart mime types with random boundaries
     if (mediaType.startsWith("multipart")) {
@@ -112,7 +120,8 @@ class MediaType {
 
   static MediaType? _parseMediaTypeInternal(String mediaType) {
     int index = mediaType.indexOf(';');
-    String fullType = (index >= 0 ? mediaType.substring(0, index) : mediaType).trim();
+    String fullType = (index >= 0 ? mediaType.substring(0, index) : mediaType)
+        .trim();
     if (fullType.isEmpty) {
       logger.d("Invalid media type: '$mediaType'");
       return null;
@@ -177,7 +186,8 @@ class MediaType {
 
   ///类似于equals（Object），但仅基于类型和子类型，即忽略参数。
   bool equalsTypeAndSubtype(MediaType other) {
-    return type.toLowerCase() == other.type.toLowerCase() && subtype.toLowerCase() == other.subtype.toLowerCase();
+    return type.toLowerCase() == other.type.toLowerCase() &&
+        subtype.toLowerCase() == other.subtype.toLowerCase();
   }
 
   @override
@@ -186,7 +196,9 @@ class MediaType {
       return true;
     }
     if (other is MediaType) {
-      return type == other.type && subtype == other.subtype && parameters == other.parameters;
+      return type == other.type &&
+          subtype == other.subtype &&
+          parameters == other.parameters;
     }
     return false;
   }

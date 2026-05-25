@@ -73,5 +73,4 @@ class _BreakpointExecutorState extends State<BreakpointExecutor> {
       },
     );
   }
-
 }

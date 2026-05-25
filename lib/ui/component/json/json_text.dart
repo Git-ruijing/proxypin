@@ -77,7 +77,12 @@ class _JsonTextState extends State<JsonText> {
   }
 
   Widget jsonTextWidget(BuildContext context) {
-    var jsonParser = JsonParser(widget.json, widget.colorTheme, widget.indent, searchController);
+    var jsonParser = JsonParser(
+      widget.json,
+      widget.colorTheme,
+      widget.indent,
+      searchController,
+    );
     var textList = jsonParser.getJsonTree();
     List<List<TextSpan>>? chunks;
 
@@ -88,15 +93,20 @@ class _JsonTextState extends State<JsonText> {
     });
 
     if (textList.length < 1000) {
-      return SelectableText.rich(TextSpan(children: textList), showCursor: true);
+      return SelectableText.rich(
+        TextSpan(children: textList),
+        showCursor: true,
+      );
     } else {
       chunks = chunks ?? splitTextSpans(textList, 500);
       return SizedBox(
-          width: double.infinity,
-          height: MediaQuery.of(context).size.height - 200,
-          child: SelectionArea(
-              child: ScrollablePositionedList.builder(
-            physics: Platforms.isDesktop() ? null : const BouncingScrollPhysics(),
+        width: double.infinity,
+        height: MediaQuery.of(context).size.height - 200,
+        child: SelectionArea(
+          child: ScrollablePositionedList.builder(
+            physics: Platforms.isDesktop()
+                ? null
+                : const BouncingScrollPhysics(),
             scrollController: Platforms.isDesktop() ? null : trackingScroll(),
             itemCount: chunks.length,
             minCacheExtent: 1500,
@@ -104,17 +114,27 @@ class _JsonTextState extends State<JsonText> {
             itemBuilder: (BuildContext context, int index) {
               return Text.rich(
                 TextSpan(children: chunks![index]),
-                textHeightBehavior:
-                    const TextHeightBehavior(applyHeightToFirstAscent: false, applyHeightToLastDescent: false),
-                strutStyle: const StrutStyle(forceStrutHeight: true, height: 1.393),
+                textHeightBehavior: const TextHeightBehavior(
+                  applyHeightToFirstAscent: false,
+                  applyHeightToLastDescent: false,
+                ),
+                strutStyle: const StrutStyle(
+                  forceStrutHeight: true,
+                  height: 1.393,
+                ),
                 style: TextStyle(fontFamily: fonts.regular),
               );
             },
-          )));
+          ),
+        ),
+      );
     }
   }
 
-  Future<void> scrollToMatch(JsonParser jsonParser, [List<List<TextSpan>>? chunks]) async {
+  Future<void> scrollToMatch(
+    JsonParser jsonParser, [
+    List<List<TextSpan>>? chunks,
+  ]) async {
     if (searchController == null || jsonParser.matchKeys.isEmpty) return;
     final index = searchController!.currentMatchIndex.value;
     if (index < 0 || index >= jsonParser.matchKeys.length) return;
@@ -192,11 +212,16 @@ class _JsonTextState extends State<JsonText> {
 
     List<List<TextSpan>> chunks = [];
 
-    bool endsWithNewline(TextSpan s) => s.text != null && s.text!.endsWith('\n');
-    bool startsWithNewline(TextSpan s) => s.text != null && s.text!.startsWith('\n');
+    bool endsWithNewline(TextSpan s) =>
+        s.text != null && s.text!.endsWith('\n');
+    bool startsWithNewline(TextSpan s) =>
+        s.text != null && s.text!.startsWith('\n');
 
     for (int i = 0; i < spans.length; i += chunkSize) {
-      final chunk = spans.sublist(i, (i + chunkSize < spans.length) ? i + chunkSize : spans.length);
+      final chunk = spans.sublist(
+        i,
+        (i + chunkSize < spans.length) ? i + chunkSize : spans.length,
+      );
 
       if (chunk.isEmpty) continue;
 
@@ -205,7 +230,11 @@ class _JsonTextState extends State<JsonText> {
         final first = chunk.first;
         if (startsWithNewline(first)) {
           final newText = first.text!.substring(1);
-          chunk[0] = TextSpan(text: newText, style: first.style, children: first.children);
+          chunk[0] = TextSpan(
+            text: newText,
+            style: first.style,
+            children: first.children,
+          );
         }
       }
 
@@ -213,7 +242,11 @@ class _JsonTextState extends State<JsonText> {
         // 除最后一块外，块尾不保留以 \n 结尾的 span（把它挪到下一块）
         final last = chunk.last;
         final newText = last.text!.substring(0, last.text!.length - 1);
-        chunk[chunk.length - 1] = TextSpan(text: newText, style: last.style, children: last.children);
+        chunk[chunk.length - 1] = TextSpan(
+          text: newText,
+          style: last.style,
+          children: last.children,
+        );
       }
 
       chunks.add(chunk);
@@ -233,9 +266,13 @@ class _JsonTextState extends State<JsonText> {
     double prevOffset = 0;
     trackingScroll.addListener(() {
       // iOS 回弹或向上轻微滑动时，驱动外部滚动条联动
-      if (trackingScroll.offset < -10 || (trackingScroll.offset < 30 && trackingScroll.offset < prevOffset)) {
+      if (trackingScroll.offset < -10 ||
+          (trackingScroll.offset < 30 && trackingScroll.offset < prevOffset)) {
         if (scrollController != null && scrollController.offset >= 50) {
-          scrollController.jumpTo(scrollController.offset - max((prevOffset - trackingScroll.offset), 10));
+          scrollController.jumpTo(
+            scrollController.offset -
+                max((prevOffset - trackingScroll.offset), 10),
+          );
         }
       }
       prevOffset = trackingScroll.offset;
@@ -243,10 +280,14 @@ class _JsonTextState extends State<JsonText> {
 
     if (Platform.isIOS && scrollController != null) {
       scrollController.addListener(() {
-        if (scrollController.offset >= scrollController.position.maxScrollExtent) {
+        if (scrollController.offset >=
+            scrollController.position.maxScrollExtent) {
           scrollController.jumpTo(scrollController.position.maxScrollExtent);
-          trackingScroll
-              .jumpTo(trackingScroll.offset + (scrollController.offset - scrollController.position.maxScrollExtent));
+          trackingScroll.jumpTo(
+            trackingScroll.offset +
+                (scrollController.offset -
+                    scrollController.position.maxScrollExtent),
+          );
         }
       });
     }
@@ -293,8 +334,12 @@ class JsonParser {
   }
 
   /// 获取Map json
-  List<TextSpan> getMapText(Map<String, dynamic> map,
-      {String openPrefix = '', String prefix = '', String suffix = ''}) {
+  List<TextSpan> getMapText(
+    Map<String, dynamic> map, {
+    String openPrefix = '',
+    String prefix = '',
+    String suffix = '',
+  }) {
     var result = <TextSpan>[];
 
     var entries = map.entries;
@@ -302,18 +347,38 @@ class JsonParser {
       var entry = entries.elementAt(i);
       String postfix = '${i == entries.length - 1 ? '' : ','} ';
 
-      var textSpan = TextSpan(text: prefix, children: [
-        ..._highlightMatches('"${entry.key}"', textColor: colorTheme.propertyKey),
-        const TextSpan(text: ': '),
-        getBasicValue(entry.value, postfix),
-      ]);
+      var textSpan = TextSpan(
+        text: prefix,
+        children: [
+          ..._highlightMatches(
+            '"${entry.key}"',
+            textColor: colorTheme.propertyKey,
+          ),
+          const TextSpan(text: ': '),
+          getBasicValue(entry.value, postfix),
+        ],
+      );
       result.add(textSpan);
       result.add(const TextSpan(text: '\n'));
 
       if (entry.value is Map<String, dynamic>) {
-        result.addAll(getMapText(entry.value, openPrefix: prefix, prefix: '$prefix$indent', suffix: postfix));
+        result.addAll(
+          getMapText(
+            entry.value,
+            openPrefix: prefix,
+            prefix: '$prefix$indent',
+            suffix: postfix,
+          ),
+        );
       } else if (entry.value is List) {
-        result.addAll(getArrayText(entry.value, openPrefix: prefix, prefix: '$prefix$indent', suffix: postfix));
+        result.addAll(
+          getArrayText(
+            entry.value,
+            openPrefix: prefix,
+            prefix: '$prefix$indent',
+            suffix: postfix,
+          ),
+        );
       }
     }
 
@@ -322,7 +387,12 @@ class JsonParser {
   }
 
   /// 获取数组json
-  List<TextSpan> getArrayText(List<dynamic> list, {String openPrefix = '', String prefix = '', String suffix = ''}) {
+  List<TextSpan> getArrayText(
+    List<dynamic> list, {
+    String openPrefix = '',
+    String prefix = '',
+    String suffix = '',
+  }) {
     var result = <TextSpan>[];
     // result.add(TextSpan(text: '$openPrefix[ \n'));
 
@@ -334,9 +404,23 @@ class JsonParser {
       result.add(const TextSpan(text: '\n'));
 
       if (value is Map<String, dynamic>) {
-        result.addAll(getMapText(value, openPrefix: '$openPrefix ', prefix: '$prefix$indent', suffix: postfix));
+        result.addAll(
+          getMapText(
+            value,
+            openPrefix: '$openPrefix ',
+            prefix: '$prefix$indent',
+            suffix: postfix,
+          ),
+        );
       } else if (value is List) {
-        result.addAll(getArrayText(value, openPrefix: '$openPrefix ', prefix: '$prefix$indent', suffix: postfix));
+        result.addAll(
+          getArrayText(
+            value,
+            openPrefix: '$openPrefix ',
+            prefix: '$prefix$indent',
+            suffix: postfix,
+          ),
+        );
       }
     }
 
@@ -348,26 +432,42 @@ class JsonParser {
   TextSpan getBasicValue(dynamic value, String suffix, {String? prefix}) {
     if (value == null) {
       return TextSpan(
-          text: prefix,
-          children: [..._highlightMatches('null', textColor: colorTheme.keyword), TextSpan(text: suffix)]);
+        text: prefix,
+        children: [
+          ..._highlightMatches('null', textColor: colorTheme.keyword),
+          TextSpan(text: suffix),
+        ],
+      );
     }
 
     if (value is String) {
       return TextSpan(
-          text: prefix,
-          children: [..._highlightMatches('"$value"', textColor: colorTheme.string), TextSpan(text: suffix)]);
+        text: prefix,
+        children: [
+          ..._highlightMatches('"$value"', textColor: colorTheme.string),
+          TextSpan(text: suffix),
+        ],
+      );
     }
 
     if (value is num) {
       return TextSpan(
-          text: prefix,
-          children: [..._highlightMatches(value.toString(), textColor: colorTheme.number), TextSpan(text: suffix)]);
+        text: prefix,
+        children: [
+          ..._highlightMatches(value.toString(), textColor: colorTheme.number),
+          TextSpan(text: suffix),
+        ],
+      );
     }
 
     if (value is bool) {
       return TextSpan(
-          text: prefix,
-          children: [..._highlightMatches(value.toString(), textColor: colorTheme.keyword), TextSpan(text: suffix)]);
+        text: prefix,
+        children: [
+          ..._highlightMatches(value.toString(), textColor: colorTheme.keyword),
+          TextSpan(text: suffix),
+        ],
+      );
     }
 
     if (value is List) {
@@ -379,13 +479,24 @@ class JsonParser {
 
   List<InlineSpan> _highlightMatches(String text, {Color? textColor}) {
     if (searchController == null || searchController?.shouldSearch() == false) {
-      return [TextSpan(text: text, style: TextStyle(color: textColor))];
+      return [
+        TextSpan(
+          text: text,
+          style: TextStyle(color: textColor),
+        ),
+      ];
     }
 
     final pattern = searchController!.value.pattern;
     final regex = searchController!.value.isRegExp
-        ? RegExp(pattern, caseSensitive: searchController!.value.isCaseSensitive)
-        : RegExp(RegExp.escape(pattern), caseSensitive: searchController!.value.isCaseSensitive);
+        ? RegExp(
+            pattern,
+            caseSensitive: searchController!.value.isCaseSensitive,
+          )
+        : RegExp(
+            RegExp.escape(pattern),
+            caseSensitive: searchController!.value.isCaseSensitive,
+          );
 
     final spans = <InlineSpan>[];
     int start = 0;
@@ -394,31 +505,44 @@ class JsonParser {
     for (int i = 0; i < allMatches.length; i++) {
       final match = allMatches[i];
       if (match.start > start) {
-        spans.add(TextSpan(text: text.substring(start, match.start), style: TextStyle(color: textColor)));
+        spans.add(
+          TextSpan(
+            text: text.substring(start, match.start),
+            style: TextStyle(color: textColor),
+          ),
+        );
       }
       // 为每个高亮项分配一个 GlobalKey
       final key = GlobalKey();
       matchKeys.add(key);
 
-      spans.add(WidgetSpan(
-        alignment: PlaceholderAlignment.middle,
-        baseline: TextBaseline.ideographic,
-        child: Text(
-          text.substring(match.start, match.end),
-          key: key,
-          style: TextStyle(
-            color: textColor,
-            backgroundColor:
-                searchMatchTotal == currentIndex ? colorTheme.searchMatchCurrentColor : colorTheme.searchMatchColor,
+      spans.add(
+        WidgetSpan(
+          alignment: PlaceholderAlignment.middle,
+          baseline: TextBaseline.ideographic,
+          child: Text(
+            text.substring(match.start, match.end),
+            key: key,
+            style: TextStyle(
+              color: textColor,
+              backgroundColor: searchMatchTotal == currentIndex
+                  ? colorTheme.searchMatchCurrentColor
+                  : colorTheme.searchMatchColor,
+            ),
           ),
         ),
-      ));
+      );
       start = match.end;
       searchMatchTotal += 1; // 统计总匹配数
     }
 
     if (start < text.length) {
-      spans.add(TextSpan(text: text.substring(start), style: TextStyle(color: textColor)));
+      spans.add(
+        TextSpan(
+          text: text.substring(start),
+          style: TextStyle(color: textColor),
+        ),
+      );
     }
     return spans;
   }

@@ -96,11 +96,13 @@ class SearchModel {
     if (requestMethod != null && requestMethod != request.method) {
       return false;
     }
-    if (requestContentType != null && request.contentType != requestContentType) {
+    if (requestContentType != null &&
+        request.contentType != requestContentType) {
       return false;
     }
 
-    if (responseContentType != null && response?.contentType != responseContentType) {
+    if (responseContentType != null &&
+        response?.contentType != responseContentType) {
       return false;
     }
 
@@ -117,7 +119,9 @@ class SearchModel {
 
     // duration range
     if ((durationFromMs != null || durationToMs != null) && response != null) {
-      var cost = response.responseTime.difference(request.requestTime).inMilliseconds;
+      var cost = response.responseTime
+          .difference(request.requestTime)
+          .inMilliseconds;
       if (durationFromMs != null && cost < durationFromMs!) {
         return false;
       }
@@ -145,7 +149,13 @@ class SearchModel {
     }
 
     for (var option in searchOptions) {
-      if (keywordFilter(keyword!, caseSensitive.value, option, request, response)) {
+      if (keywordFilter(
+        keyword!,
+        caseSensitive.value,
+        option,
+        request,
+        response,
+      )) {
         return true;
       }
     }
@@ -160,16 +170,24 @@ class SearchModel {
       case Protocol.http:
         return request.requestUrl.startsWith('http://');
       case Protocol.ws:
-        return request.isWebSocket || (response != null && response.isWebSocket == true);
+        return request.isWebSocket ||
+            (response != null && response.isWebSocket == true);
       case Protocol.http1:
         return request.protocolVersion == 'HTTP/1.1';
       case Protocol.h2:
-        return request.protocolVersion == 'HTTP/2' || request.protocolVersion == 'h2';
+        return request.protocolVersion == 'HTTP/2' ||
+            request.protocolVersion == 'h2';
     }
   }
 
   ///关键字过滤
-  bool keywordFilter(String keyword, bool caseSensitive, Option option, HttpRequest request, HttpResponse? response) {
+  bool keywordFilter(
+    String keyword,
+    bool caseSensitive,
+    Option option,
+    HttpRequest request,
+    HttpResponse? response,
+  ) {
     if (option == Option.url) {
       if (caseSensitive) {
         return request.requestUrl.contains(keyword);
@@ -182,28 +200,37 @@ class SearchModel {
           ? request.method.name.contains(keyword)
           : request.method.name.toLowerCase().contains(keyword.toLowerCase());
     }
-    if (option == Option.responseContentType && response?.headers.contentType.contains(keyword) == true) {
+    if (option == Option.responseContentType &&
+        response?.headers.contentType.contains(keyword) == true) {
       return true;
     }
 
-    if (option == Option.requestBody && request.bodyAsString.contains(keyword) == true) {
+    if (option == Option.requestBody &&
+        request.bodyAsString.contains(keyword) == true) {
       return true;
     }
-    if (option == Option.responseBody && response?.bodyAsString.contains(keyword) == true) {
+    if (option == Option.responseBody &&
+        response?.bodyAsString.contains(keyword) == true) {
       return true;
     }
 
     if (option == Option.requestHeader || option == Option.responseHeader) {
-      var entries = option == Option.requestHeader ? request.headers.entries : response?.headers.entries ?? [];
+      var entries = option == Option.requestHeader
+          ? request.headers.entries
+          : response?.headers.entries ?? [];
 
       for (var entry in entries) {
         if (caseSensitive) {
-          if (entry.key.contains(keyword) || entry.value.any((element) => element.contains(keyword))) {
+          if (entry.key.contains(keyword) ||
+              entry.value.any((element) => element.contains(keyword))) {
             return true;
           }
         } else {
           if (entry.key.toLowerCase() == keyword.toLowerCase() ||
-              entry.value.any((element) => element.toLowerCase().contains(keyword.toLowerCase()))) {
+              entry.value.any(
+                (element) =>
+                    element.toLowerCase().contains(keyword.toLowerCase()),
+              )) {
             return true;
           }
         }

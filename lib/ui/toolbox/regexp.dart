@@ -66,7 +66,8 @@ class _RegExpPageState extends State<RegExpPage> {
 
   bool onKeyEvent(KeyEvent event) {
     if (widget.windowId == null) return false;
-    if ((HardwareKeyboard.instance.isMetaPressed || HardwareKeyboard.instance.isControlPressed) &&
+    if ((HardwareKeyboard.instance.isMetaPressed ||
+            HardwareKeyboard.instance.isControlPressed) &&
         event.logicalKey == LogicalKeyboardKey.keyW) {
       HardwareKeyboard.instance.removeHandler(onKeyEvent);
       WindowController.fromWindowId(widget.windowId!).close();
@@ -81,22 +82,35 @@ class _RegExpPageState extends State<RegExpPage> {
     Color primaryColor = Theme.of(context).colorScheme.primary;
 
     return Scaffold(
-        appBar: PreferredSize(
-            preferredSize: Size.fromHeight(50),
-            child: AppBar(
-                title: Text(localizations.regExp, style: TextStyle(fontSize: 16, fontWeight: FontWeight.w500)),
-                centerTitle: true)),
-        resizeToAvoidBottomInset: false,
-        body: ListView(padding: const EdgeInsets.all(10), children: [
+      appBar: PreferredSize(
+        preferredSize: Size.fromHeight(50),
+        child: AppBar(
+          title: Text(
+            localizations.regExp,
+            style: TextStyle(fontSize: 16, fontWeight: FontWeight.w500),
+          ),
+          centerTitle: true,
+        ),
+      ),
+      resizeToAvoidBottomInset: false,
+      body: ListView(
+        padding: const EdgeInsets.all(10),
+        children: [
           TextField(
             controller: pattern,
             minLines: 1,
             maxLines: 3,
-            onTapOutside: (event) => FocusManager.instance.primaryFocus?.unfocus(),
-            decoration: decoration(context,
-                label: 'Pattern',
-                hintText: 'Enter a regular expression',
-                suffixIcon: IconButton(icon: Icon(Icons.clear), onPressed: () => pattern.clear())),
+            onTapOutside: (event) =>
+                FocusManager.instance.primaryFocus?.unfocus(),
+            decoration: decoration(
+              context,
+              label: 'Pattern',
+              hintText: 'Enter a regular expression',
+              suffixIcon: IconButton(
+                icon: Icon(Icons.clear),
+                onPressed: () => pattern.clear(),
+              ),
+            ),
           ),
           const SizedBox(height: 5),
           Wrap(
@@ -111,7 +125,8 @@ class _RegExpPageState extends State<RegExpPage> {
                 child: const Text('Letters'),
               ),
               TextButton(
-                onPressed: () => pattern.text += r'[a-zA-Z0-9]+', // Alphanumeric
+                onPressed: () =>
+                    pattern.text += r'[a-zA-Z0-9]+', // Alphanumeric
                 child: const Text('Alphanumeric'),
               ),
               TextButton(
@@ -119,40 +134,64 @@ class _RegExpPageState extends State<RegExpPage> {
                 child: const Text('Email'),
               ),
               TextButton(
-                onPressed: () => pattern.text += r'(https?|ftp)://[^\s/$.?#].[^\s]*', // URL
+                onPressed: () =>
+                    pattern.text += r'(https?|ftp)://[^\s/$.?#].[^\s]*', // URL
                 child: const Text('URL'),
               ),
               TextButton(
-                onPressed: () => pattern.text += r'\d{4}-\d{2}-\d{2}', // Date (YYYY-MM-DD)
+                onPressed: () =>
+                    pattern.text += r'\d{4}-\d{2}-\d{2}', // Date (YYYY-MM-DD)
                 child: const Text('Date (YYYY-MM-DD)'),
               ),
             ],
           ),
           const SizedBox(height: 10),
-          Row(children: [
-            Align(alignment: Alignment.centerLeft, child: Text(localizations.testData)),
-            const SizedBox(width: 10),
-            if (!isMatch) Text(localizations.noChangesDetected, style: TextStyle(color: Colors.red))
-          ]),
+          Row(
+            children: [
+              Align(
+                alignment: Alignment.centerLeft,
+                child: Text(localizations.testData),
+              ),
+              const SizedBox(width: 10),
+              if (!isMatch)
+                Text(
+                  localizations.noChangesDetected,
+                  style: TextStyle(color: Colors.red),
+                ),
+            ],
+          ),
           const SizedBox(height: 5),
           TextField(
             controller: input,
             minLines: 5,
             maxLines: 8,
-            onTapOutside: (event) => FocusManager.instance.primaryFocus?.unfocus(),
-            decoration: decoration(context, hintText: localizations.enterMatchData),
+            onTapOutside: (event) =>
+                FocusManager.instance.primaryFocus?.unfocus(),
+            decoration: decoration(
+              context,
+              hintText: localizations.enterMatchData,
+            ),
           ),
           const SizedBox(height: 25),
           //输入替换文本
-          Wrap(spacing: 10, crossAxisAlignment: WrapCrossAlignment.center, children: [
-            SizedBox(
+          Wrap(
+            spacing: 10,
+            crossAxisAlignment: WrapCrossAlignment.center,
+            children: [
+              SizedBox(
                 width: 355,
                 child: TextField(
                   controller: replaceText,
-                  onTapOutside: (event) => FocusManager.instance.primaryFocus?.unfocus(),
-                  decoration: decoration(context, label: 'Replace Text', hintText: 'Enter replacement text'),
-                )),
-            FilledButton.icon(
+                  onTapOutside: (event) =>
+                      FocusManager.instance.primaryFocus?.unfocus(),
+                  decoration: decoration(
+                    context,
+                    label: 'Replace Text',
+                    hintText: 'Enter replacement text',
+                  ),
+                ),
+              ),
+              FilledButton.icon(
                 onPressed: () {
                   if (pattern.text.isEmpty) return;
                   setState(() {
@@ -161,28 +200,49 @@ class _RegExpPageState extends State<RegExpPage> {
                 },
                 style: Buttons.buttonStyle,
                 icon: const Icon(Icons.play_arrow_rounded),
-                label: const Text('Run')),
-            const SizedBox(width: 20),
-          ]),
+                label: const Text('Run'),
+              ),
+              const SizedBox(width: 20),
+            ],
+          ),
           SizedBox(height: 10),
 
           if (resultInput != null)
-            Row(children: [
-              Text("Result", style: TextStyle(fontSize: 16, color: primaryColor, fontWeight: FontWeight.w500)),
-              const SizedBox(width: 15),
-              //copy
-              IconButton(
+            Row(
+              children: [
+                Text(
+                  "Result",
+                  style: TextStyle(
+                    fontSize: 16,
+                    color: primaryColor,
+                    fontWeight: FontWeight.w500,
+                  ),
+                ),
+                const SizedBox(width: 15),
+                //copy
+                IconButton(
                   icon: Icon(Icons.copy, color: primaryColor, size: 18),
                   onPressed: () {
                     Clipboard.setData(ClipboardData(text: resultInput!));
-                    FlutterToastr.show(localizations.copied, context, duration: 3);
-                  }),
-            ]),
+                    FlutterToastr.show(
+                      localizations.copied,
+                      context,
+                      duration: 3,
+                    );
+                  },
+                ),
+              ],
+            ),
           if (resultInput != null) SizedBox(height: 5),
           if (resultInput != null)
             Container(
               padding: const EdgeInsets.all(10),
-              decoration: BoxDecoration(border: Border.all(color: Theme.of(context).colorScheme.primary, width: 1.2)),
+              decoration: BoxDecoration(
+                border: Border.all(
+                  color: Theme.of(context).colorScheme.primary,
+                  width: 1.2,
+                ),
+              ),
               child: SelectableText.rich(
                 showCursor: true,
                 TextSpan(
@@ -191,7 +251,9 @@ class _RegExpPageState extends State<RegExpPage> {
                 ),
               ),
             ),
-        ]));
+        ],
+      ),
+    );
   }
 
   List<InlineSpan> _buildHighlightedText() {
@@ -209,7 +271,12 @@ class _RegExpPageState extends State<RegExpPage> {
       if (start < match.start) {
         spans.add(TextSpan(text: text.substring(start, match.start)));
       }
-      spans.add(TextSpan(text: replaceText, style: TextStyle(color: Colors.red, fontWeight: FontWeight.bold)));
+      spans.add(
+        TextSpan(
+          text: replaceText,
+          style: TextStyle(color: Colors.red, fontWeight: FontWeight.bold),
+        ),
+      );
       start = match.end;
     }
 

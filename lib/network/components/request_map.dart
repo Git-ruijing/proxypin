@@ -39,7 +39,11 @@ class RequestMapInterceptor extends Interceptor {
 
   ///脚本上下文
   Map<String, dynamic> scriptContext(RequestMapRule rule) {
-    return {'scriptName': rule.name, 'os': Platform.operatingSystem, 'session': scriptSession};
+    return {
+      'scriptName': rule.name,
+      'os': Platform.operatingSystem,
+      'session': scriptSession,
+    };
   }
 
   @override
@@ -75,8 +79,13 @@ class RequestMapInterceptor extends Interceptor {
   }
 
   /// 重写响应
-  Future<HttpResponse> mapLocalResponse(RequestMapRule rule, RequestMapItem item) async {
-    HttpResponse response = HttpResponse(HttpStatus.valueOf(item.statusCode ?? 200));
+  Future<HttpResponse> mapLocalResponse(
+    RequestMapRule rule,
+    RequestMapItem item,
+  ) async {
+    HttpResponse response = HttpResponse(
+      HttpStatus.valueOf(item.statusCode ?? 200),
+    );
     item.headers?.forEach((key, value) {
       response.headers.set(key, value);
     });
@@ -84,20 +93,30 @@ class RequestMapInterceptor extends Interceptor {
       if (item.bodyFile == null) return response;
       response.body = await FileRead.readFile(item.bodyFile!);
     } else if (item.body != null) {
-      response.body =
-          response.charset == 'utf-8' || response.charset == 'utf8' ? utf8.encode(item.body!) : item.body?.codeUnits;
+      response.body = response.charset == 'utf-8' || response.charset == 'utf8'
+          ? utf8.encode(item.body!)
+          : item.body?.codeUnits;
     }
     return response;
   }
 
   /// script执行
-  Future<HttpResponse?> executeScript(HttpRequest request, RequestMapRule rule, String script) async {
-    flutterJs ??= await JavaScriptEngine.getJavaScript(consoleLog: ScriptManager.consoleLog);
+  Future<HttpResponse?> executeScript(
+    HttpRequest request,
+    RequestMapRule rule,
+    String script,
+  ) async {
+    flutterJs ??= await JavaScriptEngine.getJavaScript(
+      consoleLog: ScriptManager.consoleLog,
+    );
     var context = jsonEncode(scriptContext(rule));
-    var jsRequest = jsonEncode(await JavaScriptEngine.convertJsRequest(request));
+    var jsRequest = jsonEncode(
+      await JavaScriptEngine.convertJsRequest(request),
+    );
 
     var jsResult = await flutterJs!.evaluateAsync(
-        """var request = $jsRequest, context = $context;  request['scriptContext'] = context; $script\n  onRequest(context, request)""");
+      """var request = $jsRequest, context = $context;  request['scriptContext'] = context; $script\n  onRequest(context, request)""",
+    );
     // print("response: ${jsResult.isPromise} ${jsResult.isError} ${jsResult.rawResult}");
     var result = await JavaScriptEngine.jsResultResolve(flutterJs!, jsResult);
     if (result == null) {

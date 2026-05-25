@@ -42,7 +42,11 @@ class StreamSetting {
 }
 
 class SettingHandler {
-  static void handleSettingsFrame(ChannelContext channelContext, FrameHeader frameHeader, ByteBuf payload) {
+  static void handleSettingsFrame(
+    ChannelContext channelContext,
+    FrameHeader frameHeader,
+    ByteBuf payload,
+  ) {
     // SETTINGS frames must have a length that is a multiple of 6 bytes
     if (frameHeader.length % 6 != 0) {
       throw Exception("Invalid SETTINGS frame length");

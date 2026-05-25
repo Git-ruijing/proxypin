@@ -20,7 +20,9 @@ bool _refresh = false;
 Future<void> _refreshConfig({bool force = false}) async {
   if (force) {
     _refresh = false;
-    await RequestCryptoManager.instance.then((manager) => manager.flushConfig());
+    await RequestCryptoManager.instance.then(
+      (manager) => manager.flushConfig(),
+    );
     await DesktopMultiWindow.invokeMethod(0, "refreshRequestCrypto");
     return;
   }
@@ -31,7 +33,9 @@ Future<void> _refreshConfig({bool force = false}) async {
   _refresh = true;
   Future.delayed(const Duration(milliseconds: 1000), () async {
     _refresh = false;
-    await RequestCryptoManager.instance.then((manager) => manager.flushConfig());
+    await RequestCryptoManager.instance.then(
+      (manager) => manager.flushConfig(),
+    );
     await DesktopMultiWindow.invokeMethod(0, "refreshRequestCrypto");
   });
 }
@@ -64,18 +68,23 @@ class _RequestCryptoPageState extends State<RequestCryptoPage> {
   }
 
   bool _onKeyEvent(KeyEvent event) {
-    if (HardwareKeyboard.instance.isLogicalKeyPressed(LogicalKeyboardKey.escape) && Navigator.canPop(context)) {
+    if (HardwareKeyboard.instance.isLogicalKeyPressed(
+          LogicalKeyboardKey.escape,
+        ) &&
+        Navigator.canPop(context)) {
       Navigator.maybePop(context);
       return true;
     }
 
-    if ((HardwareKeyboard.instance.isMetaPressed || HardwareKeyboard.instance.isControlPressed) &&
+    if ((HardwareKeyboard.instance.isMetaPressed ||
+            HardwareKeyboard.instance.isControlPressed) &&
         event.logicalKey == LogicalKeyboardKey.keyW) {
       if (Navigator.canPop(context)) {
         Navigator.pop(context);
         return true;
       }
-      if (widget.windowId != null) WindowController.fromWindowId(widget.windowId!).close();
+      if (widget.windowId != null)
+        WindowController.fromWindowId(widget.windowId!).close();
       return true;
     }
     return false;
@@ -85,48 +94,76 @@ class _RequestCryptoPageState extends State<RequestCryptoPage> {
   Widget build(BuildContext context) {
     bool isEN = Localizations.localeOf(context).languageCode == 'en';
     return Scaffold(
-        backgroundColor: Theme.of(context).dialogTheme.backgroundColor,
-        appBar: AppBar(
-            title: Text(localizations.requestCrypto, style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w500)),
-            toolbarHeight: 36,
-            centerTitle: true),
-        body: Center(
-            child: Container(
-                padding: const EdgeInsets.only(left: 15, right: 10),
-                child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-                  Row(children: [
-                    SizedBox(
-                        width: isEN ? 310 : 225,
-                        child: ListTile(
-                            title: Text("${localizations.enable} ${localizations.requestCrypto}"),
-                            trailing: SwitchWidget(
-                                value: manager.enabled,
-                                scale: 0.8,
-                                onChanged: (value) {
-                                  manager.enabled = value;
-                                  _refreshConfig();
-                                }))),
-                    const SizedBox(width: 10),
-                    Expanded(
-                        child: Row(mainAxisAlignment: MainAxisAlignment.end, children: [
-                      TextButton.icon(
-                          icon: const Icon(Icons.add, size: 18), label: Text(localizations.add), onPressed: _addRule),
-                      const SizedBox(width: 5),
-                      TextButton.icon(
+      backgroundColor: Theme.of(context).dialogTheme.backgroundColor,
+      appBar: AppBar(
+        title: Text(
+          localizations.requestCrypto,
+          style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w500),
+        ),
+        toolbarHeight: 36,
+        centerTitle: true,
+      ),
+      body: Center(
+        child: Container(
+          padding: const EdgeInsets.only(left: 15, right: 10),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                children: [
+                  SizedBox(
+                    width: isEN ? 310 : 225,
+                    child: ListTile(
+                      title: Text(
+                        "${localizations.enable} ${localizations.requestCrypto}",
+                      ),
+                      trailing: SwitchWidget(
+                        value: manager.enabled,
+                        scale: 0.8,
+                        onChanged: (value) {
+                          manager.enabled = value;
+                          _refreshConfig();
+                        },
+                      ),
+                    ),
+                  ),
+                  const SizedBox(width: 10),
+                  Expanded(
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.end,
+                      children: [
+                        TextButton.icon(
+                          icon: const Icon(Icons.add, size: 18),
+                          label: Text(localizations.add),
+                          onPressed: _addRule,
+                        ),
+                        const SizedBox(width: 5),
+                        TextButton.icon(
                           icon: const Icon(Icons.input_rounded, size: 18),
                           onPressed: _import,
-                          label: Text(localizations.import))
-                    ])),
-                    const SizedBox(width: 15)
-                  ]),
-                  const SizedBox(height: 16),
-                  CryptoRuleList(manager: manager, windowId: widget.windowId),
-                ]))));
+                          label: Text(localizations.import),
+                        ),
+                      ],
+                    ),
+                  ),
+                  const SizedBox(width: 15),
+                ],
+              ),
+              const SizedBox(height: 16),
+              CryptoRuleList(manager: manager, windowId: widget.windowId),
+            ],
+          ),
+        ),
+      ),
+    );
   }
 
   Future<void> _addRule() async {
-    final newRule =
-        await showDialog<CryptoRule>(context: context, barrierDismissible: false, builder: (_) => CryptoRuleDialog());
+    final newRule = await showDialog<CryptoRule>(
+      context: context,
+      barrierDismissible: false,
+      builder: (_) => CryptoRuleDialog(),
+    );
     if (newRule == null) return;
     await manager.addRule(newRule);
     setState(() {});
@@ -137,12 +174,15 @@ class _RequestCryptoPageState extends State<RequestCryptoPage> {
     String? path;
     if (Platform.isMacOS) {
       path = await DesktopMultiWindow.invokeMethod(0, "pickFiles", {
-        "allowedExtensions": ['json']
+        "allowedExtensions": ['json'],
       });
-      if (widget.windowId != null) WindowController.fromWindowId(widget.windowId!).show();
+      if (widget.windowId != null)
+        WindowController.fromWindowId(widget.windowId!).show();
     } else {
-      FilePickerResult? result =
-          await FilePicker.platform.pickFiles(type: FileType.custom, allowedExtensions: ['json']);
+      FilePickerResult? result = await FilePicker.platform.pickFiles(
+        type: FileType.custom,
+        allowedExtensions: ['json'],
+      );
       path = result?.files.single.path;
     }
     if (path == null) return;
@@ -150,13 +190,16 @@ class _RequestCryptoPageState extends State<RequestCryptoPage> {
       final content = await File(path).readAsString();
       final List list = jsonDecode(content);
       for (final item in list) {
-        await manager.addRule(CryptoRule.fromJson(Map<String, dynamic>.from(item)));
+        await manager.addRule(
+          CryptoRule.fromJson(Map<String, dynamic>.from(item)),
+        );
       }
       _refreshConfig(force: true);
       if (mounted) FlutterToastr.show(localizations.importSuccess, context);
     } catch (e) {
       logger.e('导入失败 $path', error: e);
-      if (mounted) FlutterToastr.show('${localizations.importFailed} $e', context);
+      if (mounted)
+        FlutterToastr.show('${localizations.importFailed} $e', context);
     }
   }
 }
@@ -166,11 +209,7 @@ class CryptoRuleList extends StatefulWidget {
   final int? windowId;
   final RequestCryptoManager manager;
 
-  const CryptoRuleList({
-    required this.manager,
-    super.key,
-    this.windowId,
-  });
+  const CryptoRuleList({required this.manager, super.key, this.windowId});
 
   @override
   State<CryptoRuleList> createState() => _CryptoRuleListState();
@@ -197,7 +236,8 @@ class _CryptoRuleListState extends State<CryptoRuleList> {
         if (selected.isEmpty) {
           return;
         }
-        if (HardwareKeyboard.instance.isMetaPressed || HardwareKeyboard.instance.isControlPressed) {
+        if (HardwareKeyboard.instance.isMetaPressed ||
+            HardwareKeyboard.instance.isControlPressed) {
           return;
         }
         setState(() {
@@ -215,22 +255,50 @@ class _CryptoRuleListState extends State<CryptoRuleList> {
         child: Container(
           padding: const EdgeInsets.only(top: 10),
           constraints: const BoxConstraints(minHeight: 200, maxHeight: 600),
-          decoration: BoxDecoration(border: Border.all(color: Colors.grey.withAlpha((0.2 * 255).round()))),
+          decoration: BoxDecoration(
+            border: Border.all(
+              color: Colors.grey.withAlpha((0.2 * 255).round()),
+            ),
+          ),
           child: Column(
             children: [
               Padding(
                 padding: const EdgeInsets.only(left: 5, bottom: 5),
-                child: Row(mainAxisAlignment: MainAxisAlignment.start, children: [
-                  Container(width: 80, padding: const EdgeInsets.only(left: 10), child: Text(localizations.name)),
-                  SizedBox(width: 80, child: Text(localizations.enable, textAlign: TextAlign.center)),
-                  const VerticalDivider(width: 24),
-                  const Expanded(child: Text('URL', textAlign: TextAlign.center)),
-                  SizedBox(width: 120, child: Text(localizations.cryptoRuleField, textAlign: TextAlign.center)),
-                  SizedBox(width: 220, child: Text('AES Key', textAlign: TextAlign.center)),
-                ]),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.start,
+                  children: [
+                    Container(
+                      width: 80,
+                      padding: const EdgeInsets.only(left: 10),
+                      child: Text(localizations.name),
+                    ),
+                    SizedBox(
+                      width: 80,
+                      child: Text(
+                        localizations.enable,
+                        textAlign: TextAlign.center,
+                      ),
+                    ),
+                    const VerticalDivider(width: 24),
+                    const Expanded(
+                      child: Text('URL', textAlign: TextAlign.center),
+                    ),
+                    SizedBox(
+                      width: 120,
+                      child: Text(
+                        localizations.cryptoRuleField,
+                        textAlign: TextAlign.center,
+                      ),
+                    ),
+                    SizedBox(
+                      width: 220,
+                      child: Text('AES Key', textAlign: TextAlign.center),
+                    ),
+                  ],
+                ),
               ),
               const Divider(thickness: 0.5, height: 5),
-              Column(children: rows(manager.rules))
+              Column(children: rows(manager.rules)),
             ],
           ),
         ),
@@ -257,9 +325,12 @@ class _CryptoRuleListState extends State<CryptoRuleList> {
           }
         },
         onTap: () {
-          if (HardwareKeyboard.instance.isMetaPressed || HardwareKeyboard.instance.isControlPressed) {
+          if (HardwareKeyboard.instance.isMetaPressed ||
+              HardwareKeyboard.instance.isControlPressed) {
             setState(() {
-              selected.contains(index) ? selected.remove(index) : selected.add(index);
+              selected.contains(index)
+                  ? selected.remove(index)
+                  : selected.add(index);
             });
             return;
           }
@@ -274,36 +345,61 @@ class _CryptoRuleListState extends State<CryptoRuleList> {
           color: selected.contains(index)
               ? primaryColor.withOpacity(0.6)
               : index.isEven
-                  ? Colors.grey.withOpacity(0.1)
-                  : null,
+              ? Colors.grey.withOpacity(0.1)
+              : null,
           height: 32,
           padding: const EdgeInsets.all(5),
-          child: Row(children: [
-            SizedBox(
-              width: 80,
-              child: Text(rule.name,
-                  overflow: TextOverflow.ellipsis, style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w500)),
-            ),
-            SizedBox(
+          child: Row(
+            children: [
+              SizedBox(
+                width: 80,
+                child: Text(
+                  rule.name,
+                  overflow: TextOverflow.ellipsis,
+                  style: const TextStyle(
+                    fontSize: 13,
+                    fontWeight: FontWeight.w500,
+                  ),
+                ),
+              ),
+              SizedBox(
                 width: 80,
                 child: SwitchWidget(
-                    scale: 0.7,
-                    value: rule.enabled,
-                    onChanged: (val) {
-                      rules[index].enabled = val;
-                      _refreshConfig();
-                    })),
-            const SizedBox(width: 8),
-            Expanded(
-                child: Text(rule.urlPattern.isEmpty ? localizations.emptyMatchAll : rule.urlPattern,
-                    overflow: TextOverflow.ellipsis)),
-            SizedBox(
+                  scale: 0.7,
+                  value: rule.enabled,
+                  onChanged: (val) {
+                    rules[index].enabled = val;
+                    _refreshConfig();
+                  },
+                ),
+              ),
+              const SizedBox(width: 8),
+              Expanded(
+                child: Text(
+                  rule.urlPattern.isEmpty
+                      ? localizations.emptyMatchAll
+                      : rule.urlPattern,
+                  overflow: TextOverflow.ellipsis,
+                ),
+              ),
+              SizedBox(
                 width: 120,
-                child: Text(rule.field ?? '', overflow: TextOverflow.ellipsis, textAlign: TextAlign.center)),
-            SizedBox(
+                child: Text(
+                  rule.field ?? '',
+                  overflow: TextOverflow.ellipsis,
+                  textAlign: TextAlign.center,
+                ),
+              ),
+              SizedBox(
                 width: 220,
-                child: Text(_formatKey(rule.config.key), overflow: TextOverflow.ellipsis, textAlign: TextAlign.center)),
-          ]),
+                child: Text(
+                  _formatKey(rule.config.key),
+                  overflow: TextOverflow.ellipsis,
+                  textAlign: TextAlign.center,
+                ),
+              ),
+            ],
+          ),
         ),
       );
     });
@@ -315,7 +411,10 @@ class _CryptoRuleListState extends State<CryptoRuleList> {
       return;
     }
 
-    final updated = await showDialog<CryptoRule>(context: context, builder: (_) => CryptoRuleDialog(rule: rule));
+    final updated = await showDialog<CryptoRule>(
+      context: context,
+      builder: (_) => CryptoRuleDialog(rule: rule),
+    );
     if (updated == null) return;
     if (index == null) {
       await manager.addRule(updated);
@@ -328,14 +427,18 @@ class _CryptoRuleListState extends State<CryptoRuleList> {
 
   Future<void> removeRules(List<int> indexes) async {
     if (indexes.isEmpty) return;
-    showConfirmDialog(context, content: localizations.confirmContent, onConfirm: () async {
-      indexes.sort((a, b) => b.compareTo(a));
-      for (final index in indexes) {
-        await manager.removeRule(index);
-      }
-      selected.clear();
-      _refreshConfig(force: true);
-    });
+    showConfirmDialog(
+      context,
+      content: localizations.confirmContent,
+      onConfirm: () async {
+        indexes.sort((a, b) => b.compareTo(a));
+        for (final index in indexes) {
+          await manager.removeRule(index);
+        }
+        selected.clear();
+        _refreshConfig(force: true);
+      },
+    );
   }
 
   void showMenus(TapDownDetails details, int index) {
@@ -347,22 +450,58 @@ class _CryptoRuleListState extends State<CryptoRuleList> {
       selected.add(index);
     });
 
-    showContextMenu(context, details.globalPosition, items: [
-      PopupMenuItem(height: 35, child: Text(localizations.edit), onTap: () => showEdit(index)),
-      PopupMenuItem(height: 35, child: Text(localizations.delete), onTap: () => removeRules([index]))
-    ]);
+    showContextMenu(
+      context,
+      details.globalPosition,
+      items: [
+        PopupMenuItem(
+          height: 35,
+          child: Text(localizations.edit),
+          onTap: () => showEdit(index),
+        ),
+        PopupMenuItem(
+          height: 35,
+          child: Text(localizations.delete),
+          onTap: () => removeRules([index]),
+        ),
+      ],
+    );
   }
 
   void showGlobalMenu(Offset offset) {
-    showContextMenu(context, offset, items: [
-      PopupMenuItem(height: 35, onTap: showEdit, child: Text(localizations.newBuilt)),
-      PopupMenuItem(height: 35, child: Text(localizations.export), onTap: () => export(selected.toList())),
-      const PopupMenuDivider(),
-      PopupMenuItem(height: 35, child: Text(localizations.enableSelect), onTap: () => enableStatus(true)),
-      PopupMenuItem(height: 35, child: Text(localizations.disableSelect), onTap: () => enableStatus(false)),
-      const PopupMenuDivider(),
-      PopupMenuItem(height: 35, child: Text(localizations.deleteSelect), onTap: () => removeRules(selected.toList()))
-    ]);
+    showContextMenu(
+      context,
+      offset,
+      items: [
+        PopupMenuItem(
+          height: 35,
+          onTap: showEdit,
+          child: Text(localizations.newBuilt),
+        ),
+        PopupMenuItem(
+          height: 35,
+          child: Text(localizations.export),
+          onTap: () => export(selected.toList()),
+        ),
+        const PopupMenuDivider(),
+        PopupMenuItem(
+          height: 35,
+          child: Text(localizations.enableSelect),
+          onTap: () => enableStatus(true),
+        ),
+        PopupMenuItem(
+          height: 35,
+          child: Text(localizations.disableSelect),
+          onTap: () => enableStatus(false),
+        ),
+        const PopupMenuDivider(),
+        PopupMenuItem(
+          height: 35,
+          child: Text(localizations.deleteSelect),
+          onTap: () => removeRules(selected.toList()),
+        ),
+      ],
+    );
   }
 
   Future<void> enableStatus(bool enable) async {
@@ -380,10 +519,15 @@ class _CryptoRuleListState extends State<CryptoRuleList> {
     final data = indexes.map((i) => manager.rules[i].toJson()).toList();
     String? path;
     if (Platform.isMacOS) {
-      path = await DesktopMultiWindow.invokeMethod(0, "saveFile", {"fileName": 'request_crypto.json'});
-      if (widget.windowId != null) WindowController.fromWindowId(widget.windowId!).show();
+      path = await DesktopMultiWindow.invokeMethod(0, "saveFile", {
+        "fileName": 'request_crypto.json',
+      });
+      if (widget.windowId != null)
+        WindowController.fromWindowId(widget.windowId!).show();
     } else {
-      path = await FilePicker.platform.saveFile(fileName: 'request_crypto.json');
+      path = await FilePicker.platform.saveFile(
+        fileName: 'request_crypto.json',
+      );
     }
     if (path == null) return;
     await File(path).writeAsString(jsonEncode(data));
@@ -476,14 +620,20 @@ class _CryptoRuleDialogState extends State<CryptoRuleDialog> {
     super.dispose();
   }
 
-  InputDecoration decorate(BuildContext context, String? label, {String? hint, Widget? suffixIcon}) {
+  InputDecoration decorate(
+    BuildContext context,
+    String? label, {
+    String? hint,
+    Widget? suffixIcon,
+  }) {
     return InputDecoration(
-        floatingLabelBehavior: FloatingLabelBehavior.always,
-        labelText: label,
-        hintText: hint,
-        hintStyle: TextStyle(color: Colors.grey.shade500, fontSize: 15),
-        isDense: true,
-        border: const OutlineInputBorder());
+      floatingLabelBehavior: FloatingLabelBehavior.always,
+      labelText: label,
+      hintText: hint,
+      hintStyle: TextStyle(color: Colors.grey.shade500, fontSize: 15),
+      isDense: true,
+      border: const OutlineInputBorder(),
+    );
   }
 
   @override
@@ -508,235 +658,395 @@ class _CryptoRuleDialogState extends State<CryptoRuleDialog> {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Card(
-                  color: Theme.of(context).colorScheme.surfaceContainerLow.withAlpha((0.5 * 255).round()),
+                  color: Theme.of(context).colorScheme.surfaceContainerLow
+                      .withAlpha((0.5 * 255).round()),
                   elevation: 0,
                   shape: RoundedRectangleBorder(
-                    side: BorderSide(color: Theme.of(context).dividerColor.withAlpha((0.2 * 255).round())),
+                    side: BorderSide(
+                      color: Theme.of(
+                        context,
+                      ).dividerColor.withAlpha((0.2 * 255).round()),
+                    ),
                     borderRadius: BorderRadius.circular(8),
                   ),
                   child: Padding(
                     padding: const EdgeInsets.all(10),
-                    child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-                      Text(l10n.match, style: theme.textTheme.titleSmall),
-                      const SizedBox(height: 12),
-                      TextFormField(controller: nameController, decoration: decorate(context, l10n.name)),
-                      const SizedBox(height: 12),
-                      TextFormField(
-                        controller: patternController,
-                        decoration: decorate(context, "URL", hint: 'https://www.example.com/api/*'),
-                        validator: (val) => val == null || val.trim().isEmpty ? l10n.cannotBeEmpty : null,
-                      ),
-                      const SizedBox(height: 12),
-                      TextFormField(
-                        controller: fieldInputController,
-                        decoration: decorate(context, l10n.cryptoRuleField, hint: 'data.field'),
-                      ),
-                      const SizedBox(height: 12),
-                      SwitchListTile(
-                        dense: true,
-                        contentPadding: EdgeInsets.zero,
-                        title: Text(l10n.enable),
-                        value: enabled,
-                        onChanged: (value) => setState(() => enabled = value),
-                      ),
-                    ]),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(l10n.match, style: theme.textTheme.titleSmall),
+                        const SizedBox(height: 12),
+                        TextFormField(
+                          controller: nameController,
+                          decoration: decorate(context, l10n.name),
+                        ),
+                        const SizedBox(height: 12),
+                        TextFormField(
+                          controller: patternController,
+                          decoration: decorate(
+                            context,
+                            "URL",
+                            hint: 'https://www.example.com/api/*',
+                          ),
+                          validator: (val) => val == null || val.trim().isEmpty
+                              ? l10n.cannotBeEmpty
+                              : null,
+                        ),
+                        const SizedBox(height: 12),
+                        TextFormField(
+                          controller: fieldInputController,
+                          decoration: decorate(
+                            context,
+                            l10n.cryptoRuleField,
+                            hint: 'data.field',
+                          ),
+                        ),
+                        const SizedBox(height: 12),
+                        SwitchListTile(
+                          dense: true,
+                          contentPadding: EdgeInsets.zero,
+                          title: Text(l10n.enable),
+                          value: enabled,
+                          onChanged: (value) => setState(() => enabled = value),
+                        ),
+                      ],
+                    ),
                   ),
                 ),
                 const SizedBox(height: 12),
                 Card(
-                  color: Theme.of(context).colorScheme.surfaceContainerLow.withAlpha((0.5 * 255).round()),
+                  color: Theme.of(context).colorScheme.surfaceContainerLow
+                      .withAlpha((0.5 * 255).round()),
                   elevation: 0,
                   shape: RoundedRectangleBorder(
-                    side: BorderSide(color: Theme.of(context).dividerColor.withAlpha((0.2 * 255).round())),
+                    side: BorderSide(
+                      color: Theme.of(
+                        context,
+                      ).dividerColor.withAlpha((0.2 * 255).round()),
+                    ),
                     borderRadius: BorderRadius.circular(8),
                   ),
                   child: Padding(
                     padding: const EdgeInsets.all(10),
-                    child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-                      Text("AES", style: theme.textTheme.titleSmall),
-                      const SizedBox(height: 12),
-                      Row(children: [
-                        Text("Mode", style: theme.textTheme.labelMedium),
-                        const SizedBox(width: 8),
-                        Container(
-                          height: 42,
-                          padding: const EdgeInsets.symmetric(horizontal: 8),
-                          decoration: BoxDecoration(
-                            border: Border.all(color: Theme.of(context).dividerColor.withAlpha((0.12 * 255).round())),
-                            borderRadius: BorderRadius.circular(6),
-                          ),
-                          child: DropdownButtonHideUnderline(
-                            child: DropdownButton<String>(
-                              value: mode,
-                              items: const [
-                                DropdownMenuItem(value: 'ECB', child: Text('ECB')),
-                                DropdownMenuItem(value: 'CBC', child: Text('CBC')),
-                              ],
-                              onChanged: (v) => setState(() => mode = v ?? 'ECB'),
-                              style: Theme.of(context).textTheme.bodyMedium,
-                            ),
-                          ),
-                        ),
-                        const SizedBox(width: 12),
-                        Text('Padding', style: theme.textTheme.labelMedium),
-                        const SizedBox(width: 8),
-                        Container(
-                          height: 42,
-                          padding: const EdgeInsets.symmetric(horizontal: 8),
-                          decoration: BoxDecoration(
-                            border: Border.all(color: Theme.of(context).dividerColor.withAlpha((0.12 * 255).round())),
-                            borderRadius: BorderRadius.circular(6),
-                          ),
-                          child: DropdownButtonHideUnderline(
-                            child: DropdownButton<String>(
-                              value: padding,
-                              items: const [
-                                DropdownMenuItem(value: 'PKCS7', child: Text('PKCS7')),
-                                DropdownMenuItem(value: 'ZeroPadding', child: Text('ZeroPadding')),
-                              ],
-                              onChanged: (v) => setState(() => padding = v ?? 'PKCS7'),
-                              style: Theme.of(context).textTheme.bodyMedium,
-                            ),
-                          ),
-                        ),
-                        const SizedBox(width: 12),
-                        Text('Key Length', style: theme.textTheme.labelMedium),
-                        const SizedBox(width: 8),
-                        Container(
-                          height: 42,
-                          padding: const EdgeInsets.symmetric(horizontal: 8),
-                          decoration: BoxDecoration(
-                            border: Border.all(color: Theme.of(context).dividerColor.withAlpha((0.12 * 255).round())),
-                            borderRadius: BorderRadius.circular(6),
-                          ),
-                          child: DropdownButtonHideUnderline(
-                            child: DropdownButton<int>(
-                              value: length,
-                              items: const [
-                                DropdownMenuItem(value: 128, child: Text('128')),
-                                DropdownMenuItem(value: 192, child: Text('192')),
-                                DropdownMenuItem(value: 256, child: Text('256')),
-                              ],
-                              onChanged: (v) => setState(() => length = v ?? 128),
-                              style: Theme.of(context).textTheme.bodyMedium,
-                            ),
-                          ),
-                        ),
-                      ]),
-                      const SizedBox(height: 12),
-                      // Key input and format selector in a single row for nicer UI
-                      Row(children: [
-                        Container(
-                          height: 42,
-                          width: 92,
-                          padding: const EdgeInsets.symmetric(horizontal: 6),
-                          decoration: BoxDecoration(
-                            border: Border.all(color: Theme.of(context).dividerColor.withAlpha((0.12 * 255).round())),
-                            borderRadius: BorderRadius.circular(6),
-                          ),
-                          child: DropdownButtonHideUnderline(
-                            child: DropdownButton<String>(
-                              value: keyFormat,
-                              items: const [
-                                DropdownMenuItem(value: 'text', child: Text('text')),
-                                DropdownMenuItem(value: 'base64', child: Text('base64')),
-                              ],
-                              onChanged: (v) => setState(() => keyFormat = v ?? 'text'),
-                              style: Theme.of(context).textTheme.bodyMedium,
-                              iconEnabledColor: Theme.of(context).colorScheme.primary,
-                            ),
-                          ),
-                        ),
-                        const SizedBox(width: 12),
-                        Expanded(
-                          child: SizedBox(
-                            child: TextFormField(
-                              controller: keyController,
-                              maxLength: 128,
-                              decoration: decorate(context, "Key").copyWith(counterText: ''),
-                              validator: (val) => val == null || val.trim().isEmpty ? l10n.cannotBeEmpty : null,
-                            ),
-                          ),
-                        ),
-                      ]),
-                      const SizedBox(height: 12),
-                      // Compact single-line IV controls for CBC
-                      if (mode == 'CBC')
-                        Row(children: [
-                          Container(
-                            height: 42,
-                            constraints:  const BoxConstraints(minWidth: 92),
-                            padding: const EdgeInsets.symmetric(horizontal: 6),
-                            decoration: BoxDecoration(
-                              border: Border.all(color: Theme.of(context).dividerColor.withAlpha((0.12 * 255).round())),
-                              borderRadius: BorderRadius.circular(6),
-                            ),
-                            child: DropdownButtonHideUnderline(
-                              child: DropdownButton<String>(
-                                value: ivSource,
-                                items: [
-                                  DropdownMenuItem(value: 'manual', child: Text(l10n.manual)),
-                                  DropdownMenuItem(value: 'prefix', child: Text(l10n.cryptoIvPrefixLabel)),
-                                ],
-                                onChanged: (v) => setState(() => ivSource = v ?? 'manual'),
-                                style: Theme.of(context).textTheme.bodyMedium,
-                                iconEnabledColor: Theme.of(context).colorScheme.primary,
-                              ),
-                            ),
-                          ),
-                          const SizedBox(width: 8),
-                          // narrow IV input when manual (fixed width for compactness)
-                          if (ivSource == 'manual')
-                            SizedBox(
-                              width: 260,
-                              height: 42,
-                              child: TextFormField(
-                                controller: ivController,
-                                decoration: decorate(context, 'IV').copyWith(
-                                    isDense: true,
-                                    contentPadding: const EdgeInsets.symmetric(horizontal: 8, vertical: 10)),
-                                validator: (val) => (ivSource == 'manual' && (val == null || val.trim().isEmpty))
-                                    ? l10n.cannotBeEmpty
-                                    : null,
-                              ),
-                            ),
-                          if (ivSource == 'manual') const SizedBox(width: 8),
-                          if (ivSource == 'prefix')
-                            Tooltip(
-                                message: l10n.cryptoIvPrefixTooltip,
-                                child: Icon(Icons.info_outline, size: 16, color: theme.dividerColor)),
-                          if (ivSource == 'prefix') const SizedBox(width: 8),
-                          // compact numeric stepper (prefix length)
-                          if (ivSource == 'prefix')
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text("AES", style: theme.textTheme.titleSmall),
+                        const SizedBox(height: 12),
+                        Row(
+                          children: [
+                            Text("Mode", style: theme.textTheme.labelMedium),
+                            const SizedBox(width: 8),
                             Container(
+                              height: 42,
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 8,
+                              ),
                               decoration: BoxDecoration(
-                                  border: Border.all(color: theme.dividerColor.withAlpha(0x40)),
-                                  borderRadius: BorderRadius.circular(4)),
-                              child: Row(children: [
-                                IconButton(
-                                  padding: EdgeInsets.zero,
-                                  icon: const Icon(Icons.remove, size: 14),
-                                  onPressed: ivSource == 'prefix'
-                                      ? () => setState(() => ivPrefixLength = math.max(1, ivPrefixLength - 1))
-                                      : null,
-                                  constraints: const BoxConstraints.tightFor(width: 28, height: 28),
+                                border: Border.all(
+                                  color: Theme.of(context).dividerColor
+                                      .withAlpha((0.12 * 255).round()),
                                 ),
-                                SizedBox(
-                                    width: 36,
-                                    child: Center(
-                                        child: Text(ivPrefixLength.toString(), style: theme.textTheme.bodySmall))),
-                                IconButton(
-                                  padding: EdgeInsets.zero,
-                                  icon: const Icon(Icons.add, size: 14),
-                                  onPressed: ivSource == 'prefix'
-                                      ? () => setState(() => ivPrefixLength = math.min(1024, ivPrefixLength + 1))
-                                      : null,
-                                  constraints: const BoxConstraints.tightFor(width: 28, height: 28),
+                                borderRadius: BorderRadius.circular(6),
+                              ),
+                              child: DropdownButtonHideUnderline(
+                                child: DropdownButton<String>(
+                                  value: mode,
+                                  items: const [
+                                    DropdownMenuItem(
+                                      value: 'ECB',
+                                      child: Text('ECB'),
+                                    ),
+                                    DropdownMenuItem(
+                                      value: 'CBC',
+                                      child: Text('CBC'),
+                                    ),
+                                  ],
+                                  onChanged: (v) =>
+                                      setState(() => mode = v ?? 'ECB'),
+                                  style: Theme.of(context).textTheme.bodyMedium,
                                 ),
-                              ]),
+                              ),
                             ),
-                        ]),
-                    ]),
+                            const SizedBox(width: 12),
+                            Text('Padding', style: theme.textTheme.labelMedium),
+                            const SizedBox(width: 8),
+                            Container(
+                              height: 42,
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 8,
+                              ),
+                              decoration: BoxDecoration(
+                                border: Border.all(
+                                  color: Theme.of(context).dividerColor
+                                      .withAlpha((0.12 * 255).round()),
+                                ),
+                                borderRadius: BorderRadius.circular(6),
+                              ),
+                              child: DropdownButtonHideUnderline(
+                                child: DropdownButton<String>(
+                                  value: padding,
+                                  items: const [
+                                    DropdownMenuItem(
+                                      value: 'PKCS7',
+                                      child: Text('PKCS7'),
+                                    ),
+                                    DropdownMenuItem(
+                                      value: 'ZeroPadding',
+                                      child: Text('ZeroPadding'),
+                                    ),
+                                  ],
+                                  onChanged: (v) =>
+                                      setState(() => padding = v ?? 'PKCS7'),
+                                  style: Theme.of(context).textTheme.bodyMedium,
+                                ),
+                              ),
+                            ),
+                            const SizedBox(width: 12),
+                            Text(
+                              'Key Length',
+                              style: theme.textTheme.labelMedium,
+                            ),
+                            const SizedBox(width: 8),
+                            Container(
+                              height: 42,
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 8,
+                              ),
+                              decoration: BoxDecoration(
+                                border: Border.all(
+                                  color: Theme.of(context).dividerColor
+                                      .withAlpha((0.12 * 255).round()),
+                                ),
+                                borderRadius: BorderRadius.circular(6),
+                              ),
+                              child: DropdownButtonHideUnderline(
+                                child: DropdownButton<int>(
+                                  value: length,
+                                  items: const [
+                                    DropdownMenuItem(
+                                      value: 128,
+                                      child: Text('128'),
+                                    ),
+                                    DropdownMenuItem(
+                                      value: 192,
+                                      child: Text('192'),
+                                    ),
+                                    DropdownMenuItem(
+                                      value: 256,
+                                      child: Text('256'),
+                                    ),
+                                  ],
+                                  onChanged: (v) =>
+                                      setState(() => length = v ?? 128),
+                                  style: Theme.of(context).textTheme.bodyMedium,
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                        const SizedBox(height: 12),
+                        // Key input and format selector in a single row for nicer UI
+                        Row(
+                          children: [
+                            Container(
+                              height: 42,
+                              width: 92,
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 6,
+                              ),
+                              decoration: BoxDecoration(
+                                border: Border.all(
+                                  color: Theme.of(context).dividerColor
+                                      .withAlpha((0.12 * 255).round()),
+                                ),
+                                borderRadius: BorderRadius.circular(6),
+                              ),
+                              child: DropdownButtonHideUnderline(
+                                child: DropdownButton<String>(
+                                  value: keyFormat,
+                                  items: const [
+                                    DropdownMenuItem(
+                                      value: 'text',
+                                      child: Text('text'),
+                                    ),
+                                    DropdownMenuItem(
+                                      value: 'base64',
+                                      child: Text('base64'),
+                                    ),
+                                  ],
+                                  onChanged: (v) =>
+                                      setState(() => keyFormat = v ?? 'text'),
+                                  style: Theme.of(context).textTheme.bodyMedium,
+                                  iconEnabledColor: Theme.of(
+                                    context,
+                                  ).colorScheme.primary,
+                                ),
+                              ),
+                            ),
+                            const SizedBox(width: 12),
+                            Expanded(
+                              child: SizedBox(
+                                child: TextFormField(
+                                  controller: keyController,
+                                  maxLength: 128,
+                                  decoration: decorate(
+                                    context,
+                                    "Key",
+                                  ).copyWith(counterText: ''),
+                                  validator: (val) =>
+                                      val == null || val.trim().isEmpty
+                                      ? l10n.cannotBeEmpty
+                                      : null,
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                        const SizedBox(height: 12),
+                        // Compact single-line IV controls for CBC
+                        if (mode == 'CBC')
+                          Row(
+                            children: [
+                              Container(
+                                height: 42,
+                                constraints: const BoxConstraints(minWidth: 92),
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 6,
+                                ),
+                                decoration: BoxDecoration(
+                                  border: Border.all(
+                                    color: Theme.of(context).dividerColor
+                                        .withAlpha((0.12 * 255).round()),
+                                  ),
+                                  borderRadius: BorderRadius.circular(6),
+                                ),
+                                child: DropdownButtonHideUnderline(
+                                  child: DropdownButton<String>(
+                                    value: ivSource,
+                                    items: [
+                                      DropdownMenuItem(
+                                        value: 'manual',
+                                        child: Text(l10n.manual),
+                                      ),
+                                      DropdownMenuItem(
+                                        value: 'prefix',
+                                        child: Text(l10n.cryptoIvPrefixLabel),
+                                      ),
+                                    ],
+                                    onChanged: (v) => setState(
+                                      () => ivSource = v ?? 'manual',
+                                    ),
+                                    style: Theme.of(
+                                      context,
+                                    ).textTheme.bodyMedium,
+                                    iconEnabledColor: Theme.of(
+                                      context,
+                                    ).colorScheme.primary,
+                                  ),
+                                ),
+                              ),
+                              const SizedBox(width: 8),
+                              // narrow IV input when manual (fixed width for compactness)
+                              if (ivSource == 'manual')
+                                SizedBox(
+                                  width: 260,
+                                  height: 42,
+                                  child: TextFormField(
+                                    controller: ivController,
+                                    decoration: decorate(context, 'IV')
+                                        .copyWith(
+                                          isDense: true,
+                                          contentPadding:
+                                              const EdgeInsets.symmetric(
+                                                horizontal: 8,
+                                                vertical: 10,
+                                              ),
+                                        ),
+                                    validator: (val) =>
+                                        (ivSource == 'manual' &&
+                                            (val == null || val.trim().isEmpty))
+                                        ? l10n.cannotBeEmpty
+                                        : null,
+                                  ),
+                                ),
+                              if (ivSource == 'manual')
+                                const SizedBox(width: 8),
+                              if (ivSource == 'prefix')
+                                Tooltip(
+                                  message: l10n.cryptoIvPrefixTooltip,
+                                  child: Icon(
+                                    Icons.info_outline,
+                                    size: 16,
+                                    color: theme.dividerColor,
+                                  ),
+                                ),
+                              if (ivSource == 'prefix')
+                                const SizedBox(width: 8),
+                              // compact numeric stepper (prefix length)
+                              if (ivSource == 'prefix')
+                                Container(
+                                  decoration: BoxDecoration(
+                                    border: Border.all(
+                                      color: theme.dividerColor.withAlpha(0x40),
+                                    ),
+                                    borderRadius: BorderRadius.circular(4),
+                                  ),
+                                  child: Row(
+                                    children: [
+                                      IconButton(
+                                        padding: EdgeInsets.zero,
+                                        icon: const Icon(
+                                          Icons.remove,
+                                          size: 14,
+                                        ),
+                                        onPressed: ivSource == 'prefix'
+                                            ? () => setState(
+                                                () => ivPrefixLength = math.max(
+                                                  1,
+                                                  ivPrefixLength - 1,
+                                                ),
+                                              )
+                                            : null,
+                                        constraints:
+                                            const BoxConstraints.tightFor(
+                                              width: 28,
+                                              height: 28,
+                                            ),
+                                      ),
+                                      SizedBox(
+                                        width: 36,
+                                        child: Center(
+                                          child: Text(
+                                            ivPrefixLength.toString(),
+                                            style: theme.textTheme.bodySmall,
+                                          ),
+                                        ),
+                                      ),
+                                      IconButton(
+                                        padding: EdgeInsets.zero,
+                                        icon: const Icon(Icons.add, size: 14),
+                                        onPressed: ivSource == 'prefix'
+                                            ? () => setState(
+                                                () => ivPrefixLength = math.min(
+                                                  1024,
+                                                  ivPrefixLength + 1,
+                                                ),
+                                              )
+                                            : null,
+                                        constraints:
+                                            const BoxConstraints.tightFor(
+                                              width: 28,
+                                              height: 28,
+                                            ),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                            ],
+                          ),
+                      ],
+                    ),
                   ),
                 ),
               ],
@@ -745,7 +1055,10 @@ class _CryptoRuleDialogState extends State<CryptoRuleDialog> {
         ),
       ),
       actions: [
-        TextButton(onPressed: () => Navigator.of(context).pop(), child: Text(l10n.cancel)),
+        TextButton(
+          onPressed: () => Navigator.of(context).pop(),
+          child: Text(l10n.cancel),
+        ),
         FilledButton(
           onPressed: () {
             if (!(_formKey.currentState as FormState).validate()) return;
@@ -776,13 +1089,14 @@ class _CryptoRuleDialogState extends State<CryptoRuleDialog> {
               field: savedField,
               enabled: enabled,
               config: CryptoKeyConfig(
-                  key: outKey,
-                  iv: outIv,
-                  ivSource: ivSource,
-                  ivPrefixLength: ivPrefixLength,
-                  mode: mode,
-                  padding: padding,
-                  keyLength: length),
+                key: outKey,
+                iv: outIv,
+                ivSource: ivSource,
+                ivPrefixLength: ivPrefixLength,
+                mode: mode,
+                padding: padding,
+                keyLength: length,
+              ),
             );
             Navigator.of(context).pop(updated);
           },

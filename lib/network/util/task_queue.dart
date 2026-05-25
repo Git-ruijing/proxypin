@@ -12,8 +12,12 @@ class SequentialTaskQueue {
   final Map<int, List<_Task>> dependencyTasks = {};
 
   /// Adds a task to the queue with a priority (e.g., streamId).
-  void add(int id, int? dependency, Future Function() task,
-      {void Function(dynamic error, StackTrace stackTrace)? onError}) {
+  void add(
+    int id,
+    int? dependency,
+    Future Function() task, {
+    void Function(dynamic error, StackTrace stackTrace)? onError,
+  }) {
     if (_isCancelled) return;
 
     _tasks.addLast(_Task(id, task, dependency: dependency, onError: onError));
@@ -41,7 +45,9 @@ class SequentialTaskQueue {
   Future<void> runTask(_Task task) async {
     if (_isCancelled) return;
 
-    if (task.dependency != null && task.dependency! > 0 && !completedTasks.contains(task.dependency)) {
+    if (task.dependency != null &&
+        task.dependency! > 0 &&
+        !completedTasks.contains(task.dependency)) {
       dependencyTasks[task.dependency!] ??= [];
       dependencyTasks[task.dependency]!.add(task);
     } else {

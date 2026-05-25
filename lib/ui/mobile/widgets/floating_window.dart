@@ -16,9 +16,11 @@ class FloatingWindowManager {
   void show(BuildContext context, {required Widget widget}) {
     if (overlayEntry == null) {
       // var floatingWindow = FloatingWindow(top: 160, left: 210, child: Material(child: child));
-      overlayEntry = OverlayEntry(builder: (BuildContext context) {
-        return widget;
-      });
+      overlayEntry = OverlayEntry(
+        builder: (BuildContext context) {
+          return widget;
+        },
+      );
       Overlay.of(context).insert(overlayEntry!);
     }
   }
@@ -46,7 +48,8 @@ class FloatingWindow extends StatefulWidget {
   State<FloatingWindow> createState() => _FloatingWindowState();
 }
 
-class _FloatingWindowState extends State<FloatingWindow> with TickerProviderStateMixin {
+class _FloatingWindowState extends State<FloatingWindow>
+    with TickerProviderStateMixin {
   double right = 0;
   double top = 0;
 
@@ -99,7 +102,7 @@ class _FloatingWindowState extends State<FloatingWindow> with TickerProviderStat
             },
             child: widget.child,
           ),
-        )
+        ),
       ],
     );
   }
@@ -116,7 +119,8 @@ class _FloatingWindowState extends State<FloatingWindow> with TickerProviderStat
   }
 
   Size getWidgetSize(GlobalKey key) {
-    final RenderBox renderBox = key.currentContext?.findRenderObject() as RenderBox;
+    final RenderBox renderBox =
+        key.currentContext?.findRenderObject() as RenderBox;
     return renderBox.size;
   }
 }

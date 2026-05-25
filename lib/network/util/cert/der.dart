@@ -16,7 +16,8 @@ class DerValue {
   final ByteBuf buffer;
   late DerInputStream data;
 
-  DerValue(this.tag, this.value, {ByteBuf? buffer}) : buffer = buffer ?? ByteBuf(value) {
+  DerValue(this.tag, this.value, {ByteBuf? buffer})
+    : buffer = buffer ?? ByteBuf(value) {
     data = DerInputStream(this.buffer);
   }
 
@@ -427,7 +428,12 @@ class DerIndefLenConverter {
       writeTag();
       writeLengthAndValue();
     }
-    newData.setRange(dataSize + numOfTotalLenBytes, newData.length, data, dataSize);
+    newData.setRange(
+      dataSize + numOfTotalLenBytes,
+      newData.length,
+      data,
+      dataSize,
+    );
 
     return newData;
   }

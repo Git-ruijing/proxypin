@@ -30,7 +30,12 @@ class SearchConditions extends StatefulWidget {
   final Function(SearchModel searchModel)? onSearch;
   final EdgeInsetsGeometry? padding;
 
-  const SearchConditions({super.key, required this.searchModel, this.onSearch, this.padding});
+  const SearchConditions({
+    super.key,
+    required this.searchModel,
+    this.onSearch,
+    this.padding,
+  });
 
   @override
   State<StatefulWidget> createState() {
@@ -80,21 +85,33 @@ class SearchConditionsState extends State<SearchConditions> {
           TextFormField(
             initialValue: searchModel.keyword,
             onChanged: (val) => searchModel.keyword = val,
-            onTapOutside: (event) => FocusManager.instance.primaryFocus?.unfocus(),
+            onTapOutside: (event) =>
+                FocusManager.instance.primaryFocus?.unfocus(),
             decoration: InputDecoration(
               isCollapsed: true,
               contentPadding: const EdgeInsets.all(10),
-              border: const OutlineInputBorder(borderRadius: BorderRadius.all(Radius.circular(15))),
+              border: const OutlineInputBorder(
+                borderRadius: BorderRadius.all(Radius.circular(15)),
+              ),
               hintText: localizations.keyword,
-              suffixIcon: Obx(() => IconButton(
-                    tooltip: "Case Sensitive",
-                    icon: Text('Aa',
-                        style: TextStyle(
-                            fontWeight: FontWeight.w500, color: searchModel.caseSensitive.value ? primaryColor : null)),
-                    onPressed: () {
-                      searchModel.caseSensitive.value = !searchModel.caseSensitive.value;
-                    },
-                  )),
+              suffixIcon: Obx(
+                () => IconButton(
+                  tooltip: "Case Sensitive",
+                  icon: Text(
+                    'Aa',
+                    style: TextStyle(
+                      fontWeight: FontWeight.w500,
+                      color: searchModel.caseSensitive.value
+                          ? primaryColor
+                          : null,
+                    ),
+                  ),
+                  onPressed: () {
+                    searchModel.caseSensitive.value =
+                        !searchModel.caseSensitive.value;
+                  },
+                ),
+              ),
             ),
           ),
           const SizedBox(height: 10),
@@ -119,10 +136,14 @@ class SearchConditionsState extends State<SearchConditions> {
           row(
             Text('${localizations.requestMethod}:'),
             DropdownMenu(
-              initialValue: searchModel.requestMethod?.name ?? localizations.all,
-              items: HttpMethod.methods().map((e) => e.name).toList()..insert(0, localizations.all),
+              initialValue:
+                  searchModel.requestMethod?.name ?? localizations.all,
+              items: HttpMethod.methods().map((e) => e.name).toList()
+                ..insert(0, localizations.all),
               onSelected: (String value) {
-                searchModel.requestMethod = value == localizations.all ? null : HttpMethod.valueOf(value);
+                searchModel.requestMethod = value == localizations.all
+                    ? null
+                    : HttpMethod.valueOf(value);
               },
             ),
           ),
@@ -131,7 +152,12 @@ class SearchConditionsState extends State<SearchConditions> {
           row(
             Text('${localizations.requestType}:'),
             DropdownMenu(
-              initialValue: Maps.getKey(requestContentMap, searchModel.requestContentType) ?? localizations.all,
+              initialValue:
+                  Maps.getKey(
+                    requestContentMap,
+                    searchModel.requestContentType,
+                  ) ??
+                  localizations.all,
               items: requestContentMap.keys,
               onSelected: (String value) {
                 searchModel.requestContentType = requestContentMap[value];
@@ -144,7 +170,12 @@ class SearchConditionsState extends State<SearchConditions> {
           row(
             Text('${localizations.responseType}:'),
             DropdownMenu(
-              initialValue: Maps.getKey(responseContentMap, searchModel.responseContentType) ?? localizations.all,
+              initialValue:
+                  Maps.getKey(
+                    responseContentMap,
+                    searchModel.responseContentType,
+                  ) ??
+                  localizations.all,
               items: responseContentMap.keys,
               onSelected: (String value) {
                 searchModel.responseContentType = responseContentMap[value];
@@ -156,42 +187,64 @@ class SearchConditionsState extends State<SearchConditions> {
           // status code range
           row(
             Text('${localizations.statusCode}: '),
-            Row(children: [
-              SizedBox(
+            Row(
+              children: [
+                SizedBox(
                   width: 55,
                   height: 32,
                   child: textField(
-                      initialValue: searchModel.statusCodeFrom?.toString(),
-                      onChanged: (val) => searchModel.statusCodeFrom = int.tryParse(val))),
-              const Padding(padding: EdgeInsets.symmetric(horizontal: 5), child: Text(" - ")),
-              SizedBox(
+                    initialValue: searchModel.statusCodeFrom?.toString(),
+                    onChanged: (val) =>
+                        searchModel.statusCodeFrom = int.tryParse(val),
+                  ),
+                ),
+                const Padding(
+                  padding: EdgeInsets.symmetric(horizontal: 5),
+                  child: Text(" - "),
+                ),
+                SizedBox(
                   width: 55,
                   height: 32,
                   child: textField(
-                      initialValue: searchModel.statusCodeTo?.toString(),
-                      onChanged: (val) => searchModel.statusCodeTo = int.tryParse(val))),
-            ]),
+                    initialValue: searchModel.statusCodeTo?.toString(),
+                    onChanged: (val) =>
+                        searchModel.statusCodeTo = int.tryParse(val),
+                  ),
+                ),
+              ],
+            ),
           ),
           const SizedBox(height: 10),
 
           // duration range (ms)
           row(
             Text('${localizations.duration} (ms): '),
-            Row(children: [
-              SizedBox(
+            Row(
+              children: [
+                SizedBox(
                   width: 55,
                   height: 32,
                   child: textField(
-                      initialValue: searchModel.durationFromMs?.toString(),
-                      onChanged: (val) => searchModel.durationFromMs = int.tryParse(val))),
-              const Padding(padding: EdgeInsets.symmetric(horizontal: 5), child: Text(" - ")),
-              SizedBox(
+                    initialValue: searchModel.durationFromMs?.toString(),
+                    onChanged: (val) =>
+                        searchModel.durationFromMs = int.tryParse(val),
+                  ),
+                ),
+                const Padding(
+                  padding: EdgeInsets.symmetric(horizontal: 5),
+                  child: Text(" - "),
+                ),
+                SizedBox(
                   width: 55,
                   height: 32,
                   child: textField(
-                      initialValue: searchModel.durationToMs?.toString(),
-                      onChanged: (val) => searchModel.durationToMs = int.tryParse(val))),
-            ]),
+                    initialValue: searchModel.durationToMs?.toString(),
+                    onChanged: (val) =>
+                        searchModel.durationToMs = int.tryParse(val),
+                  ),
+                ),
+              ],
+            ),
           ),
           const SizedBox(height: 15),
 
@@ -201,21 +254,30 @@ class SearchConditionsState extends State<SearchConditions> {
             children: <Widget>[
               TextButton(
                 onPressed: () => Navigator.pop(context),
-                child: Text(localizations.cancel, style: const TextStyle(fontSize: 14)),
+                child: Text(
+                  localizations.cancel,
+                  style: const TextStyle(fontSize: 14),
+                ),
               ),
               TextButton(
                 onPressed: () {
                   widget.onSearch?.call(SearchModel());
                   Navigator.pop(context);
                 },
-                child: Text(localizations.clearSearch, style: const TextStyle(fontSize: 14)),
+                child: Text(
+                  localizations.clearSearch,
+                  style: const TextStyle(fontSize: 14),
+                ),
               ),
               TextButton(
                 onPressed: () {
                   widget.onSearch?.call(searchModel);
                   Navigator.pop(context);
                 },
-                child: Text(localizations.confirm, style: const TextStyle(fontSize: 14)),
+                child: Text(
+                  localizations.confirm,
+                  style: const TextStyle(fontSize: 14),
+                ),
               ),
             ],
           ),
@@ -240,7 +302,9 @@ class SearchConditionsState extends State<SearchConditions> {
           materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
           visualDensity: const VisualDensity(horizontal: -3, vertical: -3),
           onSelected: (sel) => setState(() {
-            sel ? searchModel.protocols.add(Protocol.http) : searchModel.protocols.remove(Protocol.http);
+            sel
+                ? searchModel.protocols.add(Protocol.http)
+                : searchModel.protocols.remove(Protocol.http);
           }),
         ),
         FilterChip(
@@ -253,7 +317,9 @@ class SearchConditionsState extends State<SearchConditions> {
           materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
           visualDensity: const VisualDensity(horizontal: -3, vertical: -3),
           onSelected: (sel) => setState(() {
-            sel ? searchModel.protocols.add(Protocol.https) : searchModel.protocols.remove(Protocol.https);
+            sel
+                ? searchModel.protocols.add(Protocol.https)
+                : searchModel.protocols.remove(Protocol.https);
           }),
         ),
         FilterChip(
@@ -266,7 +332,9 @@ class SearchConditionsState extends State<SearchConditions> {
           materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
           visualDensity: const VisualDensity(horizontal: -3, vertical: -3),
           onSelected: (sel) => setState(() {
-            sel ? searchModel.protocols.add(Protocol.ws) : searchModel.protocols.remove(Protocol.ws);
+            sel
+                ? searchModel.protocols.add(Protocol.ws)
+                : searchModel.protocols.remove(Protocol.ws);
           }),
         ),
         FilterChip(
@@ -279,7 +347,9 @@ class SearchConditionsState extends State<SearchConditions> {
           materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
           visualDensity: const VisualDensity(horizontal: -3, vertical: -3),
           onSelected: (sel) => setState(() {
-            sel ? searchModel.protocols.add(Protocol.http1) : searchModel.protocols.remove(Protocol.http1);
+            sel
+                ? searchModel.protocols.add(Protocol.http1)
+                : searchModel.protocols.remove(Protocol.http1);
           }),
         ),
         FilterChip(
@@ -292,7 +362,9 @@ class SearchConditionsState extends State<SearchConditions> {
           materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
           visualDensity: const VisualDensity(horizontal: -3, vertical: -3),
           onSelected: (sel) => setState(() {
-            sel ? searchModel.protocols.add(Protocol.h2) : searchModel.protocols.remove(Protocol.h2);
+            sel
+                ? searchModel.protocols.add(Protocol.h2)
+                : searchModel.protocols.remove(Protocol.h2);
           }),
         ),
       ],
@@ -302,44 +374,70 @@ class SearchConditionsState extends State<SearchConditions> {
   Widget options(String title, Option option) {
     bool isCN = localizations.localeName == 'zh';
     return Container(
-        constraints: BoxConstraints(maxWidth: isCN ? 100 : 132, minWidth: 100, maxHeight: 33),
-        child: Row(children: [
+      constraints: BoxConstraints(
+        maxWidth: isCN ? 100 : 132,
+        minWidth: 100,
+        maxHeight: 33,
+      ),
+      child: Row(
+        children: [
           Text(title, style: const TextStyle(fontSize: 12)),
           Checkbox(
-              visualDensity: VisualDensity.compact,
-              value: searchModel.searchOptions.contains(option),
-              onChanged: (val) {
-                setState(() {
-                  val == true ? searchModel.searchOptions.add(option) : searchModel.searchOptions.remove(option);
-                });
-              })
-        ]));
+            visualDensity: VisualDensity.compact,
+            value: searchModel.searchOptions.contains(option),
+            onChanged: (val) {
+              setState(() {
+                val == true
+                    ? searchModel.searchOptions.add(option)
+                    : searchModel.searchOptions.remove(option);
+              });
+            },
+          ),
+        ],
+      ),
+    );
   }
 
   Widget row(Widget child, Widget child2) {
     return Row(
-        mainAxisAlignment: MainAxisAlignment.end,
-        crossAxisAlignment: CrossAxisAlignment.center,
-        children: [Expanded(flex: 4, child: child), Expanded(flex: 6, child: child2)]);
+      mainAxisAlignment: MainAxisAlignment.end,
+      crossAxisAlignment: CrossAxisAlignment.center,
+      children: [
+        Expanded(flex: 4, child: child),
+        Expanded(flex: 6, child: child2),
+      ],
+    );
   }
 
-  Widget textField({String? initialValue, final ValueChanged<String>? onChanged, TextStyle? style}) {
+  Widget textField({
+    String? initialValue,
+    final ValueChanged<String>? onChanged,
+    TextStyle? style,
+  }) {
     Color color = Theme.of(context).colorScheme.primary;
 
     return ConstrainedBox(
-        constraints: const BoxConstraints(maxHeight: 32),
-        child: TextFormField(
-          keyboardType: TextInputType.number,
-          inputFormatters: [FilteringTextInputFormatter.digitsOnly],
-          onTapOutside: (event) => FocusManager.instance.primaryFocus?.unfocus(),
-          initialValue: initialValue,
-          onChanged: onChanged,
-          style: style,
-          decoration: InputDecoration(
-            contentPadding: const EdgeInsets.only(left: 10, right: 10, top: 2, bottom: 2),
-            border: OutlineInputBorder(borderSide: BorderSide(width: 1, color: color.withOpacity(0.3))),
+      constraints: const BoxConstraints(maxHeight: 32),
+      child: TextFormField(
+        keyboardType: TextInputType.number,
+        inputFormatters: [FilteringTextInputFormatter.digitsOnly],
+        onTapOutside: (event) => FocusManager.instance.primaryFocus?.unfocus(),
+        initialValue: initialValue,
+        onChanged: onChanged,
+        style: style,
+        decoration: InputDecoration(
+          contentPadding: const EdgeInsets.only(
+            left: 10,
+            right: 10,
+            top: 2,
+            bottom: 2,
           ),
-        ));
+          border: OutlineInputBorder(
+            borderSide: BorderSide(width: 1, color: color.withOpacity(0.3)),
+          ),
+        ),
+      ),
+    );
   }
 }
 
@@ -348,7 +446,12 @@ class DropdownMenu<T> extends StatefulWidget {
   final Iterable<String> items;
   final Function(String value) onSelected;
 
-  const DropdownMenu({super.key, this.initialValue, required this.items, required this.onSelected});
+  const DropdownMenu({
+    super.key,
+    this.initialValue,
+    required this.items,
+    required this.onSelected,
+  });
 
   @override
   State<StatefulWidget> createState() {
@@ -370,10 +473,16 @@ class DropdownMenuState extends State<DropdownMenu> {
     return PopupMenuButton(
       tooltip: '',
       initialValue: selectValue,
-      child: Wrap(runAlignment: WrapAlignment.center, children: [
-        Text(selectValue ?? '', style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w500)),
-        const Icon(Icons.arrow_drop_down, size: 20)
-      ]),
+      child: Wrap(
+        runAlignment: WrapAlignment.center,
+        children: [
+          Text(
+            selectValue ?? '',
+            style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w500),
+          ),
+          const Icon(Icons.arrow_drop_down, size: 20),
+        ],
+      ),
       onSelected: (String value) {
         setState(() {
           widget.onSelected.call(value);
@@ -382,8 +491,13 @@ class DropdownMenuState extends State<DropdownMenu> {
       },
       itemBuilder: (BuildContext context) {
         return widget.items
-            .map((it) =>
-                PopupMenuItem<String>(height: 35, value: it, child: Text(it, style: const TextStyle(fontSize: 12))))
+            .map(
+              (it) => PopupMenuItem<String>(
+                height: 35,
+                value: it,
+                child: Text(it, style: const TextStyle(fontSize: 12)),
+              ),
+            )
             .toList();
       },
     );

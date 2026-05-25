@@ -28,16 +28,28 @@ class HighlightTextEditingController extends TextEditingController {
   HighlightTextEditingController({super.text});
 
   bool highlight(String? value, {bool caseSensitive = true}) {
-    highlightPattern = value == null ? null : RegExp(value, caseSensitive: caseSensitive);
+    highlightPattern = value == null
+        ? null
+        : RegExp(value, caseSensitive: caseSensitive);
     return highlightPattern?.hasMatch(text) ?? false;
   }
 
   @override
-  TextSpan buildTextSpan({required BuildContext context, TextStyle? style, required bool withComposing}) {
+  TextSpan buildTextSpan({
+    required BuildContext context,
+    TextStyle? style,
+    required bool withComposing,
+  }) {
     final text = this.text;
 
-    if (!highlightEnabled || highlightPattern == null || !highlightPattern!.hasMatch(text)) {
-      return super.buildTextSpan(context: context, style: style, withComposing: withComposing);
+    if (!highlightEnabled ||
+        highlightPattern == null ||
+        !highlightPattern!.hasMatch(text)) {
+      return super.buildTextSpan(
+        context: context,
+        style: style,
+        withComposing: withComposing,
+      );
     }
 
     Color color = Theme.of(context).colorScheme.primary;
@@ -47,20 +59,40 @@ class HighlightTextEditingController extends TextEditingController {
     if (splitPattern != null) {
       var texts = text.split(splitPattern!);
       for (var i = 0; i < texts.length; i++) {
-        matchHighlight(texts[i], spans, normalStyle: normalStyle, highlightStyle: highlightStyle);
+        matchHighlight(
+          texts[i],
+          spans,
+          normalStyle: normalStyle,
+          highlightStyle: highlightStyle,
+        );
         spans.add(TextSpan(text: splitPattern, style: normalStyle));
       }
     } else {
-      matchHighlight(text, spans, normalStyle: normalStyle, highlightStyle: highlightStyle);
+      matchHighlight(
+        text,
+        spans,
+        normalStyle: normalStyle,
+        highlightStyle: highlightStyle,
+      );
     }
     return TextSpan(children: spans, style: style);
   }
 
-  matchHighlight(String text, List<TextSpan> spans, {TextStyle? normalStyle, TextStyle? highlightStyle}) {
+  matchHighlight(
+    String text,
+    List<TextSpan> spans, {
+    TextStyle? normalStyle,
+    TextStyle? highlightStyle,
+  }) {
     int start = 0;
     for (final match in highlightPattern!.allMatches(text)) {
       if (match.start > start) {
-        spans.add(TextSpan(text: text.substring(start, match.start), style: normalStyle));
+        spans.add(
+          TextSpan(
+            text: text.substring(start, match.start),
+            style: normalStyle,
+          ),
+        );
       }
       spans.add(TextSpan(text: match.group(0), style: highlightStyle));
       start = match.end;
@@ -72,16 +104,29 @@ class HighlightTextEditingController extends TextEditingController {
   }
 }
 
-InputDecoration decoration(BuildContext context, {String? label, String? hintText, Widget? suffixIcon, bool? isDense}) {
+InputDecoration decoration(
+  BuildContext context, {
+  String? label,
+  String? hintText,
+  Widget? suffixIcon,
+  bool? isDense,
+}) {
   Color color = Theme.of(context).colorScheme.primary;
   return InputDecoration(
-      floatingLabelBehavior: FloatingLabelBehavior.always,
-      labelText: label,
-      hintText: hintText,
-      suffixIcon: suffixIcon,
-      isDense: isDense,
-      hintStyle: TextStyle(color: Colors.grey.shade500, fontSize: 15),
-      border: OutlineInputBorder(borderSide: BorderSide(width: 0.8, color: color)),
-      enabledBorder: OutlineInputBorder(borderSide: BorderSide(width: 1.3, color: color)),
-      focusedBorder: OutlineInputBorder(borderSide: BorderSide(width: 2, color: color)));
+    floatingLabelBehavior: FloatingLabelBehavior.always,
+    labelText: label,
+    hintText: hintText,
+    suffixIcon: suffixIcon,
+    isDense: isDense,
+    hintStyle: TextStyle(color: Colors.grey.shade500, fontSize: 15),
+    border: OutlineInputBorder(
+      borderSide: BorderSide(width: 0.8, color: color),
+    ),
+    enabledBorder: OutlineInputBorder(
+      borderSide: BorderSide(width: 1.3, color: color),
+    ),
+    focusedBorder: OutlineInputBorder(
+      borderSide: BorderSide(width: 2, color: color),
+    ),
+  );
 }

@@ -22,11 +22,18 @@ abstract class Interceptor {
   }
 
   /// Called after the response is received from the server.
-  Future<HttpResponse?> onResponse(HttpRequest request, HttpResponse response) async {
+  Future<HttpResponse?> onResponse(
+    HttpRequest request,
+    HttpResponse response,
+  ) async {
     return response;
   }
 
-  Future<void> onError(HttpRequest? request, dynamic error, StackTrace? stackTrace) async {
+  Future<void> onError(
+    HttpRequest? request,
+    dynamic error,
+    StackTrace? stackTrace,
+  ) async {
     return;
   }
 }

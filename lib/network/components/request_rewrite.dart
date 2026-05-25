@@ -47,7 +47,10 @@ class RequestRewriteInterceptor extends Interceptor {
   }
 
   @override
-  Future<HttpResponse?> onResponse(HttpRequest request, HttpResponse response) async {
+  Future<HttpResponse?> onResponse(
+    HttpRequest request,
+    HttpResponse response,
+  ) async {
     //重写响应
     try {
       var url = request.requestUrl;
@@ -68,7 +71,9 @@ class RequestRewriteInterceptor extends Interceptor {
     }
 
     var rewriteItems = await manager.getRewriteItems(rewriteRule);
-    var redirectUrl = rewriteItems?.firstWhereOrNull((element) => element.enabled)?.redirectUrl;
+    var redirectUrl = rewriteItems
+        ?.firstWhereOrNull((element) => element.enabled)
+        ?.redirectUrl;
     if (rewriteRule.url.contains("*") && redirectUrl?.contains("*") == true) {
       String ruleUrl = rewriteRule.url.replaceAll("*", "");
       redirectUrl = redirectUrl?.replaceAll("*", url!.replaceAll(ruleUrl, ""));
@@ -79,7 +84,10 @@ class RequestRewriteInterceptor extends Interceptor {
   /// 重写请求
   Future<void> requestRewrite(String url, HttpRequest request) async {
     var manager = await RequestRewriteManager.instance;
-    var rewriteRule = manager.getRewriteRule(url, [RuleType.requestReplace, RuleType.requestUpdate]);
+    var rewriteRule = manager.getRewriteRule(url, [
+      RuleType.requestReplace,
+      RuleType.requestUpdate,
+    ]);
 
     if (rewriteRule?.type == RuleType.requestReplace) {
       var rewriteItems = await manager.getRewriteItems(rewriteRule!);
@@ -110,7 +118,10 @@ class RequestRewriteInterceptor extends Interceptor {
   Future<bool> responseRewrite(String? url, HttpResponse response) async {
     var manager = await RequestRewriteManager.instance;
 
-    var rewriteRule = manager.getRewriteRule(url, [RuleType.responseReplace, RuleType.responseUpdate]);
+    var rewriteRule = manager.getRewriteRule(url, [
+      RuleType.responseReplace,
+      RuleType.responseUpdate,
+    ]);
     if (rewriteRule == null) {
       return false;
     }
@@ -146,11 +157,17 @@ class RequestRewriteInterceptor extends Interceptor {
   }
 
   Future<void> _updateRequest(HttpRequest request, RewriteItem item) async {
-    var paramTypes = [RewriteType.addQueryParam, RewriteType.removeQueryParam, RewriteType.updateQueryParam];
+    var paramTypes = [
+      RewriteType.addQueryParam,
+      RewriteType.removeQueryParam,
+      RewriteType.updateQueryParam,
+    ];
 
     if (paramTypes.contains(item.type)) {
       var requestUri = request.requestUri;
-      Map<String, dynamic> queryParameters = LinkedHashMap.from(requestUri!.queryParameters);
+      Map<String, dynamic> queryParameters = LinkedHashMap.from(
+        requestUri!.queryParameters,
+      );
 
       switch (item.type) {
         case RewriteType.addQueryParam:
@@ -188,9 +205,13 @@ class RequestRewriteInterceptor extends Interceptor {
         default:
           break;
       }
-      requestUri = requestUri.replace(query: UriUtils.mapToQuery(queryParameters));
+      requestUri = requestUri.replace(
+        query: UriUtils.mapToQuery(queryParameters),
+      );
       if (requestUri.isScheme('https')) {
-        request.uri = requestUri.path + (requestUri.hasQuery ? "?${requestUri.query}" : "");
+        request.uri =
+            requestUri.path +
+            (requestUri.hasQuery ? "?${requestUri.query}" : "");
       } else {
         request.uri = requestUri.toString();
       }
@@ -203,14 +224,19 @@ class RequestRewriteInterceptor extends Interceptor {
   //修改消息
   Future<void> _updateMessage(HttpMessage message, RewriteItem item) async {
     if (item.type == RewriteType.updateBody && message.body != null) {
-      String body = (await message.decodeBodyString()).replaceAllMapped(RegExp(item.key!), (match) {
-        if (match.groupCount > 0 && item.value?.contains("\$1") == true) {
-          return item.value!.replaceAll("\$1", match.group(1)!);
-        }
-        return item.value ?? '';
-      });
+      String body = (await message.decodeBodyString()).replaceAllMapped(
+        RegExp(item.key!),
+        (match) {
+          if (match.groupCount > 0 && item.value?.contains("\$1") == true) {
+            return item.value!.replaceAll("\$1", match.group(1)!);
+          }
+          return item.value ?? '';
+        },
+      );
 
-      message.body = message.charset == 'utf-8' || message.charset == 'utf8' ? utf8.encode(body) : body.codeUnits;
+      message.body = message.charset == 'utf-8' || message.charset == 'utf8'
+          ? utf8.encode(body)
+          : body.codeUnits;
 
       message.headers.remove(HttpHeaders.CONTENT_ENCODING);
       message.headers.contentLength = message.body!.length;
@@ -256,7 +282,9 @@ class RequestRewriteInterceptor extends Interceptor {
   Future<void> _replaceRequest(HttpRequest request, RewriteItem item) async {
     if (item.type == RewriteType.replaceRequestLine) {
       request.method = item.method ?? request.method;
-      Uri uri = Uri.parse(request.requestUrl).replace(path: item.path, query: item.queryParam);
+      Uri uri = Uri.parse(
+        request.requestUrl,
+      ).replace(path: item.path, query: item.queryParam);
       if (uri.isScheme('https')) {
         request.uri = uri.path + (uri.hasQuery ? "?${uri.query}" : "");
       } else {
@@ -269,21 +297,27 @@ class RequestRewriteInterceptor extends Interceptor {
 
   //替换相应
   Future<void> _replaceResponse(HttpResponse response, RewriteItem item) async {
-    if (item.type == RewriteType.replaceResponseStatus && item.statusCode != null) {
+    if (item.type == RewriteType.replaceResponseStatus &&
+        item.statusCode != null) {
       response.status = HttpStatus.valueOf(item.statusCode!);
       return;
     }
     await _replaceHttpMessage(response, item);
   }
 
-  Future<void> _replaceHttpMessage(HttpMessage message, RewriteItem item) async {
-    if ((item.type == RewriteType.replaceRequestHeader || item.type == RewriteType.replaceResponseHeader) &&
+  Future<void> _replaceHttpMessage(
+    HttpMessage message,
+    RewriteItem item,
+  ) async {
+    if ((item.type == RewriteType.replaceRequestHeader ||
+            item.type == RewriteType.replaceResponseHeader) &&
         item.headers != null) {
       item.headers?.forEach((key, value) => message.headers.set(key, value));
       return;
     }
 
-    if (item.type == RewriteType.replaceResponseBody || item.type == RewriteType.replaceRequestBody) {
+    if (item.type == RewriteType.replaceResponseBody ||
+        item.type == RewriteType.replaceRequestBody) {
       if (item.bodyType == ReplaceBodyType.file.name) {
         if (item.bodyFile == null) return;
 
@@ -294,8 +328,9 @@ class RequestRewriteInterceptor extends Interceptor {
       }
 
       if (item.body != null) {
-        message.body =
-            message.charset == 'utf-8' || message.charset == 'utf8' ? utf8.encode(item.body!) : item.body?.codeUnits;
+        message.body = message.charset == 'utf-8' || message.charset == 'utf8'
+            ? utf8.encode(item.body!)
+            : item.body?.codeUnits;
         message.headers.contentLength = message.body!.length;
         message.headers.remove(HttpHeaders.CONTENT_ENCODING);
       }

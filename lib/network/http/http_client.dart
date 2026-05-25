@@ -37,14 +37,19 @@ import 'h2/frame.dart';
 import 'h2/setting.dart';
 
 class HttpClients {
-  static Future<Channel> startConnect(HostAndPort hostAndPort, {Duration timeout = const Duration(seconds: 3)}) {
+  static Future<Channel> startConnect(
+    HostAndPort hostAndPort, {
+    Duration timeout = const Duration(seconds: 3),
+  }) {
     String host = hostAndPort.host;
     //说明支持ipv6
     if (host.startsWith("[") && host.endsWith(']')) {
       host = host.substring(1, host.length - 1);
     }
 
-    return Socket.connect(host, hostAndPort.port, timeout: timeout).then((socket) {
+    return Socket.connect(host, hostAndPort.port, timeout: timeout).then((
+      socket,
+    ) {
       if (socket.address.type != InternetAddressType.unix) {
         socket.setOption(SocketOption.tcpNoDelay, true);
       }
@@ -54,25 +59,45 @@ class HttpClients {
 
   ///代理建立连接
   static Future<Channel> proxyConnect(
-      HttpRequest request, HostAndPort hostAndPort, ChannelHandler<HttpResponse> handler, ChannelContext channelContext,
-      {ProxyInfo? proxyInfo}) async {
-    var client = Client()..initChannel((channel) => channel.dispatcher.channelHandle(HttpClientCodec(), handler));
+    HttpRequest request,
+    HostAndPort hostAndPort,
+    ChannelHandler<HttpResponse> handler,
+    ChannelContext channelContext, {
+    ProxyInfo? proxyInfo,
+  }) async {
+    var client = Client()
+      ..initChannel(
+        (channel) =>
+            channel.dispatcher.channelHandle(HttpClientCodec(), handler),
+      );
 
     if (proxyInfo == null) {
       var proxyTypes = hostAndPort.isSsl() ? ProxyTypes.https : ProxyTypes.http;
       proxyInfo = await SystemProxy.getSystemProxy(proxyTypes);
     }
 
-    HostAndPort connectHost = proxyInfo == null ? hostAndPort : HostAndPort.host(proxyInfo.host, proxyInfo.port!);
+    HostAndPort connectHost = proxyInfo == null
+        ? hostAndPort
+        : HostAndPort.host(proxyInfo.host, proxyInfo.port!);
     var channel = await client.connect(connectHost, channelContext);
 
     if (proxyInfo != null) {
-      await connectRequest(channelContext, hostAndPort, channel, proxyInfo: proxyInfo);
+      await connectRequest(
+        channelContext,
+        hostAndPort,
+        channel,
+        proxyInfo: proxyInfo,
+      );
     }
 
     if (hostAndPort.isSsl()) {
-      await channel.startSecureSocket(channelContext,
-          host: hostAndPort.host, supportedProtocols: request.protocolVersion == "HTTP/2" ? ["h2", "http/1.1"] : null);
+      await channel.startSecureSocket(
+        channelContext,
+        host: hostAndPort.host,
+        supportedProtocols: request.protocolVersion == "HTTP/2"
+            ? ["h2", "http/1.1"]
+            : null,
+      );
       if (channelContext.serverChannel?.selectedProtocol == "h2") {
         await Http2ClientHandler(handler).listen(channel, channelContext);
       } else {
@@ -82,81 +107,129 @@ class HttpClients {
     }
 
     logger.d(
-        "request ${hostAndPort.host}:${hostAndPort.port} ${request.protocolVersion} ${channelContext.serverChannel?.selectedProtocol ?? ''}");
+      "request ${hostAndPort.host}:${hostAndPort.port} ${request.protocolVersion} ${channelContext.serverChannel?.selectedProtocol ?? ''}",
+    );
 
     return channel;
   }
 
   ///发起代理连接请求
-  static Future<Channel> connectRequest(ChannelContext channelContext, HostAndPort hostAndPort, Channel channel,
-      {ProxyInfo? proxyInfo}) async {
+  static Future<Channel> connectRequest(
+    ChannelContext channelContext,
+    HostAndPort hostAndPort,
+    Channel channel, {
+    ProxyInfo? proxyInfo,
+  }) async {
     ChannelHandler handler = channel.dispatcher.handler;
     //代理 发送connect请求
     var httpResponseHandler = HttpResponseHandler();
     channel.dispatcher.handler = httpResponseHandler;
 
-    HttpRequest proxyRequest = HttpRequest(HttpMethod.connect, '${hostAndPort.host}:${hostAndPort.port}');
-    proxyRequest.headers.set(HttpHeaders.HOST, '${hostAndPort.host}:${hostAndPort.port}');
+    HttpRequest proxyRequest = HttpRequest(
+      HttpMethod.connect,
+      '${hostAndPort.host}:${hostAndPort.port}',
+    );
+    proxyRequest.headers.set(
+      HttpHeaders.HOST,
+      '${hostAndPort.host}:${hostAndPort.port}',
+    );
 
     //proxy Authorization
     if (proxyInfo?.isAuthenticated == true) {
-      String auth = base64Encode(utf8.encode("${proxyInfo?.username}:${proxyInfo?.password}"));
+      String auth = base64Encode(
+        utf8.encode("${proxyInfo?.username}:${proxyInfo?.password}"),
+      );
       proxyRequest.headers.set(HttpHeaders.PROXY_AUTHORIZATION, 'Basic $auth');
     }
 
     await channel.write(channelContext, proxyRequest);
-    var response = await httpResponseHandler.getResponse(const Duration(seconds: 5));
+    var response = await httpResponseHandler.getResponse(
+      const Duration(seconds: 5),
+    );
 
     channel.dispatcher.handler = handler;
 
     if (!response.status.isSuccessful()) {
-      throw Exception("$hostAndPort Proxy failed to establish tunnel "
-          "(${response.status.code} ${response..status.reasonPhrase})");
+      throw Exception(
+        "$hostAndPort Proxy failed to establish tunnel "
+        "(${response.status.code} ${response..status.reasonPhrase})",
+      );
     }
 
     return channel;
   }
 
   /// 建立连接
-  static Future<Channel> connect(Uri uri, ChannelHandler handler, ChannelContext channelContext) async {
+  static Future<Channel> connect(
+    Uri uri,
+    ChannelHandler handler,
+    ChannelContext channelContext,
+  ) async {
     Client client = Client()
-      ..initChannel((channel) => channel.dispatcher.handle(HttpResponseCodec(), HttpRequestCodec(), handler));
+      ..initChannel(
+        (channel) => channel.dispatcher.handle(
+          HttpResponseCodec(),
+          HttpRequestCodec(),
+          handler,
+        ),
+      );
     if (uri.scheme == "https" || uri.scheme == "wss") {
-      return client.secureConnect(HostAndPort.of(uri.toString()), channelContext);
+      return client.secureConnect(
+        HostAndPort.of(uri.toString()),
+        channelContext,
+      );
     }
 
     return client.connect(HostAndPort.of(uri.toString()), channelContext);
   }
 
   /// 发送get请求
-  static Future<HttpResponse> get(String url, {Duration timeout = const Duration(seconds: 3)}) async {
+  static Future<HttpResponse> get(
+    String url, {
+    Duration timeout = const Duration(seconds: 3),
+  }) async {
     HttpRequest msg = HttpRequest(HttpMethod.get, url);
     return request(HostAndPort.of(url), msg, timeout: timeout);
   }
 
   /// 发送请求
-  static Future<HttpResponse> request(HostAndPort hostAndPort, HttpRequest request,
-      {Duration timeout = const Duration(seconds: 3)}) async {
+  static Future<HttpResponse> request(
+    HostAndPort hostAndPort,
+    HttpRequest request, {
+    Duration timeout = const Duration(seconds: 3),
+  }) async {
     var httpResponseHandler = HttpResponseHandler();
 
     var client = Client()
       ..initChannel(
-          (channel) => channel.dispatcher.handle(HttpResponseCodec(), HttpRequestCodec(), httpResponseHandler));
+        (channel) => channel.dispatcher.handle(
+          HttpResponseCodec(),
+          HttpRequestCodec(),
+          httpResponseHandler,
+        ),
+      );
 
     ChannelContext channelContext = ChannelContext();
     Channel channel = await client.connect(hostAndPort, channelContext);
     await channel.write(channelContext, request);
 
-    return httpResponseHandler.getResponse(timeout).whenComplete(() => channel.close());
+    return httpResponseHandler
+        .getResponse(timeout)
+        .whenComplete(() => channel.close());
   }
 
   /// 发送代理请求
-  static Future<HttpResponse> proxyRequest(HttpRequest request,
-      {ProxyInfo? proxyInfo, Duration timeout = const Duration(seconds: 30)}) async {
-    if (request.headers.host == null || request.headers.host?.trim().isEmpty == true) {
+  static Future<HttpResponse> proxyRequest(
+    HttpRequest request, {
+    ProxyInfo? proxyInfo,
+    Duration timeout = const Duration(seconds: 30),
+  }) async {
+    if (request.headers.host == null ||
+        request.headers.host?.trim().isEmpty == true) {
       try {
         var uri = Uri.parse(request.requestUrl);
-        request.headers.host = '${uri.host}${uri.hasPort ? ':${uri.port}' : ''}';
+        request.headers.host =
+            '${uri.host}${uri.hasPort ? ':${uri.port}' : ''}';
       } catch (_) {}
     }
 
@@ -164,12 +237,19 @@ class HttpClients {
     var httpResponseHandler = HttpResponseHandler();
     request.hostAndPort ??= HostAndPort.of(request.requestUrl);
 
-    Channel channel =
-        await proxyConnect(request, proxyInfo: proxyInfo, request.hostAndPort!, httpResponseHandler, channelContext);
+    Channel channel = await proxyConnect(
+      request,
+      proxyInfo: proxyInfo,
+      request.hostAndPort!,
+      httpResponseHandler,
+      channelContext,
+    );
 
     if (!request.uri.startsWith("/")) {
       Uri? uri = request.requestUri;
-      request = request.copy(uri: '${uri!.path}${uri.hasQuery ? '?${uri.query}' : ''}');
+      request = request.copy(
+        uri: '${uri!.path}${uri.hasQuery ? '?${uri.query}' : ''}',
+      );
     }
 
     if (channel.selectedProtocol == 'h2') {
@@ -177,7 +257,9 @@ class HttpClients {
       request.streamId = 1;
     }
     await channel.write(channelContext, request);
-    return httpResponseHandler.getResponse(timeout).whenComplete(() => channel.close());
+    return httpResponseHandler
+        .getResponse(timeout)
+        .whenComplete(() => channel.close());
   }
 }
 
@@ -194,9 +276,12 @@ class Http2ClientHandler {
     channel.dispatcher.encoder = Http2RequestDecoder();
     channel.dispatcher.decoder = decoder;
 
-    channel.socket.listen((data) => onData(channelContext, channel, data),
-        onError: (error, trace) => handler.exceptionCaught(channelContext, channel, error, trace: trace),
-        onDone: () => handler.channelInactive(channelContext, channel));
+    channel.socket.listen(
+      (data) => onData(channelContext, channel, data),
+      onError: (error, trace) =>
+          handler.exceptionCaught(channelContext, channel, error, trace: trace),
+      onDone: () => handler.channelInactive(channelContext, channel),
+    );
 
     await channel.writeBytes(Http2Codec.connectionPrefacePRI);
 
@@ -266,7 +351,11 @@ class HttpResponseHandler extends ChannelHandler<HttpResponse> {
   Completer<HttpResponse> _completer = Completer<HttpResponse>();
 
   @override
-  Future<void> channelRead(ChannelContext channelContext, Channel channel, HttpResponse msg) async {
+  Future<void> channelRead(
+    ChannelContext channelContext,
+    Channel channel,
+    HttpResponse msg,
+  ) async {
     // log.i("[${channel.id}] Response $msg");
     _completer.complete(msg);
   }

@@ -53,42 +53,52 @@ class _FilterDialogState extends State<FilterDialog> {
   @override
   Widget build(BuildContext context) {
     return AlertDialog(
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10.0)),
-        titlePadding: const EdgeInsets.only(left: 20, top: 10, right: 15),
-        contentPadding: const EdgeInsets.only(left: 20, right: 20),
-        scrollable: true,
-        title: Row(children: [
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10.0)),
+      titlePadding: const EdgeInsets.only(left: 20, top: 10, right: 15),
+      contentPadding: const EdgeInsets.only(left: 20, right: 20),
+      scrollable: true,
+      title: Row(
+        children: [
           const Expanded(child: SizedBox()),
-          Text(localizations.domainFilter, style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w500)),
-          const Expanded(child: SizedBox()),
-          Align(alignment: Alignment.topRight, child: CloseButton())
-        ]),
-        content: SizedBox(
-          width: 680,
-          height: 510,
-          child: Flex(
-            direction: Axis.horizontal,
-            children: [
-              Expanded(
-                  flex: 1,
-                  child: DomainFilter(
-                      title: localizations.domainWhitelist,
-                      subtitle: localizations.domainWhitelistDescribe,
-                      hostList: HostFilter.whitelist,
-                      configuration: widget.configuration,
-                      hostEnableNotifier: hostEnableNotifier)),
-              const SizedBox(width: 10),
-              Expanded(
-                  flex: 1,
-                  child: DomainFilter(
-                      title: localizations.domainBlacklist,
-                      subtitle: localizations.domainBlacklistDescribe,
-                      hostList: HostFilter.blacklist,
-                      configuration: widget.configuration,
-                      hostEnableNotifier: hostEnableNotifier)),
-            ],
+          Text(
+            localizations.domainFilter,
+            style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w500),
           ),
-        ));
+          const Expanded(child: SizedBox()),
+          Align(alignment: Alignment.topRight, child: CloseButton()),
+        ],
+      ),
+      content: SizedBox(
+        width: 680,
+        height: 510,
+        child: Flex(
+          direction: Axis.horizontal,
+          children: [
+            Expanded(
+              flex: 1,
+              child: DomainFilter(
+                title: localizations.domainWhitelist,
+                subtitle: localizations.domainWhitelistDescribe,
+                hostList: HostFilter.whitelist,
+                configuration: widget.configuration,
+                hostEnableNotifier: hostEnableNotifier,
+              ),
+            ),
+            const SizedBox(width: 10),
+            Expanded(
+              flex: 1,
+              child: DomainFilter(
+                title: localizations.domainBlacklist,
+                subtitle: localizations.domainBlacklistDescribe,
+                hostList: HostFilter.blacklist,
+                configuration: widget.configuration,
+                hostEnableNotifier: hostEnableNotifier,
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
   }
 }
 
@@ -99,13 +109,14 @@ class DomainFilter extends StatefulWidget {
   final Configuration configuration;
   final ValueNotifier<bool> hostEnableNotifier;
 
-  const DomainFilter(
-      {super.key,
-      required this.title,
-      required this.subtitle,
-      required this.hostList,
-      required this.hostEnableNotifier,
-      required this.configuration});
+  const DomainFilter({
+    super.key,
+    required this.title,
+    required this.subtitle,
+    required this.hostList,
+    required this.hostEnableNotifier,
+    required this.configuration,
+  });
 
   @override
   State<StatefulWidget> createState() {
@@ -136,34 +147,46 @@ class _DomainFilterState extends State<DomainFilter> {
           subtitle: Text(widget.subtitle, style: const TextStyle(fontSize: 12)),
           titleAlignment: ListTileTitleAlignment.center,
         ),
-        Row(children: [
-          const SizedBox(width: 8),
-          Text(localizations.enable),
-          const SizedBox(width: 10),
-          SwitchWidget(
+        Row(
+          children: [
+            const SizedBox(width: 8),
+            Text(localizations.enable),
+            const SizedBox(width: 10),
+            SwitchWidget(
               scale: 0.75,
               value: widget.hostList.enabled,
               onChanged: (value) {
                 widget.hostList.enabled = value;
                 changed = true;
-              }),
-          const Expanded(child: SizedBox()),
-          TextButton.icon(icon: const Icon(Icons.add, size: 18), onPressed: add, label: Text(localizations.add)),
-          const SizedBox(width: 5),
-          TextButton.icon(
-              icon: const Icon(Icons.input_rounded, size: 18), onPressed: import, label: Text(localizations.import)),
-          const SizedBox(width: 5),
-        ]),
-        DomainList(widget.hostList, onChange: () => changed = true)
+              },
+            ),
+            const Expanded(child: SizedBox()),
+            TextButton.icon(
+              icon: const Icon(Icons.add, size: 18),
+              onPressed: add,
+              label: Text(localizations.add),
+            ),
+            const SizedBox(width: 5),
+            TextButton.icon(
+              icon: const Icon(Icons.input_rounded, size: 18),
+              onPressed: import,
+              label: Text(localizations.import),
+            ),
+            const SizedBox(width: 5),
+          ],
+        ),
+        DomainList(widget.hostList, onChange: () => changed = true),
       ],
     );
   }
 
   //导入
   import() async {
-
-    final FilePickerResult? result =
-        await FilePicker.platform.pickFiles(allowedExtensions: ['config'], type: FileType.custom, initialDirectory: "/Downloads");
+    final FilePickerResult? result = await FilePicker.platform.pickFiles(
+      allowedExtensions: ['config'],
+      type: FileType.custom,
+      initialDirectory: "/Downloads",
+    );
     var file = result?.files.single;
     if (file == null) {
       return;
@@ -190,9 +213,11 @@ class _DomainFilterState extends State<DomainFilter> {
 
   void add() {
     showDialog(
-        context: context,
-        barrierDismissible: false,
-        builder: (BuildContext context) => DomainAddDialog(hostList: widget.hostList)).then((value) {
+      context: context,
+      barrierDismissible: false,
+      builder: (BuildContext context) =>
+          DomainAddDialog(hostList: widget.hostList),
+    ).then((value) {
       if (value != null) {
         setState(() {
           changed = true;
@@ -213,40 +238,61 @@ class DomainAddDialog extends StatelessWidget {
     AppLocalizations localizations = AppLocalizations.of(context)!;
 
     GlobalKey formKey = GlobalKey<FormState>();
-    String? host = index == null ? null : hostList.list.elementAt(index!).pattern.replaceAll(".*", "*");
+    String? host = index == null
+        ? null
+        : hostList.list.elementAt(index!).pattern.replaceAll(".*", "*");
     return AlertDialog(
-        scrollable: true,
-        content: Padding(
-            padding: const EdgeInsets.all(8.0),
-            child: Form(
-                key: formKey,
-                child: Column(children: <Widget>[
-                  TextFormField(
-                      initialValue: host,
-                      decoration: const InputDecoration(labelText: 'Host', hintText: '*.example.com'),
-                      validator: (val) => val == null || val.trim().isEmpty ? localizations.cannotBeEmpty : null,
-                      onChanged: (val) => host = val)
-                ]))),
-        actions: [
-          TextButton(child: Text(localizations.cancel), onPressed: () => Navigator.of(context).pop()),
-          TextButton(
-              child: Text(localizations.save),
-              onPressed: () {
-                if (!(formKey.currentState as FormState).validate()) {
-                  return;
-                }
-                try {
-                  if (index != null) {
-                    hostList.list[index!] = RegExp(host!.trim().replaceAll("*", ".*"));
-                  } else {
-                    hostList.add(host!.trim());
-                  }
-                } catch (e) {
-                  ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(e.toString())));
-                }
-                Navigator.of(context).pop(host);
-              }),
-        ]);
+      scrollable: true,
+      content: Padding(
+        padding: const EdgeInsets.all(8.0),
+        child: Form(
+          key: formKey,
+          child: Column(
+            children: <Widget>[
+              TextFormField(
+                initialValue: host,
+                decoration: const InputDecoration(
+                  labelText: 'Host',
+                  hintText: '*.example.com',
+                ),
+                validator: (val) => val == null || val.trim().isEmpty
+                    ? localizations.cannotBeEmpty
+                    : null,
+                onChanged: (val) => host = val,
+              ),
+            ],
+          ),
+        ),
+      ),
+      actions: [
+        TextButton(
+          child: Text(localizations.cancel),
+          onPressed: () => Navigator.of(context).pop(),
+        ),
+        TextButton(
+          child: Text(localizations.save),
+          onPressed: () {
+            if (!(formKey.currentState as FormState).validate()) {
+              return;
+            }
+            try {
+              if (index != null) {
+                hostList.list[index!] = RegExp(
+                  host!.trim().replaceAll("*", ".*"),
+                );
+              } else {
+                hostList.add(host!.trim());
+              }
+            } catch (e) {
+              ScaffoldMessenger.of(
+                context,
+              ).showSnackBar(SnackBar(content: Text(e.toString())));
+            }
+            Navigator.of(context).pop(host);
+          },
+        ),
+      ],
+    );
   }
 }
 
@@ -278,43 +324,52 @@ class _DomainListState extends State<DomainList> {
   @override
   Widget build(BuildContext context) {
     return GestureDetector(
-        onSecondaryTapDown: (details) => showGlobalMenu(details.globalPosition),
-        onTapDown: (details) {
-          if (selected.isEmpty) {
-            return;
-          }
+      onSecondaryTapDown: (details) => showGlobalMenu(details.globalPosition),
+      onTapDown: (details) {
+        if (selected.isEmpty) {
+          return;
+        }
 
-          if (HardwareKeyboard.instance.isMetaPressed || HardwareKeyboard.instance.isControlPressed) {
-            return;
+        if (HardwareKeyboard.instance.isMetaPressed ||
+            HardwareKeyboard.instance.isControlPressed) {
+          return;
+        }
+        setState(() {
+          selected.clear();
+        });
+      },
+      child: Listener(
+        onPointerUp: (event) => isPressed = false,
+        onPointerDown: (event) {
+          lastPressPosition = event.localPosition;
+          if (event.buttons == kPrimaryMouseButton) {
+            isPressed = true;
           }
-          setState(() {
-            selected.clear();
-          });
         },
-        child: Listener(
-            onPointerUp: (event) => isPressed = false,
-            onPointerDown: (event) {
-              lastPressPosition = event.localPosition;
-              if (event.buttons == kPrimaryMouseButton) {
-                isPressed = true;
-              }
-            },
-            child: Container(
-                padding: const EdgeInsets.only(top: 10),
-                height: 380,
-                decoration: BoxDecoration(border: Border.all(color: Colors.grey.withOpacity(0.2))),
-                child: SingleChildScrollView(
-                    child: Column(children: [
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.start,
-                    children: [
-                      Container(width: 15),
-                      const Expanded(child: Text('Host')),
-                    ],
-                  ),
-                  const Divider(thickness: 0.5),
-                  Column(children: rows(widget.hostList.list))
-                ])))));
+        child: Container(
+          padding: const EdgeInsets.only(top: 10),
+          height: 380,
+          decoration: BoxDecoration(
+            border: Border.all(color: Colors.grey.withOpacity(0.2)),
+          ),
+          child: SingleChildScrollView(
+            child: Column(
+              children: [
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.start,
+                  children: [
+                    Container(width: 15),
+                    const Expanded(child: Text('Host')),
+                  ],
+                ),
+                const Divider(thickness: 0.5),
+                Column(children: rows(widget.hostList.list)),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
   }
 
   List<Widget> rows(List<RegExp> list) {
@@ -322,48 +377,55 @@ class _DomainListState extends State<DomainList> {
 
     return List.generate(list.length, (index) {
       return InkWell(
-          highlightColor: Colors.transparent,
-          splashColor: Colors.transparent,
-          hoverColor: primaryColor.withOpacity(0.3),
-          onSecondaryTapDown: (details) => showMenus(details, index),
-          //right click menus
-          onDoubleTap: () => showEdit(index),
-          onHover: (hover) {
-            if (isPressed && selected[index] != true) {
-              setState(() {
-                selected[index] = true;
-              });
-            }
-          },
-          onTap: () {
-            if (HardwareKeyboard.instance.isMetaPressed || HardwareKeyboard.instance.isControlPressed) {
-              setState(() {
-                selected[index] = !(selected[index] ?? false);
-              });
-              return;
-            }
-            if (selected.isEmpty) {
-              return;
-            }
+        highlightColor: Colors.transparent,
+        splashColor: Colors.transparent,
+        hoverColor: primaryColor.withOpacity(0.3),
+        onSecondaryTapDown: (details) => showMenus(details, index),
+        //right click menus
+        onDoubleTap: () => showEdit(index),
+        onHover: (hover) {
+          if (isPressed && selected[index] != true) {
             setState(() {
-              selected.clear();
+              selected[index] = true;
             });
-          },
-          child: Container(
-              color: selected[index] == true
-                  ? primaryColor.withOpacity(0.6)
-                  : index.isEven
-                      ? Colors.grey.withOpacity(0.1)
-                      : null,
-              height: 38,
-              padding: const EdgeInsets.symmetric(vertical: 3),
-              child: Row(
-                children: [
-                  const SizedBox(width: 15),
-                  Expanded(
-                      child: Text(list[index].pattern.replaceAll(".*", "*"), style: const TextStyle(fontSize: 14))),
-                ],
-              )));
+          }
+        },
+        onTap: () {
+          if (HardwareKeyboard.instance.isMetaPressed ||
+              HardwareKeyboard.instance.isControlPressed) {
+            setState(() {
+              selected[index] = !(selected[index] ?? false);
+            });
+            return;
+          }
+          if (selected.isEmpty) {
+            return;
+          }
+          setState(() {
+            selected.clear();
+          });
+        },
+        child: Container(
+          color: selected[index] == true
+              ? primaryColor.withOpacity(0.6)
+              : index.isEven
+              ? Colors.grey.withOpacity(0.1)
+              : null,
+          height: 38,
+          padding: const EdgeInsets.symmetric(vertical: 3),
+          child: Row(
+            children: [
+              const SizedBox(width: 15),
+              Expanded(
+                child: Text(
+                  list[index].pattern.replaceAll(".*", "*"),
+                  style: const TextStyle(fontSize: 14),
+                ),
+              ),
+            ],
+          ),
+        ),
+      );
     });
   }
 
@@ -372,7 +434,9 @@ class _DomainListState extends State<DomainList> {
     if (indexes.isEmpty) return;
 
     String fileName = 'host-filters.config';
-    String? saveLocation = (await FilePicker.platform.saveFile(fileName: fileName));
+    String? saveLocation = (await FilePicker.platform.saveFile(
+      fileName: fileName,
+    ));
     if (saveLocation == null) {
       return;
     }
@@ -393,24 +457,28 @@ class _DomainListState extends State<DomainList> {
   //删除
   Future<void> remove(List<int> indexes) async {
     if (indexes.isEmpty) return;
-    return showConfirmDialog(context, content: localizations.requestRewriteDeleteConfirm(indexes.length),
-        onConfirm: () async {
-      widget.hostList.removeIndex(indexes);
-      onChanged();
-      setState(() {
-        selected.clear();
-      });
-      if (mounted) FlutterToastr.show(localizations.deleteSuccess, context);
-    });
+    return showConfirmDialog(
+      context,
+      content: localizations.requestRewriteDeleteConfirm(indexes.length),
+      onConfirm: () async {
+        widget.hostList.removeIndex(indexes);
+        onChanged();
+        setState(() {
+          selected.clear();
+        });
+        if (mounted) FlutterToastr.show(localizations.deleteSuccess, context);
+      },
+    );
   }
 
   showEdit([int? index]) {
     showDialog(
-        context: context,
-        barrierDismissible: false,
-        builder: (BuildContext context) {
-          return DomainAddDialog(hostList: widget.hostList, index: index);
-        }).then((value) {
+      context: context,
+      barrierDismissible: false,
+      builder: (BuildContext context) {
+        return DomainAddDialog(hostList: widget.hostList, index: index);
+      },
+    ).then((value) {
       if (value != null) {
         setState(() {
           onChanged();
@@ -424,20 +492,30 @@ class _DomainListState extends State<DomainList> {
       return;
     }
 
-    showContextMenu(context, offset, items: [
-      PopupMenuItem(height: 35, child: Text(localizations.newBuilt), onTap: () => showEdit()),
-      PopupMenuItem(
+    showContextMenu(
+      context,
+      offset,
+      items: [
+        PopupMenuItem(
+          height: 35,
+          child: Text(localizations.newBuilt),
+          onTap: () => showEdit(),
+        ),
+        PopupMenuItem(
           height: 35,
           enabled: selected.isNotEmpty,
           child: Text(localizations.export),
-          onTap: () => export(selected.keys.toList())),
-      const PopupMenuDivider(),
-      PopupMenuItem(
+          onTap: () => export(selected.keys.toList()),
+        ),
+        const PopupMenuDivider(),
+        PopupMenuItem(
           height: 35,
           enabled: selected.isNotEmpty,
           child: Text(localizations.deleteSelect),
-          onTap: () => remove(selected.keys.toList())),
-    ]);
+          onTap: () => remove(selected.keys.toList()),
+        ),
+      ],
+    );
   }
 
   //点击菜单
@@ -452,25 +530,43 @@ class _DomainListState extends State<DomainList> {
       selected[index] = true;
     });
 
-    showContextMenu(context, details.globalPosition, items: [
-      PopupMenuItem(
+    showContextMenu(
+      context,
+      details.globalPosition,
+      items: [
+        PopupMenuItem(
           height: 35,
           child: Text(localizations.copy),
           onTap: () {
-            Clipboard.setData(ClipboardData(text: widget.hostList.list[index].pattern.replaceAll(".*", "*")));
+            Clipboard.setData(
+              ClipboardData(
+                text: widget.hostList.list[index].pattern.replaceAll(".*", "*"),
+              ),
+            );
             FlutterToastr.show(localizations.copied, context);
-          }),
-      PopupMenuItem(height: 35, child: Text(localizations.edit), onTap: () => showEdit(index)),
-      PopupMenuItem(height: 35, onTap: () => export([index]), child: Text(localizations.export)),
-      const PopupMenuDivider(),
-      PopupMenuItem(
+          },
+        ),
+        PopupMenuItem(
+          height: 35,
+          child: Text(localizations.edit),
+          onTap: () => showEdit(index),
+        ),
+        PopupMenuItem(
+          height: 35,
+          onTap: () => export([index]),
+          child: Text(localizations.export),
+        ),
+        const PopupMenuDivider(),
+        PopupMenuItem(
           height: 35,
           child: Text(localizations.delete),
           onTap: () {
             widget.hostList.removeIndex([index]);
             onChanged();
-          })
-    ]).then((value) {
+          },
+        ),
+      ],
+    ).then((value) {
       _isSecondaryTapHandled = false;
       setState(() {
         selected.remove(index);

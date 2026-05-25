@@ -15,14 +15,22 @@ class DesktopSupport {
 
       //设置窗口大小
       Size windowSize =
-          appConfiguration.windowSize ?? (Platform.isMacOS ? const Size(1230, 750) : const Size(1100, 650));
-      WindowOptions windowOptions =
-          WindowOptions(minimumSize: const Size(1000, 600), size: windowSize, titleBarStyle: TitleBarStyle.hidden);
+          appConfiguration.windowSize ??
+          (Platform.isMacOS ? const Size(1230, 750) : const Size(1100, 650));
+      WindowOptions windowOptions = WindowOptions(
+        minimumSize: const Size(1000, 600),
+        size: windowSize,
+        titleBarStyle: TitleBarStyle.hidden,
+      );
 
       Offset? windowPosition = appConfiguration.windowPosition;
 
       if (appConfiguration.themeMode != ThemeMode.system) {
-        windowManager.setBrightness(appConfiguration.themeMode == ThemeMode.dark ? Brightness.dark : Brightness.light);
+        windowManager.setBrightness(
+          appConfiguration.themeMode == ThemeMode.dark
+              ? Brightness.dark
+              : Brightness.light,
+        );
       }
 
       if (Platform.isMacOS) {

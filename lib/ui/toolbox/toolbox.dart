@@ -36,9 +36,12 @@ class _ToolboxState extends State<Toolbox> {
   @override
   Widget build(BuildContext context) {
     return IconTheme(
-        data: IconTheme.of(context).copyWith(color: IconTheme.of(context).color?.withValues(alpha: 0.65), size: 22),
-        child: SingleChildScrollView(
-            child: Container(
+      data: IconTheme.of(context).copyWith(
+        color: IconTheme.of(context).color?.withValues(alpha: 0.65),
+        size: 22,
+      ),
+      child: SingleChildScrollView(
+        child: Container(
           padding: const EdgeInsets.all(10),
           child: Column(
             mainAxisAlignment: MainAxisAlignment.start,
@@ -55,24 +58,36 @@ class _ToolboxState extends State<Toolbox> {
                     tooltip: localizations.httpRequest,
                   ),
                   IconText(
-                      onTap: () async {
-                        if (Platforms.isMobile()) {
-                          Navigator.of(context)
-                              .push(MaterialPageRoute(builder: (context) => const WebSocketRequestPage()));
-                          return;
-                        }
-                        MultiWindow.openWindow('WebSocket', 'WebSocketRequestPage', size: const Size(800, 600));
-                      },
-                      icon: Icons.wifi_tethering,
-                      text: 'WebSocket',
-                      tooltip: 'WebSocket'),
+                    onTap: () async {
+                      if (Platforms.isMobile()) {
+                        Navigator.of(context).push(
+                          MaterialPageRoute(
+                            builder: (context) => const WebSocketRequestPage(),
+                          ),
+                        );
+                        return;
+                      }
+                      MultiWindow.openWindow(
+                        'WebSocket',
+                        'WebSocketRequestPage',
+                        size: const Size(800, 600),
+                      );
+                    },
+                    icon: Icons.wifi_tethering,
+                    text: 'WebSocket',
+                    tooltip: 'WebSocket',
+                  ),
                   IconText(
                     icon: Icons.javascript,
                     text: 'JavaScript',
                     tooltip: 'JavaScript',
                     onTap: () async {
                       if (Platforms.isMobile()) {
-                        Navigator.of(context).push(MaterialPageRoute(builder: (context) => const JavaScript()));
+                        Navigator.of(context).push(
+                          MaterialPageRoute(
+                            builder: (context) => const JavaScript(),
+                          ),
+                        );
                         return;
                       }
 
@@ -82,12 +97,15 @@ class _ToolboxState extends State<Toolbox> {
                         ratio = WindowManager.instance.getDevicePixelRatio();
                       }
 
-                      final window = await DesktopMultiWindow.createWindow(jsonEncode(
-                        {'name': 'JavaScript'},
-                      ));
+                      final window = await DesktopMultiWindow.createWindow(
+                        jsonEncode({'name': 'JavaScript'}),
+                      );
                       window.setTitle('JavaScript');
                       window
-                        ..setFrame(const Offset(100, 100) & Size(960 * ratio, size.height * ratio))
+                        ..setFrame(
+                          const Offset(100, 100) &
+                              Size(960 * ratio, size.height * ratio),
+                        )
                         ..center()
                         ..show();
                     },
@@ -95,7 +113,13 @@ class _ToolboxState extends State<Toolbox> {
                 ],
               ),
               const Divider(thickness: 0.3),
-              Text(localizations.encode, style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w500)),
+              Text(
+                localizations.encode,
+                style: const TextStyle(
+                  fontSize: 14,
+                  fontWeight: FontWeight.w500,
+                ),
+              ),
               Wrap(
                 spacing: 6,
                 children: [
@@ -126,17 +150,31 @@ class _ToolboxState extends State<Toolbox> {
                 ],
               ),
               const Divider(thickness: 0.3),
-              Text(localizations.cipher, style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w500)),
+              Text(
+                localizations.cipher,
+                style: const TextStyle(
+                  fontSize: 14,
+                  fontWeight: FontWeight.w500,
+                ),
+              ),
               Wrap(
                 spacing: 6,
                 children: [
                   IconText(
                     onTap: () {
                       if (Platforms.isMobile()) {
-                        Navigator.of(context).push(MaterialPageRoute(builder: (context) => const AesPage()));
+                        Navigator.of(context).push(
+                          MaterialPageRoute(
+                            builder: (context) => const AesPage(),
+                          ),
+                        );
                         return;
                       }
-                      MultiWindow.openWindow("AES", "AesPage", size: const Size(700, 672));
+                      MultiWindow.openWindow(
+                        "AES",
+                        "AesPage",
+                        size: const Size(700, 672),
+                      );
                     },
                     icon: Icons.enhanced_encryption_outlined,
                     text: 'AES',
@@ -145,66 +183,112 @@ class _ToolboxState extends State<Toolbox> {
                 ],
               ),
               const Divider(thickness: 0.3),
-              Text(localizations.other, style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w500)),
+              Text(
+                localizations.other,
+                style: const TextStyle(
+                  fontSize: 14,
+                  fontWeight: FontWeight.w500,
+                ),
+              ),
               Wrap(
                 spacing: 6,
                 children: [
                   IconText(
-                      onTap: () async {
-                        if (Platforms.isMobile()) {
-                          Navigator.of(context).push(MaterialPageRoute(builder: (context) => const TimestampPage()));
-                          return;
-                        }
+                    onTap: () async {
+                      if (Platforms.isMobile()) {
+                        Navigator.of(context).push(
+                          MaterialPageRoute(
+                            builder: (context) => const TimestampPage(),
+                          ),
+                        );
+                        return;
+                      }
 
-                        MultiWindow.openWindow(localizations.timestamp, 'TimestampPage', size: const Size(700, 350));
-                      },
-                      icon: Icons.av_timer,
-                      text: localizations.timestamp,
-                      tooltip: localizations.timestamp),
+                      MultiWindow.openWindow(
+                        localizations.timestamp,
+                        'TimestampPage',
+                        size: const Size(700, 350),
+                      );
+                    },
+                    icon: Icons.av_timer,
+                    text: localizations.timestamp,
+                    tooltip: localizations.timestamp,
+                  ),
                   IconText(
-                      onTap: () async {
-                        if (Platforms.isMobile()) {
-                          Navigator.of(context).push(MaterialPageRoute(builder: (context) => const CertHashPage()));
-                          return;
-                        }
-                        MultiWindow.openWindow(localizations.certHashName, 'CertHashPage');
-                      },
-                      icon: Icons.key_outlined,
-                      text: localizations.certHashName,
-                      tooltip: localizations.certHashName),
+                    onTap: () async {
+                      if (Platforms.isMobile()) {
+                        Navigator.of(context).push(
+                          MaterialPageRoute(
+                            builder: (context) => const CertHashPage(),
+                          ),
+                        );
+                        return;
+                      }
+                      MultiWindow.openWindow(
+                        localizations.certHashName,
+                        'CertHashPage',
+                      );
+                    },
+                    icon: Icons.key_outlined,
+                    text: localizations.certHashName,
+                    tooltip: localizations.certHashName,
+                  ),
                   IconText(
-                      onTap: () async {
-                        if (Platforms.isMobile()) {
-                          Navigator.of(context).push(MaterialPageRoute(builder: (context) => const RegExpPage()));
-                          return;
-                        }
-                        MultiWindow.openWindow(localizations.regExp, 'RegExpPage', size: const Size(800, 720));
-                      },
-                      icon: Icons.code,
-                      text: localizations.regExp,
-                      tooltip: localizations.regExp),
+                    onTap: () async {
+                      if (Platforms.isMobile()) {
+                        Navigator.of(context).push(
+                          MaterialPageRoute(
+                            builder: (context) => const RegExpPage(),
+                          ),
+                        );
+                        return;
+                      }
+                      MultiWindow.openWindow(
+                        localizations.regExp,
+                        'RegExpPage',
+                        size: const Size(800, 720),
+                      );
+                    },
+                    icon: Icons.code,
+                    text: localizations.regExp,
+                    tooltip: localizations.regExp,
+                  ),
                   IconText(
-                      onTap: () async {
-                        if (Platforms.isMobile()) {
-                          Navigator.of(context).push(MaterialPageRoute(builder: (context) => const QrCodePage()));
-                          return;
-                        }
-                        MultiWindow.openWindow(localizations.qrCode, 'QrCodePage');
-                      },
-                      icon: Icons.qr_code_2,
-                      text: localizations.qrCode,
-                      tooltip: localizations.qrCode),
+                    onTap: () async {
+                      if (Platforms.isMobile()) {
+                        Navigator.of(context).push(
+                          MaterialPageRoute(
+                            builder: (context) => const QrCodePage(),
+                          ),
+                        );
+                        return;
+                      }
+                      MultiWindow.openWindow(
+                        localizations.qrCode,
+                        'QrCodePage',
+                      );
+                    },
+                    icon: Icons.qr_code_2,
+                    text: localizations.qrCode,
+                    tooltip: localizations.qrCode,
+                  ),
                 ],
               ),
             ],
           ),
-        )));
+        ),
+      ),
+    );
   }
 
   Future<void> httpRequest() async {
     if (Platforms.isMobile()) {
-      Navigator.of(context)
-          .push(MaterialPageRoute(builder: (context) => MobileRequestEditor(proxyServer: widget.proxyServer)));
+      Navigator.of(context).push(
+        MaterialPageRoute(
+          builder: (context) =>
+              MobileRequestEditor(proxyServer: widget.proxyServer),
+        ),
+      );
       return;
     }
 
@@ -214,12 +298,14 @@ class _ToolboxState extends State<Toolbox> {
       ratio = WindowManager.instance.getDevicePixelRatio();
     }
 
-    final window = await DesktopMultiWindow.createWindow(jsonEncode(
-      {'name': 'RequestEditor'},
-    ));
+    final window = await DesktopMultiWindow.createWindow(
+      jsonEncode({'name': 'RequestEditor'}),
+    );
     window.setTitle(localizations.httpRequest);
     window
-      ..setFrame(const Offset(100, 100) & Size(960 * ratio, size.height * ratio))
+      ..setFrame(
+        const Offset(100, 100) & Size(960 * ratio, size.height * ratio),
+      )
       ..center()
       ..show();
   }
@@ -233,7 +319,13 @@ class IconText extends StatelessWidget {
   /// Called when the user taps this part of the material.
   final GestureTapCallback? onTap;
 
-  const IconText({super.key, required this.icon, required this.text, this.onTap, this.tooltip});
+  const IconText({
+    super.key,
+    required this.icon,
+    required this.text,
+    this.onTap,
+    this.tooltip,
+  });
 
   @override
   Widget build(BuildContext context) {

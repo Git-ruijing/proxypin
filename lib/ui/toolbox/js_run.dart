@@ -47,13 +47,17 @@ class _JavaScriptState extends State<JavaScript> {
       flutterJs = getJavascriptRuntime(xhr: false);
     }
     // register channel callback
-    final channelCallbacks = JavascriptRuntime.channelFunctionsRegistered[flutterJs!.getEngineInstanceId()];
+    final channelCallbacks = JavascriptRuntime
+        .channelFunctionsRegistered[flutterJs!.getEngineInstanceId()];
     channelCallbacks!["ConsoleLog"] = consoleLog;
     Md5Bridge.registerMd5(flutterJs!);
     FileBridge.registerFile(flutterJs!);
     flutterJs?.enableFetch2(enabledProxy: true);
 
-    code = CodeController(language: javascript, text: 'console.log("Hello, World!")');
+    code = CodeController(
+      language: javascript,
+      text: 'console.log("Hello, World!")',
+    );
   }
 
   @override
@@ -73,7 +77,15 @@ class _JavaScriptState extends State<JavaScript> {
     String output = args.join(' ');
     if (level == 'info') level = 'warn';
     setState(() {
-      outLines.add(Text(output, style: TextStyle(color: level == 'error' ? Colors.red : Colors.white, fontSize: 13)));
+      outLines.add(
+        Text(
+          output,
+          style: TextStyle(
+            color: level == 'error' ? Colors.red : Colors.white,
+            fontSize: 13,
+          ),
+        ),
+      );
       print(outLines);
     });
   }
@@ -82,109 +94,157 @@ class _JavaScriptState extends State<JavaScript> {
   Widget build(BuildContext context) {
     Color primaryColor = Theme.of(context).colorScheme.primary;
     return Scaffold(
-        resizeToAvoidBottomInset: false,
-        appBar: AppBar(title: const Text("JavaScript", style: TextStyle(fontSize: 16)), centerTitle: true),
-        body: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+      resizeToAvoidBottomInset: false,
+      appBar: AppBar(
+        title: const Text("JavaScript", style: TextStyle(fontSize: 16)),
+        centerTitle: true,
+      ),
+      body: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
           Row(
             mainAxisAlignment: MainAxisAlignment.end,
             children: [
               //选择文件
               ElevatedButton.icon(
-                  onPressed: () async {
-                    String? path;
-                    if (Platform.isMacOS) {
-                      path = await DesktopMultiWindow.invokeMethod(0, "pickFiles", {
-                        "allowedExtensions": ['js']
-                      });
-                      WindowController.fromWindowId(widget.windowId!).show();
-                    } else {
-                      FilePickerResult? result =
-                          await FilePicker.platform.pickFiles(type: FileType.custom, allowedExtensions: ['js']);
-                      path = result?.files.single.path;
-                    }
+                onPressed: () async {
+                  String? path;
+                  if (Platform.isMacOS) {
+                    path = await DesktopMultiWindow.invokeMethod(
+                      0,
+                      "pickFiles",
+                      {
+                        "allowedExtensions": ['js'],
+                      },
+                    );
+                    WindowController.fromWindowId(widget.windowId!).show();
+                  } else {
+                    FilePickerResult? result = await FilePicker.platform
+                        .pickFiles(
+                          type: FileType.custom,
+                          allowedExtensions: ['js'],
+                        );
+                    path = result?.files.single.path;
+                  }
 
-                    if (path != null) {
-                      File file = File(path);
-                      String content = await file.readAsString();
-                      code.text = content;
-                      setState(() {});
-                    }
-                  },
-                  icon: const Icon(Icons.folder_open),
-                  label: const Text("File")),
+                  if (path != null) {
+                    File file = File(path);
+                    String content = await file.readAsString();
+                    code.text = content;
+                    setState(() {});
+                  }
+                },
+                icon: const Icon(Icons.folder_open),
+                label: const Text("File"),
+              ),
               const SizedBox(width: 15),
               FilledButton.icon(
-                  onPressed: () async {
-                    outLines.clear();
-                    //失去焦点
-                    FocusScope.of(context).unfocus();
-                    var jsResult = await flutterJs!.evaluateAsync(code.text);
-                    if (jsResult.isPromise || jsResult.rawResult is Future) {
-                      jsResult = await flutterJs!.handlePromise(jsResult);
-                    }
-                    if (jsResult.isError) {
-                      setState(() {
-                        outLines
-                            .add(Text(jsResult.toString(), style: const TextStyle(color: Colors.red, fontSize: 13)));
-                      });
-                    }
-                  },
-                  icon: const Icon(Icons.play_arrow_rounded),
-                  label: const Text("Run")),
+                onPressed: () async {
+                  outLines.clear();
+                  //失去焦点
+                  FocusScope.of(context).unfocus();
+                  var jsResult = await flutterJs!.evaluateAsync(code.text);
+                  if (jsResult.isPromise || jsResult.rawResult is Future) {
+                    jsResult = await flutterJs!.handlePromise(jsResult);
+                  }
+                  if (jsResult.isError) {
+                    setState(() {
+                      outLines.add(
+                        Text(
+                          jsResult.toString(),
+                          style: const TextStyle(
+                            color: Colors.red,
+                            fontSize: 13,
+                          ),
+                        ),
+                      );
+                    });
+                  }
+                },
+                icon: const Icon(Icons.play_arrow_rounded),
+                label: const Text("Run"),
+              ),
               const SizedBox(width: 10),
             ],
           ),
           const SizedBox(height: 10),
           SizedBox(
-              height: 320,
-              child: CodeTheme(
-                  data: CodeThemeData(styles: monokaiSublimeTheme),
-                  child: Scrollbar(
-                      controller: inputScrollController,
-                      thumbVisibility: true,
-                      interactive: true,
-                      trackVisibility: true,
-                      thickness: 8,
-                      child: SingleChildScrollView(
-                          controller: inputScrollController,
-                          scrollDirection: Axis.vertical,
-                          child: CodeField(
-                            minLines: 16,
-                            background: Colors.grey.shade800,
-                            padding: const EdgeInsets.only(right: 10),
-                            textStyle: const TextStyle(fontSize: 13),
-                            controller: code,
-                            enableSuggestions: true,
-                            onTapOutside: (event) => FocusScope.of(context).unfocus(),
-                            gutterStyle: const GutterStyle(width: 50, margin: 0),
-                          ))))),
-          Row(children: [
-            const SizedBox(width: 10),
-            Text("${localizations.output}:",
-                style: TextStyle(fontSize: 16, color: primaryColor, fontWeight: FontWeight.w500)),
-            const SizedBox(width: 15),
-            //copy
-            IconButton(
+            height: 320,
+            child: CodeTheme(
+              data: CodeThemeData(styles: monokaiSublimeTheme),
+              child: Scrollbar(
+                controller: inputScrollController,
+                thumbVisibility: true,
+                interactive: true,
+                trackVisibility: true,
+                thickness: 8,
+                child: SingleChildScrollView(
+                  controller: inputScrollController,
+                  scrollDirection: Axis.vertical,
+                  child: CodeField(
+                    minLines: 16,
+                    background: Colors.grey.shade800,
+                    padding: const EdgeInsets.only(right: 10),
+                    textStyle: const TextStyle(fontSize: 13),
+                    controller: code,
+                    enableSuggestions: true,
+                    onTapOutside: (event) => FocusScope.of(context).unfocus(),
+                    gutterStyle: const GutterStyle(width: 50, margin: 0),
+                  ),
+                ),
+              ),
+            ),
+          ),
+          Row(
+            children: [
+              const SizedBox(width: 10),
+              Text(
+                "${localizations.output}:",
+                style: TextStyle(
+                  fontSize: 16,
+                  color: primaryColor,
+                  fontWeight: FontWeight.w500,
+                ),
+              ),
+              const SizedBox(width: 15),
+              //copy
+              IconButton(
                 icon: Icon(Icons.copy, color: primaryColor, size: 18),
                 onPressed: () {
                   Clipboard.setData(ClipboardData(text: outLines.join("\n")));
-                  FlutterToastr.show(localizations.copied, context, duration: 3);
-                }),
-          ]),
+                  FlutterToastr.show(
+                    localizations.copied,
+                    context,
+                    duration: 3,
+                  );
+                },
+              ),
+            ],
+          ),
           Expanded(
-              child: Container(
-                  width: double.infinity,
-                  padding: const EdgeInsets.all(10),
-                  color: Colors.grey.shade800,
-                  child: Scrollbar(
-                      controller: outputScrollController,
-                      thumbVisibility: true,
-                      trackVisibility: true,
-                      child: SingleChildScrollView(
-                          controller: outputScrollController,
-                          child: SelectionArea(
-                              child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: outLines)))))),
-        ]));
+            child: Container(
+              width: double.infinity,
+              padding: const EdgeInsets.all(10),
+              color: Colors.grey.shade800,
+              child: Scrollbar(
+                controller: outputScrollController,
+                thumbVisibility: true,
+                trackVisibility: true,
+                child: SingleChildScrollView(
+                  controller: outputScrollController,
+                  child: SelectionArea(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: outLines,
+                    ),
+                  ),
+                ),
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
   }
 }
 
@@ -197,28 +257,29 @@ class FullScreenCodeField extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-        appBar: AppBar(
-          title: Text("FullScreen Code Editor"),
-          actions: [
-            IconButton(
-              icon: Icon(Icons.close),
-              onPressed: () {
-                Navigator.of(context).pop();
-              },
-            ),
-          ],
-        ),
-        body: Expanded(
-          child: CodeTheme(
-            data: CodeThemeData(styles: monokaiSublimeTheme),
-            child: CodeField(
-              background: Colors.grey.shade800,
-              minLines: 50,
-              textStyle: const TextStyle(fontSize: 12),
-              controller: code,
-              gutterStyle: const GutterStyle(width: 50, margin: 0),
-            ),
+      appBar: AppBar(
+        title: Text("FullScreen Code Editor"),
+        actions: [
+          IconButton(
+            icon: Icon(Icons.close),
+            onPressed: () {
+              Navigator.of(context).pop();
+            },
           ),
-        ));
+        ],
+      ),
+      body: Expanded(
+        child: CodeTheme(
+          data: CodeThemeData(styles: monokaiSublimeTheme),
+          child: CodeField(
+            background: Colors.grey.shade800,
+            minLines: 50,
+            textStyle: const TextStyle(fontSize: 12),
+            controller: code,
+            gutterStyle: const GutterStyle(width: 50, margin: 0),
+          ),
+        ),
+      ),
+    );
   }
 }

@@ -65,16 +65,17 @@ class RequestWidget extends StatefulWidget {
   final MultiSelectController multiSelectController;
   final RequestSelectionHandlers selectionHandlers;
 
-  RequestWidget(this.request,
-      {Key? key,
-      required this.proxyServer,
-      this.remove,
-      this.displayDomain = true,
-      this.trailing,
-      required this.selectionHandlers,
-      required this.index,
-      required this.multiSelectController})
-      : super(key: key ?? GlobalKey<_RequestWidgetState>());
+  RequestWidget(
+    this.request, {
+    Key? key,
+    required this.proxyServer,
+    this.remove,
+    this.displayDomain = true,
+    this.trailing,
+    required this.selectionHandlers,
+    required this.index,
+    required this.multiSelectController,
+  }) : super(key: key ?? GlobalKey<_RequestWidgetState>());
 
   @override
   State<RequestWidget> createState() => _RequestWidgetState();
@@ -136,56 +137,89 @@ class _RequestWidgetState extends State<RequestWidget> {
     var packagesSize = getPackagesSize(request, response);
 
     var requestColor = color(path);
-    bool selectedInSelectionMode = widget.multiSelectController.contains(request.requestId);
+    bool selectedInSelectionMode = widget.multiSelectController.contains(
+      request.requestId,
+    );
     return GestureDetector(
-        onLongPress: () {
-          if (!selectionMode) {
-            widget.multiSelectController.enterSelectionMode(widget.request.requestId);
-          }
-        },
-        onSecondaryTap: contextualMenu,
-        child: ListTile(
-            minLeadingWidth: 5,
-            textColor: requestColor,
-            selectedColor: requestColor,
-            selectedTileColor: Theme.of(context).colorScheme.primary.withValues(alpha: 0.1),
-            leading: _leading(requestColor),
-            trailing: widget.trailing,
-            title: Text(title.fixAutoLines(), overflow: TextOverflow.ellipsis, maxLines: 2),
-            subtitle: Container(
-                padding: const EdgeInsets.only(top: 3),
-                child: Text.rich(
-                    maxLines: 1,
-                    TextSpan(
-                      children: [
-                        TextSpan(text: '#${widget.index} ', style: const TextStyle(fontSize: 11, color: Colors.teal)),
-                        TextSpan(
-                            text:
-                                '$time - [${response?.status.code ?? ''}]  $contentType $packagesSize ${response?.costTime() ?? ''}',
-                            style: const TextStyle(fontSize: 11, color: Colors.grey))
-                      ],
-                    ))),
-            selected: selected || selectedInSelectionMode,
-            dense: true,
-            visualDensity: const VisualDensity(vertical: -4),
-            contentPadding: EdgeInsets.only(left: selectedInSelectionMode ? 6 : 28),
-            onTap: onClick));
+      onLongPress: () {
+        if (!selectionMode) {
+          widget.multiSelectController.enterSelectionMode(
+            widget.request.requestId,
+          );
+        }
+      },
+      onSecondaryTap: contextualMenu,
+      child: ListTile(
+        minLeadingWidth: 5,
+        textColor: requestColor,
+        selectedColor: requestColor,
+        selectedTileColor: Theme.of(
+          context,
+        ).colorScheme.primary.withValues(alpha: 0.1),
+        leading: _leading(requestColor),
+        trailing: widget.trailing,
+        title: Text(
+          title.fixAutoLines(),
+          overflow: TextOverflow.ellipsis,
+          maxLines: 2,
+        ),
+        subtitle: Container(
+          padding: const EdgeInsets.only(top: 3),
+          child: Text.rich(
+            maxLines: 1,
+            TextSpan(
+              children: [
+                TextSpan(
+                  text: '#${widget.index} ',
+                  style: const TextStyle(fontSize: 11, color: Colors.teal),
+                ),
+                TextSpan(
+                  text:
+                      '$time - [${response?.status.code ?? ''}]  $contentType $packagesSize ${response?.costTime() ?? ''}',
+                  style: const TextStyle(fontSize: 11, color: Colors.grey),
+                ),
+              ],
+            ),
+          ),
+        ),
+        selected: selected || selectedInSelectionMode,
+        dense: true,
+        visualDensity: const VisualDensity(vertical: -4),
+        contentPadding: EdgeInsets.only(left: selectedInSelectionMode ? 6 : 28),
+        onTap: onClick,
+      ),
+    );
   }
 
   Widget _leading(Color? requestColor) {
-    bool selectedInSelectionMode = widget.multiSelectController.contains(widget.request.requestId);
+    bool selectedInSelectionMode = widget.multiSelectController.contains(
+      widget.request.requestId,
+    );
 
-    var icon = getIcon(widget.response.get() ?? widget.request.response, color: requestColor);
+    var icon = getIcon(
+      widget.response.get() ?? widget.request.response,
+      color: requestColor,
+    );
     if (!selectedInSelectionMode) {
       return icon;
     }
 
-    return Row(mainAxisSize: MainAxisSize.min, children: [
-      Icon(selectedInSelectionMode ? Icons.check_box_outlined : Icons.check_box_outline_blank_outlined,
-          size: 18, color: selectedInSelectionMode ? Theme.of(context).colorScheme.primary : Colors.grey),
-      const SizedBox(width: 4),
-      icon,
-    ]);
+    return Row(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Icon(
+          selectedInSelectionMode
+              ? Icons.check_box_outlined
+              : Icons.check_box_outline_blank_outlined,
+          size: 18,
+          color: selectedInSelectionMode
+              ? Theme.of(context).colorScheme.primary
+              : Colors.grey,
+        ),
+        const SizedBox(width: 4),
+        icon,
+      ],
+    );
   }
 
   Color? color(String url) {
@@ -198,7 +232,9 @@ class _RequestWidgetState extends State<RequestWidget> {
       return highlightColor;
     }
 
-    return autoReadRequests.contains(widget.request.requestId) ? Colors.grey : null;
+    return autoReadRequests.contains(widget.request.requestId)
+        ? Colors.grey
+        : null;
   }
 
   void changeState() {
@@ -206,66 +242,121 @@ class _RequestWidgetState extends State<RequestWidget> {
   }
 
   void contextualMenu() {
-    popUpContextMenu(selectionMode && selectionCount > 1 ? _batchMenu() : _requestMenu());
+    popUpContextMenu(
+      selectionMode && selectionCount > 1 ? _batchMenu() : _requestMenu(),
+    );
   }
 
   Menu _batchMenu() {
-    return Menu(items: [
-      _menuAction(localizations.repeat, _RequestMenuAction.batchRepeat),
-      _menuAction(localizations.export, _RequestMenuAction.batchExport),
-      MenuItem.separator(),
-      _menuAction(localizations.delete, _RequestMenuAction.batchDelete),
-      MenuItem.separator(),
-      _menuAction(localizations.cancel, _RequestMenuAction.batchCancel),
-    ]);
+    return Menu(
+      items: [
+        _menuAction(localizations.repeat, _RequestMenuAction.batchRepeat),
+        _menuAction(localizations.export, _RequestMenuAction.batchExport),
+        MenuItem.separator(),
+        _menuAction(localizations.delete, _RequestMenuAction.batchDelete),
+        MenuItem.separator(),
+        _menuAction(localizations.cancel, _RequestMenuAction.batchCancel),
+      ],
+    );
   }
 
   Menu _requestMenu() {
-    return Menu(items: [
-      _menuAction(localizations.copyUrl, _RequestMenuAction.copyUrl),
-      MenuItem(label: localizations.copy, type: 'submenu', submenu: _copySubmenu()),
-      MenuItem.separator(),
-      _menuAction(localizations.openNewWindow, _RequestMenuAction.openNewWindow),
-      MenuItem.separator(),
-      MenuItem(label: localizations.export, type: 'submenu', submenu: _exportSubmenu()),
-      MenuItem.separator(),
-      _menuAction(localizations.repeat, _RequestMenuAction.repeat),
-      _menuAction(localizations.customRepeat, _RequestMenuAction.customRepeat),
-      _menuAction(localizations.editRequest, _RequestMenuAction.editRequest),
-      MenuItem.separator(),
-      _menuAction(localizations.requestRewrite, _RequestMenuAction.requestRewrite),
-      _menuAction(localizations.requestMap, _RequestMenuAction.requestMap),
-      _menuAction(localizations.script, _RequestMenuAction.script),
-      MenuItem.separator(),
-      _menuAction(localizations.favorite, _RequestMenuAction.favorite),
-      MenuItem(label: localizations.highlight, type: 'submenu', submenu: highlightMenu()),
-      MenuItem.separator(),
-      _menuAction(localizations.select, _RequestMenuAction.select),
-      MenuItem.separator(),
-      _menuAction(localizations.delete, _RequestMenuAction.delete),
-    ]);
+    return Menu(
+      items: [
+        _menuAction(localizations.copyUrl, _RequestMenuAction.copyUrl),
+        MenuItem(
+          label: localizations.copy,
+          type: 'submenu',
+          submenu: _copySubmenu(),
+        ),
+        MenuItem.separator(),
+        _menuAction(
+          localizations.openNewWindow,
+          _RequestMenuAction.openNewWindow,
+        ),
+        MenuItem.separator(),
+        MenuItem(
+          label: localizations.export,
+          type: 'submenu',
+          submenu: _exportSubmenu(),
+        ),
+        MenuItem.separator(),
+        _menuAction(localizations.repeat, _RequestMenuAction.repeat),
+        _menuAction(
+          localizations.customRepeat,
+          _RequestMenuAction.customRepeat,
+        ),
+        _menuAction(localizations.editRequest, _RequestMenuAction.editRequest),
+        MenuItem.separator(),
+        _menuAction(
+          localizations.requestRewrite,
+          _RequestMenuAction.requestRewrite,
+        ),
+        _menuAction(localizations.requestMap, _RequestMenuAction.requestMap),
+        _menuAction(localizations.script, _RequestMenuAction.script),
+        MenuItem.separator(),
+        _menuAction(localizations.favorite, _RequestMenuAction.favorite),
+        MenuItem(
+          label: localizations.highlight,
+          type: 'submenu',
+          submenu: highlightMenu(),
+        ),
+        MenuItem.separator(),
+        _menuAction(localizations.selectAction, _RequestMenuAction.select),
+        MenuItem.separator(),
+        _menuAction(localizations.delete, _RequestMenuAction.delete),
+      ],
+    );
   }
 
   Menu _copySubmenu() {
-    return Menu(items: [
-      _copyMenuAction(localizations.copyCurl, _RequestCopyMenuAction.curl),
-      _copyMenuAction(localizations.copyRawRequest, _RequestCopyMenuAction.rawRequest),
-      _copyMenuAction(localizations.copyRequestResponse, _RequestCopyMenuAction.requestResponse),
-      _copyMenuAction(localizations.copyAsPythonRequests, _RequestCopyMenuAction.pythonRequests),
-      _copyMenuAction(localizations.copyAsFetch, _RequestCopyMenuAction.fetch),
-    ]);
+    return Menu(
+      items: [
+        _copyMenuAction(localizations.copyCurl, _RequestCopyMenuAction.curl),
+        _copyMenuAction(
+          localizations.copyRawRequest,
+          _RequestCopyMenuAction.rawRequest,
+        ),
+        _copyMenuAction(
+          localizations.copyRequestResponse,
+          _RequestCopyMenuAction.requestResponse,
+        ),
+        _copyMenuAction(
+          localizations.copyAsPythonRequests,
+          _RequestCopyMenuAction.pythonRequests,
+        ),
+        _copyMenuAction(
+          localizations.copyAsFetch,
+          _RequestCopyMenuAction.fetch,
+        ),
+      ],
+    );
   }
 
   Menu _exportSubmenu() {
-    return Menu(items: [
-      _exportMenuAction(localizations.request, _RequestExportMenuAction.request),
-      _exportMenuAction(localizations.requestBody, _RequestExportMenuAction.requestBody),
-      MenuItem.separator(),
-      _exportMenuAction(localizations.response, _RequestExportMenuAction.response),
-      _exportMenuAction(localizations.responseBody, _RequestExportMenuAction.responseBody),
-      MenuItem.separator(),
-      _exportMenuAction('HAR', _RequestExportMenuAction.har),
-    ]);
+    return Menu(
+      items: [
+        _exportMenuAction(
+          localizations.request,
+          _RequestExportMenuAction.request,
+        ),
+        _exportMenuAction(
+          localizations.requestBody,
+          _RequestExportMenuAction.requestBody,
+        ),
+        MenuItem.separator(),
+        _exportMenuAction(
+          localizations.response,
+          _RequestExportMenuAction.response,
+        ),
+        _exportMenuAction(
+          localizations.responseBody,
+          _RequestExportMenuAction.responseBody,
+        ),
+        MenuItem.separator(),
+        _exportMenuAction('HAR', _RequestExportMenuAction.har),
+      ],
+    );
   }
 
   MenuItem _menuAction(String label, _RequestMenuAction action) {
@@ -304,16 +395,23 @@ class _RequestWidgetState extends State<RequestWidget> {
         break;
       case _RequestMenuAction.requestMap:
         showDialog(
-            context: context,
-            builder: (context) =>
-                RequestMapEdit(url: widget.request.domainPath, title: widget.request.hostAndPort?.host));
+          context: context,
+          builder: (context) => RequestMapEdit(
+            url: widget.request.domainPath,
+            title: widget.request.hostAndPort?.host,
+          ),
+        );
         break;
       case _RequestMenuAction.script:
         await _openScriptDialog();
         break;
       case _RequestMenuAction.favorite:
         FavoriteStorage.addFavorite(widget.request);
-        FlutterToastr.show(localizations.operationSuccess, context, rootNavigator: true);
+        FlutterToastr.show(
+          localizations.operationSuccess,
+          context,
+          rootNavigator: true,
+        );
         break;
       case _RequestMenuAction.select:
         widget.multiSelectController.selectOnly(widget.request.requestId);
@@ -379,15 +477,24 @@ class _RequestWidgetState extends State<RequestWidget> {
   Future<void> _openScriptDialog() async {
     var scriptManager = await ScriptManager.instance;
     var url = widget.request.domainPath;
-    var scriptItem = scriptManager.list.firstWhereOrNull((it) => it.urls.contains(url));
-    String? script = scriptItem == null ? null : await scriptManager.getScript(scriptItem);
+    var scriptItem = scriptManager.list.firstWhereOrNull(
+      (it) => it.urls.contains(url),
+    );
+    String? script = scriptItem == null
+        ? null
+        : await scriptManager.getScript(scriptItem);
     if (!mounted) {
       return;
     }
     showDialog(
-        context: context,
-        builder: (context) =>
-            ScriptEdit(scriptItem: scriptItem, script: script, url: url, title: widget.request.hostAndPort?.host));
+      context: context,
+      builder: (context) => ScriptEdit(
+        scriptItem: scriptItem,
+        script: script,
+        url: url,
+        title: widget.request.hostAndPort?.host,
+      ),
+    );
   }
 
   Future<void> _copyText(String text) async {
@@ -402,63 +509,76 @@ class _RequestWidgetState extends State<RequestWidget> {
     return Menu(
       items: [
         MenuItem(
-            label: localizations.red,
-            onClick: (_) {
-              setState(() {
-                highlightColor = Colors.red;
-              });
-            }),
+          label: localizations.red,
+          onClick: (_) {
+            setState(() {
+              highlightColor = Colors.red;
+            });
+          },
+        ),
         MenuItem(
-            label: localizations.yellow,
-            onClick: (_) {
-              setState(() {
-                highlightColor = Colors.yellow.shade600;
-              });
-            }),
+          label: localizations.yellow,
+          onClick: (_) {
+            setState(() {
+              highlightColor = Colors.yellow.shade600;
+            });
+          },
+        ),
         MenuItem(
-            label: localizations.blue,
-            onClick: (_) {
-              setState(() {
-                highlightColor = Colors.blue;
-              });
-            }),
+          label: localizations.blue,
+          onClick: (_) {
+            setState(() {
+              highlightColor = Colors.blue;
+            });
+          },
+        ),
         MenuItem(
-            label: localizations.green,
-            onClick: (_) {
-              setState(() {
-                highlightColor = Colors.green;
-              });
-            }),
+          label: localizations.green,
+          onClick: (_) {
+            setState(() {
+              highlightColor = Colors.green;
+            });
+          },
+        ),
         MenuItem(
-            label: localizations.gray,
-            onClick: (_) {
-              setState(() {
-                highlightColor = Colors.grey;
-              });
-            }),
+          label: localizations.gray,
+          onClick: (_) {
+            setState(() {
+              highlightColor = Colors.grey;
+            });
+          },
+        ),
         MenuItem.separator(),
         MenuItem.checkbox(
-            label: localizations.autoRead,
-            checked: AppConfiguration.current?.autoReadEnabled,
-            onClick: (_) {
-              setState(() {
-                AppConfiguration.current?.autoReadEnabled = !AppConfiguration.current!.autoReadEnabled;
-              });
-            }),
+          label: localizations.autoRead,
+          checked: AppConfiguration.current?.autoReadEnabled,
+          onClick: (_) {
+            setState(() {
+              AppConfiguration.current?.autoReadEnabled =
+                  !AppConfiguration.current!.autoReadEnabled;
+            });
+          },
+        ),
         MenuItem.separator(),
         MenuItem(
-            label: localizations.reset,
-            onClick: (_) {
-              setState(() {
-                highlightColor = null;
-                autoReadRequests.clear();
-              });
-            }),
+          label: localizations.reset,
+          onClick: (_) {
+            setState(() {
+              highlightColor = null;
+              autoReadRequests.clear();
+            });
+          },
+        ),
         MenuItem(
-            label: localizations.keyword,
-            onClick: (_) {
-              showDialog(context: context, builder: (BuildContext context) => const DesktopKeywordHighlight());
-            }),
+          label: localizations.keyword,
+          onClick: (_) {
+            showDialog(
+              context: context,
+              builder: (BuildContext context) =>
+                  const DesktopKeywordHighlight(),
+            );
+          },
+        ),
       ],
     );
   }
@@ -469,21 +589,35 @@ class _RequestWidgetState extends State<RequestWidget> {
     if (!mounted) return;
 
     showDialog(
-        context: context,
-        builder: (BuildContext context) {
-          return CustomRepeatDialog(onRepeat: () => onRepeat(request), prefs: prefs);
-        });
+      context: context,
+      builder: (BuildContext context) {
+        return CustomRepeatDialog(
+          onRepeat: () => onRepeat(request),
+          prefs: prefs,
+        );
+      },
+    );
   }
 
   void onRepeat(HttpRequest httpRequest) {
     var request = httpRequest.copy(uri: httpRequest.requestUrl);
-    var proxyInfo = widget.proxyServer.isRunning ? ProxyInfo.of("127.0.0.1", widget.proxyServer.port) : null;
+    var proxyInfo = widget.proxyServer.isRunning
+        ? ProxyInfo.of("127.0.0.1", widget.proxyServer.port)
+        : null;
     HttpClients.proxyRequest(request, proxyInfo: proxyInfo);
-    FlutterToastr.show(localizations.reSendRequest, context, rootNavigator: true);
+    FlutterToastr.show(
+      localizations.reSendRequest,
+      context,
+      rootNavigator: true,
+    );
   }
 
   PopupMenuItem popupItem(String text, {VoidCallback? onTap}) {
-    return CustomPopupMenuItem(height: 32, onTap: onTap, child: Text(text, style: const TextStyle(fontSize: 13)));
+    return CustomPopupMenuItem(
+      height: 32,
+      onTap: onTap,
+      child: Text(text, style: const TextStyle(fontSize: 13)),
+    );
   }
 
   ///请求编辑
@@ -494,13 +628,19 @@ class _RequestWidgetState extends State<RequestWidget> {
       ratio = WindowManager.instance.getDevicePixelRatio();
     }
 
-    final window = await DesktopMultiWindow.createWindow(jsonEncode(
-      {'name': 'RequestEditor', 'request': widget.request, 'proxyPort': widget.proxyServer.port},
-    ));
+    final window = await DesktopMultiWindow.createWindow(
+      jsonEncode({
+        'name': 'RequestEditor',
+        'request': widget.request,
+        'proxyPort': widget.proxyServer.port,
+      }),
+    );
 
     window.setTitle(localizations.requestEdit);
     window
-      ..setFrame(const Offset(100, 100) & Size(960 * ratio, size.height * ratio))
+      ..setFrame(
+        const Offset(100, 100) & Size(960 * ratio, size.height * ratio),
+      )
       ..center()
       ..show();
   }
@@ -521,7 +661,8 @@ class _RequestWidgetState extends State<RequestWidget> {
   //点击事件
   void onClick() {
     final keyboard = HardwareKeyboard.instance;
-    final useToggleSelection = keyboard.isMetaPressed || keyboard.isControlPressed;
+    final useToggleSelection =
+        keyboard.isMetaPressed || keyboard.isControlPressed;
     final useRangeSelection = keyboard.isShiftPressed;
 
     if (useRangeSelection) {
@@ -554,7 +695,10 @@ class _RequestWidgetState extends State<RequestWidget> {
     }
 
     selectedState = this;
-    NetworkTabController.current?.change(widget.request, widget.response.get() ?? widget.request.response);
+    NetworkTabController.current?.change(
+      widget.request,
+      widget.response.get() ?? widget.request.response,
+    );
   }
 }
 
@@ -590,6 +734,18 @@ enum _RequestMenuAction {
   batchCancel,
 }
 
-enum _RequestCopyMenuAction { curl, rawRequest, requestResponse, pythonRequests, fetch }
+enum _RequestCopyMenuAction {
+  curl,
+  rawRequest,
+  requestResponse,
+  pythonRequests,
+  fetch,
+}
 
-enum _RequestExportMenuAction { request, requestBody, response, responseBody, har }
+enum _RequestExportMenuAction {
+  request,
+  requestBody,
+  response,
+  responseBody,
+  har,
+}

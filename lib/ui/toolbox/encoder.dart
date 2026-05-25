@@ -30,13 +30,19 @@ class EncoderWidget extends StatefulWidget {
   final WindowController? windowController;
   final String? text;
 
-  const EncoderWidget({super.key, required this.type, this.windowController, this.text});
+  const EncoderWidget({
+    super.key,
+    required this.type,
+    this.windowController,
+    this.text,
+  });
 
   @override
   State<EncoderWidget> createState() => _EncoderState();
 }
 
-class _EncoderState extends State<EncoderWidget> with SingleTickerProviderStateMixin {
+class _EncoderState extends State<EncoderWidget>
+    with SingleTickerProviderStateMixin {
   var tabs = const [
     Tab(text: 'URL'),
     Tab(text: 'Base64'),
@@ -58,7 +64,11 @@ class _EncoderState extends State<EncoderWidget> with SingleTickerProviderStateM
     type = widget.type;
     inputText = widget.text ?? '';
 
-    tabController = TabController(initialIndex: type.index, length: tabs.length, vsync: this);
+    tabController = TabController(
+      initialIndex: type.index,
+      length: tabs.length,
+      vsync: this,
+    );
     HardwareKeyboard.instance.addHandler(onKeyEvent);
   }
 
@@ -70,7 +80,8 @@ class _EncoderState extends State<EncoderWidget> with SingleTickerProviderStateM
   }
 
   bool onKeyEvent(KeyEvent event) {
-    if ((HardwareKeyboard.instance.isMetaPressed || HardwareKeyboard.instance.isControlPressed) &&
+    if ((HardwareKeyboard.instance.isMetaPressed ||
+            HardwareKeyboard.instance.isControlPressed) &&
         event.logicalKey == LogicalKeyboardKey.keyW) {
       HardwareKeyboard.instance.removeHandler(onKeyEvent);
       tabController.dispose();
@@ -86,18 +97,22 @@ class _EncoderState extends State<EncoderWidget> with SingleTickerProviderStateM
     return Scaffold(
       resizeToAvoidBottomInset: true,
       appBar: AppBar(
-          title: Text('${type.name.toUpperCase()}${localizations.encode}', style: const TextStyle(fontSize: 16)),
-          centerTitle: true,
-          bottom: TabBar(
-            controller: tabController,
-            tabs: tabs,
-            onTap: (index) {
-              setState(() {
-                type = EncoderType.values[index];
-                outputTextController.clear();
-              });
-            },
-          )),
+        title: Text(
+          '${type.name.toUpperCase()}${localizations.encode}',
+          style: const TextStyle(fontSize: 16),
+        ),
+        centerTitle: true,
+        bottom: TabBar(
+          controller: tabController,
+          tabs: tabs,
+          onTap: (index) {
+            setState(() {
+              type = EncoderType.values[index];
+              outputTextController.clear();
+            });
+          },
+        ),
+      ),
       body: Container(
         padding: const EdgeInsets.all(10),
         child: ListView(
@@ -105,21 +120,31 @@ class _EncoderState extends State<EncoderWidget> with SingleTickerProviderStateM
             Text(localizations.encodeInput),
             const SizedBox(height: 5),
             TextFormField(
-                initialValue: inputText,
-                minLines: 5,
-                maxLines: 10,
-                onChanged: (text) => inputText = text,
-                decoration: const InputDecoration(border: OutlineInputBorder())),
+              initialValue: inputText,
+              minLines: 5,
+              maxLines: 10,
+              onChanged: (text) => inputText = text,
+              decoration: const InputDecoration(border: OutlineInputBorder()),
+            ),
             const SizedBox(height: 10),
             Wrap(
               alignment: WrapAlignment.center,
               children: [
-                FilledButton(onPressed: encode, child: Text('${type.name.toUpperCase()}${localizations.encode}')),
+                FilledButton(
+                  onPressed: encode,
+                  child: Text(
+                    '${type.name.toUpperCase()}${localizations.encode}',
+                  ),
+                ),
                 const SizedBox(width: 20),
                 type == EncoderType.md5
                     ? const SizedBox()
                     : OutlinedButton(
-                        onPressed: decode, child: Text('${type.name.toUpperCase()}${localizations.decode}')),
+                        onPressed: decode,
+                        child: Text(
+                          '${type.name.toUpperCase()}${localizations.decode}',
+                        ),
+                      ),
               ],
             ),
             Text(localizations.encodeResult),
@@ -134,7 +159,9 @@ class _EncoderState extends State<EncoderWidget> with SingleTickerProviderStateM
             const SizedBox(height: 10),
             ElevatedButton(
               onPressed: () {
-                Clipboard.setData(ClipboardData(text: outputTextController.text));
+                Clipboard.setData(
+                  ClipboardData(text: outputTextController.text),
+                );
                 FlutterToastr.show(localizations.copied, context);
               },
               child: Text(localizations.copy),
@@ -196,7 +223,9 @@ class _EncoderState extends State<EncoderWidget> with SingleTickerProviderStateM
   }
 
   String encodeToUnicode(String input) {
-    return input.runes.map((rune) => '\\u${rune.toRadixString(16).padLeft(4, '0')}').join();
+    return input.runes
+        .map((rune) => '\\u${rune.toRadixString(16).padLeft(4, '0')}')
+        .join();
   }
 
   String decodeFromUnicode(String input) {

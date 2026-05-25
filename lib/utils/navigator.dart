@@ -12,7 +12,8 @@ class NavigatorHelper {
 
   GlobalKey<NavigatorState> get navigatorKey => _navigatorKey;
 
-  BuildContext get context => NavigatorHelper().navigatorKey.currentState!.context;
+  BuildContext get context =>
+      NavigatorHelper().navigatorKey.currentState!.context;
 
   //保存单例
   final GlobalKey<NavigatorState> _navigatorKey = GlobalKey<NavigatorState>();
@@ -40,7 +41,11 @@ class NavigatorPage extends StatelessWidget {
   final GlobalKey navigatorKey;
   final Widget child;
 
-  const NavigatorPage({super.key, required this.child, required this.navigatorKey});
+  const NavigatorPage({
+    super.key,
+    required this.child,
+    required this.navigatorKey,
+  });
 
   bool onPopInvoked() {
     var context = navigatorKey.currentState?.context;
@@ -55,12 +60,16 @@ class NavigatorPage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Material(
-        child: Navigator(
-      key: navigatorKey,
-      initialRoute: '/',
-      onGenerateRoute: (settings) {
-        return MaterialPageRoute(builder: (context) => child, settings: settings);
-      },
-    ));
+      child: Navigator(
+        key: navigatorKey,
+        initialRoute: '/',
+        onGenerateRoute: (settings) {
+          return MaterialPageRoute(
+            builder: (context) => child,
+            settings: settings,
+          );
+        },
+      ),
+    );
   }
 }

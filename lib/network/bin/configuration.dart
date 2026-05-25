@@ -86,18 +86,22 @@ class Configuration {
     port = config['port'] ?? port;
     enableSsl = config['enableSsl'] == true;
     startup = config['startup'] ?? Platforms.isDesktop();
-    enableSystemProxy = config['enableSystemProxy'] ?? (config['enableDesktop'] ?? true);
+    enableSystemProxy =
+        config['enableSystemProxy'] ?? (config['enableDesktop'] ?? true);
     enableSocks5 = config['enableSocks5'] ?? true;
     enabledHttp2 = config['enabledHttp2'] ?? false;
 
-    proxyPassDomains = config['proxyPassDomains'] ?? SystemProxy.proxyPassDomains;
+    proxyPassDomains =
+        config['proxyPassDomains'] ?? SystemProxy.proxyPassDomains;
     historyCacheTime = config['historyCacheTime'] ?? 0;
     if (config['externalProxy'] != null) {
       externalProxy = ProxyInfo.fromJson(config['externalProxy']);
     }
     appWhitelist = List<String>.from(config['appWhitelist'] ?? []);
     appWhitelistEnabled = config['appWhitelistEnabled'] ?? true;
-    appBlacklist = config['appBlacklist'] == null ? null : List<String>.from(config['appBlacklist']);
+    appBlacklist = config['appBlacklist'] == null
+        ? null
+        : List<String>.from(config['appBlacklist']);
     HostFilter.whitelist.load(config['whitelist']);
     HostFilter.blacklist.load(config['blacklist']);
   }

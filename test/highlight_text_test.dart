@@ -5,40 +5,52 @@ import 'package:proxypin/ui/component/search/search_controller.dart';
 
 void main() {
   group('HighlightTextWidget', () {
-    testWidgets('does not apply root style when language is empty', (tester) async {
+    testWidgets('does not apply root style when language is empty', (
+      tester,
+    ) async {
       final controller = SearchTextController();
 
-      await tester.pumpWidget(MaterialApp(
-        home: Scaffold(
-          body: HighlightTextWidget(
-            text: 'plain text body',
-            searchController: controller,
+      await tester.pumpWidget(
+        MaterialApp(
+          home: Scaffold(
+            body: HighlightTextWidget(
+              text: 'plain text body',
+              searchController: controller,
+            ),
           ),
         ),
-      ));
+      );
 
-      final selectable = tester.widget<SelectableText>(find.byType(SelectableText));
+      final selectable = tester.widget<SelectableText>(
+        find.byType(SelectableText),
+      );
       expect(selectable.style, isNull);
 
       await _disposeController(tester, controller);
     });
 
-    testWidgets('keeps syntax highlighting while search is active', (tester) async {
+    testWidgets('keeps syntax highlighting while search is active', (
+      tester,
+    ) async {
       final controller = SearchTextController();
       BuildContext? hostContext;
 
-      await tester.pumpWidget(MaterialApp(
-        home: Scaffold(
-          body: Builder(builder: (context) {
-            hostContext = context;
-            return HighlightTextWidget(
-              text: 'const token = 1;\nconst next = token;',
-              language: 'javascript',
-              searchController: controller,
-            );
-          }),
+      await tester.pumpWidget(
+        MaterialApp(
+          home: Scaffold(
+            body: Builder(
+              builder: (context) {
+                hostContext = context;
+                return HighlightTextWidget(
+                  text: 'const token = 1;\nconst next = token;',
+                  language: 'javascript',
+                  searchController: controller,
+                );
+              },
+            ),
+          ),
         ),
-      ));
+      );
 
       controller.patternController.text = 'token';
       controller.showSearchOverlay(hostContext!, top: 0, right: 0);
@@ -47,32 +59,45 @@ void main() {
 
       expect(controller.totalMatchCount.value, 2);
 
-      final selectable = tester.widget<SelectableText>(find.byType(SelectableText));
+      final selectable = tester.widget<SelectableText>(
+        find.byType(SelectableText),
+      );
       final rootSpan = selectable.textSpan!;
-      final keywordSpan = _flattenTextSpans(rootSpan).firstWhere((span) => span.text?.contains('const') ?? false);
+      final keywordSpan = _flattenTextSpans(
+        rootSpan,
+      ).firstWhere((span) => span.text?.contains('const') ?? false);
 
       expect(keywordSpan.style?.color, isNotNull);
-      expect((rootSpan.children ?? const <InlineSpan>[]).whereType<WidgetSpan>(), isEmpty);
+      expect(
+        (rootSpan.children ?? const <InlineSpan>[]).whereType<WidgetSpan>(),
+        isEmpty,
+      );
 
       await _disposeController(tester, controller);
     });
 
-    testWidgets('invalid regular expressions safely produce zero matches', (tester) async {
+    testWidgets('invalid regular expressions safely produce zero matches', (
+      tester,
+    ) async {
       final controller = SearchTextController();
       BuildContext? hostContext;
 
-      await tester.pumpWidget(MaterialApp(
-        home: Scaffold(
-          body: Builder(builder: (context) {
-            hostContext = context;
-            return HighlightTextWidget(
-              text: '{"name": "proxypin"}',
-              language: 'json',
-              searchController: controller,
-            );
-          }),
+      await tester.pumpWidget(
+        MaterialApp(
+          home: Scaffold(
+            body: Builder(
+              builder: (context) {
+                hostContext = context;
+                return HighlightTextWidget(
+                  text: '{"name": "proxypin"}',
+                  language: 'json',
+                  searchController: controller,
+                );
+              },
+            ),
+          ),
         ),
-      ));
+      );
 
       controller.toggleIsRegExp();
       controller.patternController.text = '(';
@@ -86,21 +111,27 @@ void main() {
       await _disposeController(tester, controller);
     });
 
-    testWidgets('current match index is clamped when match count shrinks', (tester) async {
+    testWidgets('current match index is clamped when match count shrinks', (
+      tester,
+    ) async {
       final controller = SearchTextController();
       BuildContext? hostContext;
 
-      await tester.pumpWidget(MaterialApp(
-        home: Scaffold(
-          body: Builder(builder: (context) {
-            hostContext = context;
-            return HighlightTextWidget(
-              text: 'foo bar foo',
-              searchController: controller,
-            );
-          }),
+      await tester.pumpWidget(
+        MaterialApp(
+          home: Scaffold(
+            body: Builder(
+              builder: (context) {
+                hostContext = context;
+                return HighlightTextWidget(
+                  text: 'foo bar foo',
+                  searchController: controller,
+                );
+              },
+            ),
+          ),
         ),
-      ));
+      );
 
       controller.patternController.text = 'foo';
       controller.showSearchOverlay(hostContext!, top: 0, right: 0);
@@ -123,19 +154,26 @@ void main() {
 
     testWidgets('forwards the custom context menu builder', (tester) async {
       final controller = SearchTextController();
-      Widget menuBuilder(BuildContext context, EditableTextState editableTextState) => const SizedBox.shrink();
+      Widget menuBuilder(
+        BuildContext context,
+        EditableTextState editableTextState,
+      ) => const SizedBox.shrink();
 
-      await tester.pumpWidget(MaterialApp(
-        home: Scaffold(
-          body: HighlightTextWidget(
-            text: 'plain text',
-            searchController: controller,
-            contextMenuBuilder: menuBuilder,
+      await tester.pumpWidget(
+        MaterialApp(
+          home: Scaffold(
+            body: HighlightTextWidget(
+              text: 'plain text',
+              searchController: controller,
+              contextMenuBuilder: menuBuilder,
+            ),
           ),
         ),
-      ));
+      );
 
-      final selectable = tester.widget<SelectableText>(find.byType(SelectableText));
+      final selectable = tester.widget<SelectableText>(
+        find.byType(SelectableText),
+      );
       expect(selectable.contextMenuBuilder, same(menuBuilder));
 
       await _disposeController(tester, controller);
@@ -143,7 +181,10 @@ void main() {
   });
 }
 
-Future<void> _disposeController(WidgetTester tester, SearchTextController controller) async {
+Future<void> _disposeController(
+  WidgetTester tester,
+  SearchTextController controller,
+) async {
   controller.closeSearch();
   await tester.pumpWidget(const SizedBox.shrink());
   await tester.pump();
@@ -160,4 +201,3 @@ Iterable<TextSpan> _flattenTextSpans(InlineSpan span) sync* {
     yield* _flattenTextSpans(child);
   }
 }
-

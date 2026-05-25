@@ -41,9 +41,9 @@ class NewVersionDialog extends StatelessWidget {
       title: Text(localizations.appUpdateDialogTitle),
       // scrollable: true,
       content: Container(
-          constraints: BoxConstraints(maxHeight: 230, maxWidth: 500),
-          child: SingleChildScrollView(
-              child: Column(
+        constraints: BoxConstraints(maxHeight: 230, maxWidth: 500),
+        child: SingleChildScrollView(
+          child: Column(
             mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
@@ -52,44 +52,70 @@ class NewVersionDialog extends StatelessWidget {
               Text.rich(
                 TextSpan(
                   children: [
-                    TextSpan(text: "${localizations.appUpdateCurrentVersionLbl}: ", style: theme.textTheme.bodySmall),
-                    TextSpan(text: currentVersion, style: theme.textTheme.labelMedium),
+                    TextSpan(
+                      text: "${localizations.appUpdateCurrentVersionLbl}: ",
+                      style: theme.textTheme.bodySmall,
+                    ),
+                    TextSpan(
+                      text: currentVersion,
+                      style: theme.textTheme.labelMedium,
+                    ),
                   ],
                 ),
               ),
               Text.rich(
                 TextSpan(
                   children: [
-                    TextSpan(text: "${localizations.appUpdateNewVersionLbl}: ", style: theme.textTheme.bodySmall),
-                    TextSpan(text: newVersion.version, style: theme.textTheme.labelMedium),
+                    TextSpan(
+                      text: "${localizations.appUpdateNewVersionLbl}: ",
+                      style: theme.textTheme.bodySmall,
+                    ),
+                    TextSpan(
+                      text: newVersion.version,
+                      style: theme.textTheme.labelMedium,
+                    ),
                   ],
                 ),
               ),
-              Text(newVersion.content ?? '', style: theme.textTheme.labelMedium),
+              Text(
+                newVersion.content ?? '',
+                style: theme.textTheme.labelMedium,
+              ),
             ],
-          ))),
+          ),
+        ),
+      ),
       actions: [
-        Wrap(alignment: WrapAlignment.end, children: [
-          if (canIgnore)
+        Wrap(
+          alignment: WrapAlignment.end,
+          children: [
+            if (canIgnore)
+              TextButton(
+                onPressed: () async {
+                  SharedPreferencesAsync().setString(
+                    Constants.ignoreReleaseVersionKey,
+                    newVersion.version,
+                  );
+                  logger.i("ignored release [${newVersion.version}]");
+                  if (context.mounted) Navigator.pop(context);
+                },
+                child: Text(localizations.appUpdateIgnoreBtnTxt),
+              ),
+            TextButton(
+              onPressed: () => Navigator.pop(context),
+              child: Text(localizations.appUpdateLaterBtnTxt),
+            ),
             TextButton(
               onPressed: () async {
-                SharedPreferencesAsync().setString(Constants.ignoreReleaseVersionKey, newVersion.version);
-                logger.i("ignored release [${newVersion.version}]");
-                if (context.mounted) Navigator.pop(context);
+                await launchUrl(
+                  Uri.parse(newVersion.url),
+                  mode: LaunchMode.externalApplication,
+                );
               },
-              child: Text(localizations.appUpdateIgnoreBtnTxt),
+              child: Text(localizations.appUpdateUpdateNowBtnTxt),
             ),
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: Text(localizations.appUpdateLaterBtnTxt),
-          ),
-          TextButton(
-            onPressed: () async {
-              await launchUrl(Uri.parse(newVersion.url), mode: LaunchMode.externalApplication);
-            },
-            child: Text(localizations.appUpdateUpdateNowBtnTxt),
-          ),
-        ])
+          ],
+        ),
       ],
     );
   }

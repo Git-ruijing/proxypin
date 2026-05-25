@@ -12,12 +12,17 @@ class SseChannelHandler extends ChannelHandler<Uint8List> {
   final SseDecoder decoder = SseDecoder();
 
   final Channel proxyChannel;
-  final HttpMessage message; // HttpResponse on server->client, HttpRequest on client->server
+  final HttpMessage
+  message; // HttpResponse on server->client, HttpRequest on client->server
 
   SseChannelHandler(this.proxyChannel, this.message);
 
   @override
-  Future<void> channelRead(ChannelContext channelContext, Channel channel, Uint8List msg) async {
+  Future<void> channelRead(
+    ChannelContext channelContext,
+    Channel channel,
+    Uint8List msg,
+  ) async {
     // Always forward the raw bytes first
     proxyChannel.writeBytes(msg);
 
@@ -28,11 +33,11 @@ class SseChannelHandler extends ChannelHandler<Uint8List> {
         message.messages.add(frame);
         channelContext.listener?.onMessage(channel, message, frame);
         logger.d(
-            "[${channelContext.clientChannel?.id}] sse channelRead ${frame.payloadLength} ${frame.payloadDataAsString}");
+          "[${channelContext.clientChannel?.id}] sse channelRead ${frame.payloadLength} ${frame.payloadDataAsString}",
+        );
       }
     } catch (e, stackTrace) {
       log.e("sse decode error", error: e, stackTrace: stackTrace);
     }
   }
 }
-

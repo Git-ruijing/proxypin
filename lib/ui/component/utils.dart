@@ -42,10 +42,16 @@ const contentMap = {
 
 Widget getIcon(HttpResponse? response, {Color? color}) {
   if (response == null) {
-    return SizedBox(width: 18, child: Icon(Icons.question_mark, size: 16, color: color ?? Colors.green));
+    return SizedBox(
+      width: 18,
+      child: Icon(Icons.question_mark, size: 16, color: color ?? Colors.green),
+    );
   }
   if (response.status.code < 0) {
-    return SizedBox(width: 18, child: Icon(Icons.error, size: 16, color: color ?? Colors.red));
+    return SizedBox(
+      width: 18,
+      child: Icon(Icons.error, size: 16, color: color ?? Colors.red),
+    );
   }
 
   var contentType = response.contentType;
@@ -53,12 +59,19 @@ Widget getIcon(HttpResponse? response, {Color? color}) {
     return Image.memory(
       Uint8List.fromList(response.body!),
       width: Platforms.isDesktop() ? 19 : 26,
-      errorBuilder: (context, error, stackTrace) => Icon(Icons.image, size: 16, color: color ?? Colors.green),
+      errorBuilder: (context, error, stackTrace) =>
+          Icon(Icons.image, size: 16, color: color ?? Colors.green),
     );
   }
 
   return SizedBox(
-      width: 18, child: Icon(contentMap[contentType] ?? Icons.http, size: 16, color: color ?? Colors.green));
+    width: 18,
+    child: Icon(
+      contentMap[contentType] ?? Icons.http,
+      size: 16,
+      color: color ?? Colors.green,
+    ),
+  );
 }
 
 //展示报文大小
@@ -102,7 +115,9 @@ String copyRawRequest(HttpRequest request) {
 String copyRequest(HttpRequest request, HttpResponse? response) {
   var sb = StringBuffer();
   sb.writeln("Request");
-  sb.writeln("${request.method.name} ${request.requestUrl} ${request.protocolVersion}");
+  sb.writeln(
+    "${request.method.name} ${request.requestUrl} ${request.protocolVersion}",
+  );
   sb.writeln(request.headers.headerLines());
   sb.writeln();
   sb.writeln(request.bodyAsString);
@@ -118,7 +133,8 @@ String copyRequest(HttpRequest request, HttpResponse? response) {
 
 RelativeRect menuPosition(BuildContext context) {
   final RenderBox bar = context.findRenderObject() as RenderBox;
-  final RenderBox overlay = Overlay.of(context).context.findRenderObject() as RenderBox;
+  final RenderBox overlay =
+      Overlay.of(context).context.findRenderObject() as RenderBox;
   const Offset offset = Offset.zero;
   final RelativeRect position = RelativeRect.fromRect(
     Rect.fromPoints(
@@ -130,7 +146,11 @@ RelativeRect menuPosition(BuildContext context) {
   return position;
 }
 
-Widget contextMenu(BuildContext context, EditableTextState editableTextState, {ContextMenuButtonItem? customItem}) {
+Widget contextMenu(
+  BuildContext context,
+  EditableTextState editableTextState, {
+  ContextMenuButtonItem? customItem,
+}) {
   List<ContextMenuButtonItem> list = [
     ContextMenuButtonItem(
       onPressed: () {
@@ -144,11 +164,18 @@ Widget contextMenu(BuildContext context, EditableTextState editableTextState, {C
       type: ContextMenuButtonType.copy,
     ),
     ContextMenuButtonItem(
-      label: Localizations.localeOf(context) == const Locale.fromSubtags(languageCode: 'zh') ? '复制值' : 'Copy Value',
+      label:
+          Localizations.localeOf(context) ==
+              const Locale.fromSubtags(languageCode: 'zh')
+          ? '复制值'
+          : 'Copy Value',
       onPressed: () {
         unSelect(editableTextState);
-        Clipboard.setData(ClipboardData(text: editableTextState.textEditingValue.text)).then((value) {
-          if (context.mounted) FlutterToastr.show(AppLocalizations.of(context)!.copied, context);
+        Clipboard.setData(
+          ClipboardData(text: editableTextState.textEditingValue.text),
+        ).then((value) {
+          if (context.mounted)
+            FlutterToastr.show(AppLocalizations.of(context)!.copied, context);
           editableTextState.hideToolbar();
         });
       },
@@ -167,12 +194,14 @@ Widget contextMenu(BuildContext context, EditableTextState editableTextState, {C
   }
 
   if (Platform.isIOS) {
-    list.add(ContextMenuButtonItem(
-      onPressed: () async {
-        editableTextState.shareSelection(SelectionChangedCause.toolbar);
-      },
-      type: ContextMenuButtonType.share,
-    ));
+    list.add(
+      ContextMenuButtonItem(
+        onPressed: () async {
+          editableTextState.shareSelection(SelectionChangedCause.toolbar);
+        },
+        type: ContextMenuButtonType.share,
+      ),
+    );
   }
 
   return AdaptiveTextSelectionToolbar.buttonItems(
@@ -183,14 +212,22 @@ Widget contextMenu(BuildContext context, EditableTextState editableTextState, {C
 
 void unSelect(EditableTextState editableTextState) {
   editableTextState.userUpdateTextEditingValue(
-    editableTextState.textEditingValue
-        .copyWith(selection: TextSelection.collapsed(offset: editableTextState.textEditingValue.selection.baseOffset)),
+    editableTextState.textEditingValue.copyWith(
+      selection: TextSelection.collapsed(
+        offset: editableTextState.textEditingValue.selection.baseOffset,
+      ),
+    ),
     SelectionChangedCause.tap,
   );
 }
 
 ///Future — skips rebuild when the resolved value equals [initialData].
-Widget futureWidget<T>(Future<T> future, Widget Function(T data) toWidget, {T? initialData, bool loading = false}) {
+Widget futureWidget<T>(
+  Future<T> future,
+  Widget Function(T data) toWidget, {
+  T? initialData,
+  bool loading = false,
+}) {
   return _FutureWidget<T>(
     future: future,
     toWidget: toWidget,
@@ -237,14 +274,16 @@ class _FutureWidgetState<T> extends State<_FutureWidget<T>> {
 
   void _subscribe() {
     final captured = widget.future;
-    captured.then((result) {
-      if (!mounted || widget.future != captured) return;
-      // Result unchanged — no rebuild needed.
-      if (result == _data) return;
-      setState(() => _data = result);
-    }).catchError((error) {
-      if (mounted) logger.e(error);
-    });
+    captured
+        .then((result) {
+          if (!mounted || widget.future != captured) return;
+          // Result unchanged — no rebuild needed.
+          if (result == _data) return;
+          setState(() => _data = result);
+        })
+        .catchError((error) {
+          if (mounted) logger.e(error);
+        });
   }
 
   @override
@@ -252,46 +291,62 @@ class _FutureWidgetState<T> extends State<_FutureWidget<T>> {
     if (_data != null) {
       return widget.toWidget(_data as T);
     }
-    return widget.loading ? const Center(child: CircularProgressIndicator()) : const SizedBox();
+    return widget.loading
+        ? const Center(child: CircularProgressIndicator())
+        : const SizedBox();
   }
 }
 
-Future showContextMenu(BuildContext context, Offset offset, {required List<PopupMenuEntry> items}) {
+Future showContextMenu(
+  BuildContext context,
+  Offset offset, {
+  required List<PopupMenuEntry> items,
+}) {
   return showMenu(
-      context: context,
-      position: RelativeRect.fromLTRB(
-        offset.dx + 10,
-        offset.dy - 50,
-        offset.dx + 10,
-        offset.dy - 50,
-      ),
-      items: items);
+    context: context,
+    position: RelativeRect.fromLTRB(
+      offset.dx + 10,
+      offset.dy - 50,
+      offset.dx + 10,
+      offset.dy - 50,
+    ),
+    items: items,
+  );
 }
 
-Future<T?> showConfirmDialog<T>(BuildContext context, {String? title, String? content, VoidCallback? onConfirm}) {
+Future<T?> showConfirmDialog<T>(
+  BuildContext context, {
+  String? title,
+  String? content,
+  VoidCallback? onConfirm,
+}) {
   title ??= AppLocalizations.of(context)!.confirmTitle;
   content ??= AppLocalizations.of(context)!.confirmContent;
   return showDialog(
-      context: context,
-      builder: (context) {
-        return AlertDialog(
-          title: Text(title!, style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
-          content: Text(content!),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.pop(context),
-              child: Text(AppLocalizations.of(context)!.cancel),
-            ),
-            TextButton(
-              onPressed: () {
-                Navigator.pop(context);
-                if (onConfirm != null) onConfirm();
-              },
-              child: Text(AppLocalizations.of(context)!.confirm),
-            ),
-          ],
-        );
-      });
+    context: context,
+    builder: (context) {
+      return AlertDialog(
+        title: Text(
+          title!,
+          style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+        ),
+        content: Text(content!),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: Text(AppLocalizations.of(context)!.cancel),
+          ),
+          TextButton(
+            onPressed: () {
+              Navigator.pop(context);
+              if (onConfirm != null) onConfirm();
+            },
+            child: Text(AppLocalizations.of(context)!.confirm),
+          ),
+        ],
+      );
+    },
+  );
 }
 
 ///滚动条
@@ -303,14 +358,20 @@ ScrollController? trackingScroll(ScrollController? scrollController) {
   var trackingScroll = TrackingScrollController();
   double offset = 0;
   trackingScroll.addListener(() {
-    if (trackingScroll.offset < 30 && trackingScroll.offset < offset && scrollController.offset > 0) {
+    if (trackingScroll.offset < 30 &&
+        trackingScroll.offset < offset &&
+        scrollController.offset > 0) {
       //往上滚动
-      scrollController.jumpTo(scrollController.offset - max(offset - trackingScroll.offset, 15));
+      scrollController.jumpTo(
+        scrollController.offset - max(offset - trackingScroll.offset, 15),
+      );
     } else if (trackingScroll.offset > 0 &&
         trackingScroll.offset > offset &&
         scrollController.offset < scrollController.position.maxScrollExtent) {
       //往下滚动
-      scrollController.jumpTo(scrollController.offset + max(trackingScroll.offset - offset, 15));
+      scrollController.jumpTo(
+        scrollController.offset + max(trackingScroll.offset - offset, 15),
+      );
     }
 
     offset = trackingScroll.offset;

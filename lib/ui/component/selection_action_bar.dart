@@ -9,28 +9,51 @@ class SelectionActionBar extends StatelessWidget {
   final VoidCallback? onExport;
   final VoidCallback? onDelete;
 
-  const SelectionActionBar({super.key, required this.selectionController, this.onRepeat, this.onExport, this.onDelete});
+  const SelectionActionBar({
+    super.key,
+    required this.selectionController,
+    this.onRepeat,
+    this.onExport,
+    this.onDelete,
+  });
 
   @override
   Widget build(BuildContext context) {
     final localizations = AppLocalizations.of(context);
 
     return SizedBox(
-        height: 36,
-        child: Row(children: [
+      height: 36,
+      child: Row(
+        children: [
           const SizedBox(width: 8),
           _SelectLabel(selectionController: selectionController),
           const Spacer(),
           if (onRepeat != null)
-            IconButton(onPressed: onRepeat, tooltip: localizations?.repeat, icon: const Icon(Icons.repeat, size: 18)),
+            IconButton(
+              onPressed: onRepeat,
+              tooltip: localizations?.repeat,
+              icon: const Icon(Icons.repeat, size: 18),
+            ),
           if (onExport != null)
             IconButton(
-                onPressed: onExport, tooltip: localizations?.export, icon: const Icon(Icons.share_outlined, size: 18)),
+              onPressed: onExport,
+              tooltip: localizations?.export,
+              icon: const Icon(Icons.share_outlined, size: 18),
+            ),
           if (onDelete != null)
             IconButton(
-                onPressed: onDelete, tooltip: localizations?.delete, icon: const Icon(Icons.delete_outline, size: 18)),
-          IconButton(onPressed: _onCancel, tooltip: localizations?.cancel, icon: const Icon(Icons.close, size: 18)),
-        ]));
+              onPressed: onDelete,
+              tooltip: localizations?.delete,
+              icon: const Icon(Icons.delete_outline, size: 18),
+            ),
+          IconButton(
+            onPressed: _onCancel,
+            tooltip: localizations?.cancel,
+            icon: const Icon(Icons.close, size: 18),
+          ),
+        ],
+      ),
+    );
   }
 
   void _onCancel() {
@@ -74,9 +97,16 @@ class _SelectLabelState extends State<_SelectLabel> {
   Widget build(BuildContext context) {
     final selectLabel = AppLocalizations.of(context)?.selectAction;
     final selectedCount = widget.selectionController.selectedIds.length;
-    final label = (selectLabel == null || selectLabel.isEmpty) ? '$selectedCount' : '$selectedCount $selectLabel';
+    final label = (selectLabel == null || selectLabel.isEmpty)
+        ? '$selectedCount'
+        : '$selectedCount $selectLabel';
 
-    return Text(label, style: Theme.of(context).textTheme.bodyMedium, maxLines: 1, overflow: TextOverflow.ellipsis);
+    return Text(
+      label,
+      style: Theme.of(context).textTheme.bodyMedium,
+      maxLines: 1,
+      overflow: TextOverflow.ellipsis,
+    );
   }
 }
 

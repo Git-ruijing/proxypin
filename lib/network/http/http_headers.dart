@@ -74,7 +74,7 @@ class HttpHeaders {
     'X-Csrf-Token',
     'X-Request-ID',
     'X-Correlation-ID',
-    'Save-Data'
+    'Save-Data',
   ];
 
   static const Map<String, List<String>> commonHeaderValues = {
@@ -82,7 +82,7 @@ class HttpHeaders {
       'application/json, text/plain, */*',
       'application/xml, text/xml, */*',
       'text/html, application/xhtml+xml, */*',
-      '*/*'
+      '*/*',
     ],
     'Accept-Charset': ['utf-8, iso-8859-1;q=0.5', 'utf-8'],
     'Accept-Encoding': ['gzip, deflate, br', 'gzip, deflate'],
@@ -95,17 +95,18 @@ class HttpHeaders {
       'multipart/form-data',
       'text/plain',
       'text/html',
-      'application/xml'
+      'application/xml',
     ],
     'User-Agent': [
       'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/58.0.3029.110 Safari/537.36',
       'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.114 Safari/537.36',
       'Mozilla/5.0 (iPhone; CPU iPhone OS 14_6 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/14.0 Mobile/15E148 Safari/604.1',
-      'Mozilla/5.0 (Android 11; Mobile; rv:68.0) Gecko/68.0 Firefox/68.0'
+      'Mozilla/5.0 (Android 11; Mobile; rv:68.0) Gecko/68.0 Firefox/68.0',
     ],
   };
 
-  final LinkedHashMap<String, List<String>> _headers = LinkedHashMap<String, List<String>>();
+  final LinkedHashMap<String, List<String>> _headers =
+      LinkedHashMap<String, List<String>>();
 
   // 由小写标头名称键入的原始标头名称。
   final Map<String, String> _originalHeaderNames = {};
@@ -192,13 +193,16 @@ class HttpHeaders {
 
   int get contentLength => getInt(CONTENT_LENGTH) ?? 0;
 
-  set contentLength(int contentLength) => set(CONTENT_LENGTH, contentLength.toString());
+  set contentLength(int contentLength) =>
+      set(CONTENT_LENGTH, contentLength.toString());
 
-  String? get contentEncoding => get(HttpHeaders.CONTENT_ENCODING)?.toLowerCase();
+  String? get contentEncoding =>
+      get(HttpHeaders.CONTENT_ENCODING)?.toLowerCase();
 
   bool get isGzip => contentEncoding == "gzip";
 
-  bool get isChunked => get(HttpHeaders.TRANSFER_ENCODING)?.toLowerCase().trimLeft() == "chunked";
+  bool get isChunked =>
+      get(HttpHeaders.TRANSFER_ENCODING)?.toLowerCase().trimLeft() == "chunked";
 
   List<String> get cookies => getList(Cookie) ?? [];
 

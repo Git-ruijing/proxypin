@@ -32,8 +32,14 @@ class Har {
 
   static Map toHar(HttpRequest request) {
     Map har = {
-      "startedDateTime": request.requestTime.toUtc().toIso8601String(), // 请求发出的时间(ISO 8601)
-      "time": request.response?.responseTime.difference(request.requestTime).inMilliseconds ?? -1, // 请求耗时，单位毫秒
+      "startedDateTime": request.requestTime
+          .toUtc()
+          .toIso8601String(), // 请求发出的时间(ISO 8601)
+      "time":
+          request.response?.responseTime
+              .difference(request.requestTime)
+              .inMilliseconds ??
+          -1, // 请求耗时，单位毫秒
       "pageref": "ProxyPin", // 页面标识
       "_id": request.requestId, // 页面标识
       '_app': request.processInfo?.toJson(),
@@ -51,7 +57,11 @@ class Har {
       "cache": {},
       'timings': {
         'send': 0,
-        'wait': request.response?.responseTime.difference(request.requestTime).inMilliseconds ?? -1,
+        'wait':
+            request.response?.responseTime
+                .difference(request.requestTime)
+                .inMilliseconds ??
+            -1,
         'receive': 0,
       },
       'serverIPAddress': request.response?.remoteHost ?? '', // 服务器IP地址
@@ -60,12 +70,15 @@ class Har {
     har['response'] = {
       "status": request.response?.status.code ?? 0, // 响应状态码
       "statusText": request.response?.status.reasonPhrase ?? '', // 响应状态码描述
-      "httpVersion": request.response?.protocolVersion ?? 'HTTP/1.1', // HTTP协议版本
+      "httpVersion":
+          request.response?.protocolVersion ?? 'HTTP/1.1', // HTTP协议版本
       "cookies": [], // 响应携带的cookie
       "headers": _headers(request.response), // 响应头
       "content": {
         "size": request.response?.body?.length ?? -1, // 响应体大小
-        "mimeType": _getContentType(request.response?.headers.contentType), // 响应体类型
+        "mimeType": _getContentType(
+          request.response?.headers.contentType,
+        ), // 响应体类型
         "text": request.response?.bodyAsString ?? '', // 响应体内容
       },
       "redirectURL": '', // 重定向地址
@@ -104,15 +117,16 @@ class Har {
   static Map toHarResponse(HttpRequest request) {
     return {
       "startedDateTime": request.requestTime.toUtc().toIso8601String(),
-      "time": request.response?.responseTime.difference(request.requestTime).inMilliseconds ?? -1,
+      "time":
+          request.response?.responseTime
+              .difference(request.requestTime)
+              .inMilliseconds ??
+          -1,
       "pageref": "ProxyPin",
       "_id": request.requestId,
       "_phase": "response",
       '_app': request.processInfo?.toJson(),
-      "request": {
-        "method": request.method.name,
-        "url": request.requestUrl,
-      },
+      "request": {"method": request.method.name, "url": request.requestUrl},
       "response": {
         "status": request.response?.status.code ?? 0,
         "statusText": request.response?.status.reasonPhrase ?? '',
@@ -131,14 +145,21 @@ class Har {
       "cache": {},
       'timings': {
         'send': 0,
-        'wait': request.response?.responseTime.difference(request.requestTime).inMilliseconds ?? -1,
+        'wait':
+            request.response?.responseTime
+                .difference(request.requestTime)
+                .inMilliseconds ??
+            -1,
         'receive': 0,
       },
       'serverIPAddress': request.response?.remoteHost ?? '',
     };
   }
 
-  static Future<String> writeJson(List<HttpRequest> list, {String title = ''}) async {
+  static Future<String> writeJson(
+    List<HttpRequest> list, {
+    String title = '',
+  }) async {
     var entries = _entries(list);
     Map har = {};
     title = title.contains("ProxyPin") ? title : "[ProxyPin]$title";
@@ -149,16 +170,22 @@ class Har {
         {
           "title": title,
           "id": "ProxyPin",
-          "startedDateTime": list.firstOrNull?.requestTime.toUtc().toIso8601String(),
-          "pageTimings": {"onContentLoad": -1, "onLoad": -1}
-        }
+          "startedDateTime": list.firstOrNull?.requestTime
+              .toUtc()
+              .toIso8601String(),
+          "pageTimings": {"onContentLoad": -1, "onLoad": -1},
+        },
       ],
       "entries": entries,
     };
     return jsonEncode(har);
   }
 
-  static Future<File> writeFile(List<HttpRequest> list, File file, {String title = ''}) async {
+  static Future<File> writeFile(
+    List<HttpRequest> list,
+    File file, {
+    String title = '',
+  }) async {
     var json = await writeJson(list, title: title);
     return file.writeAsString(json);
   }
@@ -178,7 +205,9 @@ class Har {
 
   static List<Map> _headers(HttpMessage? message) {
     var headers = <Map<String, String>>[];
-    var contentEncodingName = message?.headers.getOriginalName(HttpHeaders.CONTENT_ENCODING);
+    var contentEncodingName = message?.headers.getOriginalName(
+      HttpHeaders.CONTENT_ENCODING,
+    );
 
     message?.headers.forEach((name, values) {
       for (var element in values) {
@@ -198,9 +227,16 @@ class Har {
     var method = request['method'];
     List headers = request['headers'];
 
-    var httpRequest = HttpRequest(HttpMethod.valueOf(method), request['url'], protocolVersion: request['httpVersion']);
-    if (har.containsKey("_id")) httpRequest.requestId = har['_id'].toString(); // 页面标识
-    httpRequest.processInfo = har['_app'] == null ? null : ProcessInfo.fromJson(har['_app']);
+    var httpRequest = HttpRequest(
+      HttpMethod.valueOf(method),
+      request['url'],
+      protocolVersion: request['httpVersion'],
+    );
+    if (har.containsKey("_id"))
+      httpRequest.requestId = har['_id'].toString(); // 页面标识
+    httpRequest.processInfo = har['_app'] == null
+        ? null
+        : ProcessInfo.fromJson(har['_app']);
     httpRequest.body = request['postData']?['text']?.toString().codeUnits;
     for (var element in headers) {
       httpRequest.headers.add(element['name'], element['value']);
@@ -208,8 +244,10 @@ class Har {
     var response = har['response'];
     HttpResponse? httpResponse;
     if (response != null && response['status'] != null) {
-      httpResponse = HttpResponse(HttpStatus.newStatus(response['status'], response['statusText']),
-          protocolVersion: response['httpVersion']);
+      httpResponse = HttpResponse(
+        HttpStatus.newStatus(response['status'], response['statusText']),
+        protocolVersion: response['httpVersion'],
+      );
       httpResponse.body = response['content']['text']?.toString().codeUnits;
       List responseHeaders = response['headers'];
       for (var element in responseHeaders) {
@@ -224,11 +262,14 @@ class Har {
 
     //请求时间
     if (har['startedDateTime'] != null) {
-      httpRequest.requestTime = DateTime.parse(har['startedDateTime']).toLocal();
+      httpRequest.requestTime = DateTime.parse(
+        har['startedDateTime'],
+      ).toLocal();
     }
     if (har['time'] != null) {
-      httpRequest.response?.responseTime =
-          httpRequest.requestTime.add(Duration(milliseconds: double.parse(har['time'].toString()).toInt()));
+      httpRequest.response?.responseTime = httpRequest.requestTime.add(
+        Duration(milliseconds: double.parse(har['time'].toString()).toInt()),
+      );
     }
     return httpRequest;
   }
@@ -245,16 +286,19 @@ class Har {
   }
 
   static Map<String, dynamic> _getPostData(HttpRequest request) {
-    if (request.contentType == ContentType.formData || request.contentType == ContentType.formUrl) {
+    if (request.contentType == ContentType.formData ||
+        request.contentType == ContentType.formUrl) {
       return {
         "mimeType": request.headers.contentType, // 请求体类型
-        if (request.body != null) "text": String.fromCharCodes(request.body!), // 请求体内容
+        if (request.body != null)
+          "text": String.fromCharCodes(request.body!), // 请求体内容
         "params": [], // 请求体内容
       };
     }
     return {
       "mimeType": request.headers.contentType, // 请求体类型
-      if (request.body != null) "text": String.fromCharCodes(request.body!), // 请求体内容
+      if (request.body != null)
+        "text": String.fromCharCodes(request.body!), // 请求体内容
     };
   }
 

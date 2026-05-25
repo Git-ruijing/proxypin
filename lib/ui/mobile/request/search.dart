@@ -56,59 +56,77 @@ class MobileSearchState extends State<MobileSearch> {
   @override
   Widget build(BuildContext context) {
     return Padding(
-        padding: const EdgeInsets.only(left: 0),
-        child: TextFormField(
-            controller: _keywordController,
-            textAlignVertical: TextAlignVertical.center,
-            cursorHeight: 20,
-            keyboardType: TextInputType.url,
-            onTapOutside: (event) => FocusManager.instance.primaryFocus?.unfocus(),
-            onChanged: (val) {
-              searchModel.keyword = val;
-              if (!_changing) {
-                _changing = true;
-                Future.delayed(const Duration(milliseconds: 500), () {
-                  _changing = false;
-                  if (!_searched) {
-                    searchModel.searchOptions = {Option.url, Option.method, Option.responseContentType};
-                  }
-                  widget.onSearch?.call(searchModel);
-                });
+      padding: const EdgeInsets.only(left: 0),
+      child: TextFormField(
+        controller: _keywordController,
+        textAlignVertical: TextAlignVertical.center,
+        cursorHeight: 20,
+        keyboardType: TextInputType.url,
+        onTapOutside: (event) => FocusManager.instance.primaryFocus?.unfocus(),
+        onChanged: (val) {
+          searchModel.keyword = val;
+          if (!_changing) {
+            _changing = true;
+            Future.delayed(const Duration(milliseconds: 500), () {
+              _changing = false;
+              if (!_searched) {
+                searchModel.searchOptions = {
+                  Option.url,
+                  Option.method,
+                  Option.responseContentType,
+                };
               }
-            },
-            decoration: InputDecoration(
-                border: InputBorder.none,
-                prefixIcon: InkWell(
-                    onTap: showSearch,
-                    child: Icon(Icons.search, color: _searched ? Colors.green : Theme.of(context).colorScheme.primary)),
-                hintText: 'Search')));
+              widget.onSearch?.call(searchModel);
+            });
+          }
+        },
+        decoration: InputDecoration(
+          border: InputBorder.none,
+          prefixIcon: InkWell(
+            onTap: showSearch,
+            child: Icon(
+              Icons.search,
+              color: _searched
+                  ? Colors.green
+                  : Theme.of(context).colorScheme.primary,
+            ),
+          ),
+          hintText: 'Search',
+        ),
+      ),
+    );
   }
 
   void showSearch() {
     showModalBottomSheet(
-        shape: const RoundedRectangleBorder(borderRadius: BorderRadius.vertical(top: Radius.circular(10))),
-        isScrollControlled: true,
-        context: context,
-        builder: (context) {
-          if (!_searched) {
-            searchModel.searchOptions = {Option.url};
-          }
-          return Padding(
-              padding: MediaQuery.of(context).viewInsets,
-              child: Container(
-                  constraints: BoxConstraints(minHeight: 450,maxHeight:  480),
-                  child: SearchConditions(
-                    padding: const EdgeInsets.only(left: 15, right: 15, top: 10),
-                    searchModel: searchModel,
-                    onSearch: (val) {
-                      setState(() {
-                        searchModel = val;
-                        _searched = searchModel.isNotEmpty;
-                        _keywordController.text = searchModel.keyword ?? '';
-                        widget.onSearch?.call(searchModel);
-                      });
-                    },
-                  )));
-        });
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(10)),
+      ),
+      isScrollControlled: true,
+      context: context,
+      builder: (context) {
+        if (!_searched) {
+          searchModel.searchOptions = {Option.url};
+        }
+        return Padding(
+          padding: MediaQuery.of(context).viewInsets,
+          child: Container(
+            constraints: BoxConstraints(minHeight: 450, maxHeight: 480),
+            child: SearchConditions(
+              padding: const EdgeInsets.only(left: 15, right: 15, top: 10),
+              searchModel: searchModel,
+              onSearch: (val) {
+                setState(() {
+                  searchModel = val;
+                  _searched = searchModel.isNotEmpty;
+                  _keywordController.text = searchModel.keyword ?? '';
+                  widget.onSearch?.call(searchModel);
+                });
+              },
+            ),
+          ),
+        );
+      },
+    );
   }
 }

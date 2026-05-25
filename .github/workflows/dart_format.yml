@@ -1,0 +1,43 @@
+name: Dart Format
+
+on:
+  workflow_dispatch:
+
+jobs:
+  format:
+    name: Format Dart Code
+    runs-on: ubuntu-latest
+
+    permissions:
+      contents: write
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          flutter-version: '3.44.0'
+          channel: 'stable'
+
+      - name: Format code
+        run: dart format .
+
+      - name: Check if formatting changed files
+        id: format-check
+        run: |
+          if git diff --quiet; then
+            echo "formatted=false" >> $GITHUB_OUTPUT
+          else
+            echo "formatted=true" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Commit and push formatting changes
+        if: steps.format-check.outputs.formatted == 'true'
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add .
+          git commit -m "chore: apply dart formatting"
+          git push

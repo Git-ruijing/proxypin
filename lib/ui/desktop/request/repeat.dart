@@ -29,7 +29,11 @@ class CustomRepeatDialog extends StatefulWidget {
   final Function onRepeat;
   final SharedPreferences prefs;
 
-  const CustomRepeatDialog({super.key, required this.onRepeat, required this.prefs});
+  const CustomRepeatDialog({
+    super.key,
+    required this.onRepeat,
+    required this.prefs,
+  });
 
   @override
   State<StatefulWidget> createState() => _CustomRepeatState();
@@ -76,7 +80,6 @@ class _CustomRepeatState extends State<CustomRepeatDialog> {
     super.dispose();
   }
 
-
   String _two(int v) => v.toString().padLeft(2, '0');
 
   @override
@@ -84,112 +87,174 @@ class _CustomRepeatState extends State<CustomRepeatDialog> {
     final formKey = GlobalKey<FormState>();
 
     return AlertDialog(
-      title: Text(localizations.customRepeat, style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w500)),
+      title: Text(
+        localizations.customRepeat,
+        style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w500),
+      ),
       content: SingleChildScrollView(
-          child: Form(
-              key: formKey,
-              child: ListBody(
-                children: <Widget>[
-                  field(localizations.repeatCount, textField(count)), //次数
-                  const SizedBox(height: 8),
-                  Row(
-                    //间隔
+        child: Form(
+          key: formKey,
+          child: ListBody(
+            children: <Widget>[
+              field(localizations.repeatCount, textField(count)), //次数
+              const SizedBox(height: 8),
+              Row(
+                //间隔
+                children: [
+                  SizedBox(
+                    width: isEN ? 100 : 90,
+                    child: Text(localizations.repeatInterval),
+                  ),
+                  const SizedBox(height: 5),
+                  Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      SizedBox(width: isEN ? 100 : 90, child: Text(localizations.repeatInterval)),
-                      const SizedBox(height: 5),
-                      Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-                        //Checkbox样式 固定和随机
-                        Row(children: [
+                      //Checkbox样式 固定和随机
+                      Row(
+                        children: [
                           SizedBox(
-                              width: isEN ? 107 : 84,
-                              height: 35,
-                              child: Transform.scale(
-                                  scale: 0.83,
-                                  child: CheckboxListTile(
-                                      contentPadding: EdgeInsets.zero,
-                                      title: Text("${localizations.fixed}:"),
-                                      value: fixed,
-                                      dense: true,
-                                      onChanged: (val) {
-                                        setState(() {
-                                          fixed = true;
-                                        });
-                                      }))),
-                          SizedBox(width: 152, height: 32, child: textField(interval, style: const TextStyle(fontSize: 13))),
-                        ]),
-                        Row(children: [
+                            width: isEN ? 107 : 84,
+                            height: 35,
+                            child: Transform.scale(
+                              scale: 0.83,
+                              child: CheckboxListTile(
+                                contentPadding: EdgeInsets.zero,
+                                title: Text("${localizations.fixed}:"),
+                                value: fixed,
+                                dense: true,
+                                onChanged: (val) {
+                                  setState(() {
+                                    fixed = true;
+                                  });
+                                },
+                              ),
+                            ),
+                          ),
                           SizedBox(
-                              width: isEN ? 107 : 84,
-                              height: 35,
-                              child: Transform.scale(
-                                  scale: 0.83,
-                                  child: CheckboxListTile(
-                                      contentPadding: EdgeInsets.zero,
-                                      title: Text("${localizations.random}:"),
-                                      value: !fixed,
-                                      dense: true,
-                                      onChanged: (val) {
-                                        setState(() {
-                                          fixed = false;
-                                        });
-                                      }))),
-                          SizedBox(width: 65, height: 32, child: textField(minInterval, style: const TextStyle(fontSize: 13))),
-                          const Padding(padding: EdgeInsets.symmetric(horizontal: 5), child: Text("-")),
-                          SizedBox(width: 70, height: 32, child: textField(maxInterval, style: const TextStyle(fontSize: 13))),
-                        ]),
-                      ]),
+                            width: 152,
+                            height: 32,
+                            child: textField(
+                              interval,
+                              style: const TextStyle(fontSize: 13),
+                            ),
+                          ),
+                        ],
+                      ),
+                      Row(
+                        children: [
+                          SizedBox(
+                            width: isEN ? 107 : 84,
+                            height: 35,
+                            child: Transform.scale(
+                              scale: 0.83,
+                              child: CheckboxListTile(
+                                contentPadding: EdgeInsets.zero,
+                                title: Text("${localizations.random}:"),
+                                value: !fixed,
+                                dense: true,
+                                onChanged: (val) {
+                                  setState(() {
+                                    fixed = false;
+                                  });
+                                },
+                              ),
+                            ),
+                          ),
+                          SizedBox(
+                            width: 65,
+                            height: 32,
+                            child: textField(
+                              minInterval,
+                              style: const TextStyle(fontSize: 13),
+                            ),
+                          ),
+                          const Padding(
+                            padding: EdgeInsets.symmetric(horizontal: 5),
+                            child: Text("-"),
+                          ),
+                          SizedBox(
+                            width: 70,
+                            height: 32,
+                            child: textField(
+                              maxInterval,
+                              style: const TextStyle(fontSize: 13),
+                            ),
+                          ),
+                        ],
+                      ),
                     ],
                   ),
-                  const SizedBox(height: 8),
-                  field(localizations.repeatDelay, textField(delay)), //延时
-                  const SizedBox(height: 8),
-                  field(
-                      localizations.scheduleTime,
-                      InkWell(
-                        onTap: _pickScheduleDateTime,
-                        child: Container(
-                          height: 42,
-                          padding: const EdgeInsets.only(left: 10, right: 10),
-                              decoration: BoxDecoration(
-                              border: Border.all(color: Theme.of(context).colorScheme.primary.withAlpha((0.5 * 255).round()), width: 1.0),
-                              borderRadius: BorderRadius.circular(4)),
-                          child: Row(
-                            children: [
-                              Text(time == null
-                                  ? ''
-                                  : "${time!.year}-${_two(time!.month)}-${_two(time!.day)} ${_two(time!.hour)}:${_two(time!.minute)}"),
-                              const Expanded(child: SizedBox()),
-                              if (time != null)
-                                InkWell(
-                                  onTap: () {
-                                    setState(() {
-                                      time = null;
-                                    });
-                                  },
-                                  child: const Icon(Icons.clear, size: 18),
-                                ),
-                              if (time == null) Icon(Icons.access_time, size: 18, color: Theme.of(context).colorScheme.primary),
-                            ],
-                          ),
-                        ),
-                      )), //指定时间
-                  const SizedBox(height: 8),
-                  //记录选择
-                  Row(mainAxisAlignment: MainAxisAlignment.start, children: [
-                    Text(localizations.keepCustomSettings),
-                    Expanded(
-                      child: Checkbox(
-                        value: keepSetting,
-                        onChanged: (val) {
-                          setState(() {
-                            keepSetting = val == true;
-                          });
-                        },
-                      ),
-                    ),
-                  ])
                 ],
-              ))),
+              ),
+              const SizedBox(height: 8),
+              field(localizations.repeatDelay, textField(delay)), //延时
+              const SizedBox(height: 8),
+              field(
+                localizations.scheduleTime,
+                InkWell(
+                  onTap: _pickScheduleDateTime,
+                  child: Container(
+                    height: 42,
+                    padding: const EdgeInsets.only(left: 10, right: 10),
+                    decoration: BoxDecoration(
+                      border: Border.all(
+                        color: Theme.of(
+                          context,
+                        ).colorScheme.primary.withAlpha((0.5 * 255).round()),
+                        width: 1.0,
+                      ),
+                      borderRadius: BorderRadius.circular(4),
+                    ),
+                    child: Row(
+                      children: [
+                        Text(
+                          time == null
+                              ? ''
+                              : "${time!.year}-${_two(time!.month)}-${_two(time!.day)} ${_two(time!.hour)}:${_two(time!.minute)}",
+                        ),
+                        const Expanded(child: SizedBox()),
+                        if (time != null)
+                          InkWell(
+                            onTap: () {
+                              setState(() {
+                                time = null;
+                              });
+                            },
+                            child: const Icon(Icons.clear, size: 18),
+                          ),
+                        if (time == null)
+                          Icon(
+                            Icons.access_time,
+                            size: 18,
+                            color: Theme.of(context).colorScheme.primary,
+                          ),
+                      ],
+                    ),
+                  ),
+                ),
+              ), //指定时间
+              const SizedBox(height: 8),
+              //记录选择
+              Row(
+                mainAxisAlignment: MainAxisAlignment.start,
+                children: [
+                  Text(localizations.keepCustomSettings),
+                  Expanded(
+                    child: Checkbox(
+                      value: keepSetting,
+                      onChanged: (val) {
+                        setState(() {
+                          keepSetting = val == true;
+                        });
+                      },
+                    ),
+                  ),
+                ],
+              ),
+            ],
+          ),
+        ),
+      ),
       actions: <Widget>[
         TextButton(
           child: Text(localizations.cancel),
@@ -203,15 +268,16 @@ class _CustomRepeatState extends State<CustomRepeatDialog> {
             }
             if (keepSetting) {
               widget.prefs.setString(
-                  'customerRepeat',
-                  jsonEncode({
-                    'count': count.text,
-                    'interval': interval.text,
-                    'minInterval': minInterval.text,
-                    'maxInterval': maxInterval.text,
-                    'delay': delay.text,
-                    'fixed': fixed
-                  }));
+                'customerRepeat',
+                jsonEncode({
+                  'count': count.text,
+                  'interval': interval.text,
+                  'minInterval': minInterval.text,
+                  'maxInterval': maxInterval.text,
+                  'delay': delay.text,
+                  'fixed': fixed,
+                }),
+              );
             } else {
               widget.prefs.remove('customerRepeat');
             }
@@ -226,7 +292,10 @@ class _CustomRepeatState extends State<CustomRepeatDialog> {
             }
 
             //定时发起请求
-            Future.delayed(Duration(milliseconds: delayValue), () => submitTask(int.parse(count.text)));
+            Future.delayed(
+              Duration(milliseconds: delayValue),
+              () => submitTask(int.parse(count.text)),
+            );
             Navigator.of(context).pop();
           },
         ),
@@ -260,40 +329,55 @@ class _CustomRepeatState extends State<CustomRepeatDialog> {
     DateTime now = DateTime.now();
 
     // Normalize minimum date to minute precision to avoid millisecond/second mismatches
-    DateTime minDate = DateTime(now.year, now.month, now.day, now.hour, now.minute);
+    DateTime minDate = DateTime(
+      now.year,
+      now.month,
+      now.day,
+      now.hour,
+      now.minute,
+    );
     DateTime initial = time ?? minDate;
     if (initial.isBefore(minDate)) initial = minDate;
 
     DateTime temp = initial;
 
     var date = await showDialog<DateTime>(
-        context: context,
-        builder: (BuildContext context) {
-          return AlertDialog(
-            contentPadding: const EdgeInsets.all(16.0),
-            content: SizedBox(
-              height: 250,
-              width: 300,
-              child: CupertinoTheme(
-                data: CupertinoThemeData(brightness: Theme.of(context).brightness),
-                child: CupertinoDatePicker(
-                  mode: CupertinoDatePickerMode.dateAndTime,
-                  initialDateTime: initial,
-                  minimumDate: minDate,
-                  maximumDate: minDate.add(const Duration(days: 365)),
-                  use24hFormat: true,
-                  onDateTimeChanged: (val) {
-                    temp = val;
-                  },
-                ),
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          contentPadding: const EdgeInsets.all(16.0),
+          content: SizedBox(
+            height: 250,
+            width: 300,
+            child: CupertinoTheme(
+              data: CupertinoThemeData(
+                brightness: Theme.of(context).brightness,
+              ),
+              child: CupertinoDatePicker(
+                mode: CupertinoDatePickerMode.dateAndTime,
+                initialDateTime: initial,
+                minimumDate: minDate,
+                maximumDate: minDate.add(const Duration(days: 365)),
+                use24hFormat: true,
+                onDateTimeChanged: (val) {
+                  temp = val;
+                },
               ),
             ),
-            actions: [
-              TextButton(onPressed: () => Navigator.pop(context), child: Text(localizations.cancel)),
-              TextButton(onPressed: () => Navigator.pop(context, temp), child: Text(localizations.done)),
-            ],
-          );
-        });
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(context),
+              child: Text(localizations.cancel),
+            ),
+            TextButton(
+              onPressed: () => Navigator.pop(context, temp),
+              child: Text(localizations.done),
+            ),
+          ],
+        );
+      },
+    );
 
     if (date != null) {
       setState(() {
@@ -322,19 +406,39 @@ class _CustomRepeatState extends State<CustomRepeatDialog> {
     Color color = Theme.of(context).colorScheme.primary;
 
     return ConstrainedBox(
-        constraints: const BoxConstraints(maxHeight: 42),
-        child: TextFormField(
-          controller: controller,
-          keyboardType: TextInputType.number,
-          inputFormatters: [FilteringTextInputFormatter.digitsOnly],
-          style: style,
-          decoration: InputDecoration(
-              errorStyle: const TextStyle(height: 2, fontSize: 0),
-              contentPadding: const EdgeInsets.only(left: 10, right: 10, top: 5, bottom: 5),
-              border: OutlineInputBorder(borderSide: BorderSide(width: 1, color: color.withAlpha((0.3 * 255).round()))),
-              enabledBorder: OutlineInputBorder(borderSide: BorderSide(width: 1.5, color: color.withAlpha((0.5 * 255).round()))),
-              focusedBorder: OutlineInputBorder(borderSide: BorderSide(width: 2, color: color))),
-          validator: (val) => val == null || val.isEmpty ? localizations.cannotBeEmpty : null,
-        ));
+      constraints: const BoxConstraints(maxHeight: 42),
+      child: TextFormField(
+        controller: controller,
+        keyboardType: TextInputType.number,
+        inputFormatters: [FilteringTextInputFormatter.digitsOnly],
+        style: style,
+        decoration: InputDecoration(
+          errorStyle: const TextStyle(height: 2, fontSize: 0),
+          contentPadding: const EdgeInsets.only(
+            left: 10,
+            right: 10,
+            top: 5,
+            bottom: 5,
+          ),
+          border: OutlineInputBorder(
+            borderSide: BorderSide(
+              width: 1,
+              color: color.withAlpha((0.3 * 255).round()),
+            ),
+          ),
+          enabledBorder: OutlineInputBorder(
+            borderSide: BorderSide(
+              width: 1.5,
+              color: color.withAlpha((0.5 * 255).round()),
+            ),
+          ),
+          focusedBorder: OutlineInputBorder(
+            borderSide: BorderSide(width: 2, color: color),
+          ),
+        ),
+        validator: (val) =>
+            val == null || val.isEmpty ? localizations.cannotBeEmpty : null,
+      ),
+    );
   }
 }

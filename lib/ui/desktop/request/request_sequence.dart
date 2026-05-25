@@ -39,14 +39,15 @@ class RequestSequence extends StatefulWidget {
   final MultiSelectController selectionController;
   final RequestSelectionHandlers selectionHandlers;
 
-  const RequestSequence(
-      {super.key,
-      required this.container,
-      required this.proxyServer,
-      this.displayDomain = true,
-      this.onRemove,
-      required this.selectionController,
-      required this.selectionHandlers});
+  const RequestSequence({
+    super.key,
+    required this.container,
+    required this.proxyServer,
+    this.displayDomain = true,
+    this.onRemove,
+    required this.selectionController,
+    required this.selectionHandlers,
+  });
 
   @override
   State<StatefulWidget> createState() {
@@ -54,7 +55,8 @@ class RequestSequence extends StatefulWidget {
   }
 }
 
-class RequestSequenceState extends State<RequestSequence> with AutomaticKeepAliveClientMixin {
+class RequestSequenceState extends State<RequestSequence>
+    with AutomaticKeepAliveClientMixin {
   late Configuration configuration;
 
   ///显示的请求列表 最新的在前面
@@ -126,7 +128,11 @@ class RequestSequenceState extends State<RequestSequence> with AutomaticKeepAliv
 
     return ListView.separated(
       cacheExtent: 1000,
-      separatorBuilder: (context, index) => Divider(thickness: 0.2, height: 0, color: Theme.of(context).dividerColor),
+      separatorBuilder: (context, index) => Divider(
+        thickness: 0.2,
+        height: 0,
+        color: Theme.of(context).dividerColor,
+      ),
       itemCount: view.length,
       itemBuilder: (context, index) {
         final request = view.elementAt(index);
@@ -160,15 +166,21 @@ class RequestSequenceState extends State<RequestSequence> with AutomaticKeepAliv
     }
 
     return futureWidget(
-        processInfo.getIcon(),
-        (data) => data.isEmpty
-            ? const SizedBox()
-            : Image.memory(
-                data,
-                width: 23,
-                height: Platform.isWindows ? 16 : null,
-                errorBuilder: (BuildContext context, Object error, StackTrace? stackTrace) => const SizedBox(),
-              ));
+      processInfo.getIcon(),
+      (data) => data.isEmpty
+          ? const SizedBox()
+          : Image.memory(
+              data,
+              width: 23,
+              height: Platform.isWindows ? 16 : null,
+              errorBuilder:
+                  (
+                    BuildContext context,
+                    Object error,
+                    StackTrace? stackTrace,
+                  ) => const SizedBox(),
+            ),
+    );
   }
 
   ///高亮处理
@@ -179,7 +191,8 @@ class RequestSequenceState extends State<RequestSequence> with AutomaticKeepAliv
   ///添加请求
   void add(HttpRequest request) {
     ///过滤
-    if (searchModel?.isNotEmpty == true && !searchModel!.filter(request, request.response)) {
+    if (searchModel?.isNotEmpty == true &&
+        !searchModel!.filter(request, request.response)) {
       return;
     }
 
@@ -196,7 +209,9 @@ class RequestSequenceState extends State<RequestSequence> with AutomaticKeepAliv
 
   ///添加响应
   void addResponse(HttpResponse response) {
-    if (searchModel == null || searchModel!.isEmpty || response.request == null) {
+    if (searchModel == null ||
+        searchModel!.isEmpty ||
+        response.request == null) {
       changeState();
       return;
     }
@@ -217,9 +232,16 @@ class RequestSequenceState extends State<RequestSequence> with AutomaticKeepAliv
     if (searchModel.isEmpty) {
       view = Queue.of(widget.container.source.reversed);
     } else {
-      view = Queue.of(widget.container.where((it) => searchModel.filter(it, it.response)).toList().reversed);
+      view = Queue.of(
+        widget.container
+            .where((it) => searchModel.filter(it, it.response))
+            .toList()
+            .reversed,
+      );
     }
-    rowKeys.removeWhere((requestId, _) => !view.any((request) => request.requestId == requestId));
+    rowKeys.removeWhere(
+      (requestId, _) => !view.any((request) => request.requestId == requestId),
+    );
     selectionController.prune(view.map((request) => request.requestId));
     setState(() {});
   }
@@ -243,7 +265,10 @@ class RequestSequenceState extends State<RequestSequence> with AutomaticKeepAliv
 
   void selectRange(HttpRequest request) {
     setState(() {
-      selectionController.selectRange(view.map((item) => item.requestId).toList(), request.requestId);
+      selectionController.selectRange(
+        view.map((item) => item.requestId).toList(),
+        request.requestId,
+      );
     });
   }
 

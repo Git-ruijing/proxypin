@@ -37,13 +37,13 @@ abstract class GithubReleaseParser {
 
     var body = json['body']?.toString().split("English: ");
     return RemoteVersionEntity(
-        version: version,
-        buildNumber: buildNumber,
-        releaseTag: fullTag,
-        preRelease: preRelease,
-        url: json["html_url"] as String,
-        content: body?.last,
-        publishedAt: publishedAt);
+      version: version,
+      buildNumber: buildNumber,
+      releaseTag: fullTag,
+      preRelease: preRelease,
+      url: json["html_url"] as String,
+      content: body?.last,
+      publishedAt: publishedAt,
+    );
   }
 }
-

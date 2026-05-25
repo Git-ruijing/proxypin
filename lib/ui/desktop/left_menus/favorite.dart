@@ -71,39 +71,43 @@ class _FavoritesState extends State<Favorites> {
   @override
   Widget build(BuildContext context) {
     return FutureBuilder(
-        future: FavoriteStorage.favorites,
-        builder: (BuildContext context, AsyncSnapshot<Queue<Favorite>> snapshot) {
-          if (snapshot.hasData) {
-            var favorites = snapshot.data ?? Queue();
-            if (favorites.isEmpty) {
-              return Center(child: Text(localizations.emptyFavorite));
-            }
-
-            return ListView.separated(
-              itemCount: favorites.length + 1,
-              itemBuilder: (_, index) {
-                if (index == 0) {
-                  return _FavoritesActions(onChanged: () => setState(() {}));
-                }
-                var request = favorites.elementAt(index - 1);
-                return _FavoriteItem(
-                  request,
-                  index: index - 1,
-                  panel: widget.panel,
-                  onRemove: (Favorite favorite) {
-                    FavoriteStorage.removeFavorite(favorite);
-                    CustomToast.success(localizations.deleteFavoriteSuccess).show(context);
-                    setState(() {});
-                  },
-                );
-              },
-              separatorBuilder: (_, idx) =>
-                  idx == 0 ? const SizedBox(height: 4) : const Divider(height: 1, thickness: 0.3),
-            );
-          } else {
-            return const SizedBox();
+      future: FavoriteStorage.favorites,
+      builder: (BuildContext context, AsyncSnapshot<Queue<Favorite>> snapshot) {
+        if (snapshot.hasData) {
+          var favorites = snapshot.data ?? Queue();
+          if (favorites.isEmpty) {
+            return Center(child: Text(localizations.emptyFavorite));
           }
-        });
+
+          return ListView.separated(
+            itemCount: favorites.length + 1,
+            itemBuilder: (_, index) {
+              if (index == 0) {
+                return _FavoritesActions(onChanged: () => setState(() {}));
+              }
+              var request = favorites.elementAt(index - 1);
+              return _FavoriteItem(
+                request,
+                index: index - 1,
+                panel: widget.panel,
+                onRemove: (Favorite favorite) {
+                  FavoriteStorage.removeFavorite(favorite);
+                  CustomToast.success(
+                    localizations.deleteFavoriteSuccess,
+                  ).show(context);
+                  setState(() {});
+                },
+              );
+            },
+            separatorBuilder: (_, idx) => idx == 0
+                ? const SizedBox(height: 4)
+                : const Divider(height: 1, thickness: 0.3),
+          );
+        } else {
+          return const SizedBox();
+        }
+      },
+    );
   }
 }
 
@@ -113,7 +117,12 @@ class _FavoriteItem extends StatefulWidget {
   final NetworkTabController panel;
   final Function(Favorite favorite)? onRemove;
 
-  const _FavoriteItem(this.favorite, {required this.panel, required this.onRemove, required this.index});
+  const _FavoriteItem(
+    this.favorite, {
+    required this.panel,
+    required this.onRemove,
+    required this.index,
+  });
 
   @override
   State<_FavoriteItem> createState() => _FavoriteItemState();
@@ -133,36 +142,59 @@ class _FavoriteItemState extends State<_FavoriteItem> {
 
     var response = widget.favorite.response;
     var title = '${request.method.name} ${request.requestUrl}'.fixAutoLines();
-    var time = formatDate(request.requestTime, [mm, '-', d, ' ', HH, ':', nn, ':', ss]);
+    var time = formatDate(request.requestTime, [
+      mm,
+      '-',
+      d,
+      ' ',
+      HH,
+      ':',
+      nn,
+      ':',
+      ss,
+    ]);
 
     return GestureDetector(
-        onSecondaryLongPressDown: (details) => menu(details, request),
-        child: ListTile(
-            minLeadingWidth: 25,
-            leading: getIcon(response),
-            title: Text(widget.favorite.name ?? title, overflow: TextOverflow.ellipsis, maxLines: 2),
-            trailing: request.isWebSocket
-                ? Text(
-                    'WS',
-                    style: TextStyle(
-                      fontSize: 10,
-                      fontWeight: FontWeight.w600,
-                      color: Theme.of(context).colorScheme.primary,
-                    ),
-                  )
-                : null,
-            subtitle: Text.rich(
-                style: const TextStyle(fontSize: 12),
-                maxLines: 1,
-                TextSpan(children: [
-                  TextSpan(text: '#${widget.index} ', style: const TextStyle(color: Colors.teal)),
-                  TextSpan(
-                      text:
-                          '$time - [${response?.status.code ?? ''}]  ${response?.contentType.name.toUpperCase() ?? ''} ${response?.costTime() ?? ''} '),
-                ])),
-            selected: selected,
-            dense: true,
-            onTap: () => onClick(request)));
+      onSecondaryLongPressDown: (details) => menu(details, request),
+      child: ListTile(
+        minLeadingWidth: 25,
+        leading: getIcon(response),
+        title: Text(
+          widget.favorite.name ?? title,
+          overflow: TextOverflow.ellipsis,
+          maxLines: 2,
+        ),
+        trailing: request.isWebSocket
+            ? Text(
+                'WS',
+                style: TextStyle(
+                  fontSize: 10,
+                  fontWeight: FontWeight.w600,
+                  color: Theme.of(context).colorScheme.primary,
+                ),
+              )
+            : null,
+        subtitle: Text.rich(
+          style: const TextStyle(fontSize: 12),
+          maxLines: 1,
+          TextSpan(
+            children: [
+              TextSpan(
+                text: '#${widget.index} ',
+                style: const TextStyle(color: Colors.teal),
+              ),
+              TextSpan(
+                text:
+                    '$time - [${response?.status.code ?? ''}]  ${response?.contentType.name.toUpperCase() ?? ''} ${response?.costTime() ?? ''} ',
+              ),
+            ],
+          ),
+        ),
+        selected: selected,
+        dense: true,
+        onTap: () => onClick(request),
+      ),
+    );
   }
 
   ///右键菜单
@@ -171,37 +203,69 @@ class _FavoriteItemState extends State<_FavoriteItem> {
       context,
       details.globalPosition,
       items: <PopupMenuEntry>[
-        popupItem(localizations.copyUrl, onTap: () {
-          var requestUrl = request.requestUrl;
-          Clipboard.setData(ClipboardData(text: requestUrl))
-              .then((value) => FlutterToastr.show(localizations.copied, context));
-        }),
-        popupItem(localizations.copyRequestResponse, onTap: () {
-          Clipboard.setData(ClipboardData(text: copyRequest(request, request.response)))
-              .then((value) => FlutterToastr.show(localizations.copied, context));
-        }),
-        popupItem(localizations.copyCurl, onTap: () {
-          Clipboard.setData(ClipboardData(text: curlRequest(request)))
-              .then((value) => FlutterToastr.show(localizations.copied, context));
-        }),
-        popupItem(localizations.copyAsPythonRequests, onTap: () {
-          Clipboard.setData(ClipboardData(text: copyAsPythonRequests(request)))
-              .then((value) => FlutterToastr.show(localizations.copied, context));
-        }),
+        popupItem(
+          localizations.copyUrl,
+          onTap: () {
+            var requestUrl = request.requestUrl;
+            Clipboard.setData(ClipboardData(text: requestUrl)).then(
+              (value) => FlutterToastr.show(localizations.copied, context),
+            );
+          },
+        ),
+        popupItem(
+          localizations.copyRequestResponse,
+          onTap: () {
+            Clipboard.setData(
+              ClipboardData(text: copyRequest(request, request.response)),
+            ).then(
+              (value) => FlutterToastr.show(localizations.copied, context),
+            );
+          },
+        ),
+        popupItem(
+          localizations.copyCurl,
+          onTap: () {
+            Clipboard.setData(ClipboardData(text: curlRequest(request))).then(
+              (value) => FlutterToastr.show(localizations.copied, context),
+            );
+          },
+        ),
+        popupItem(
+          localizations.copyAsPythonRequests,
+          onTap: () {
+            Clipboard.setData(
+              ClipboardData(text: copyAsPythonRequests(request)),
+            ).then(
+              (value) => FlutterToastr.show(localizations.copied, context),
+            );
+          },
+        ),
         const PopupMenuDivider(height: 0.3),
         popupItem(localizations.repeat, onTap: () => onRepeat(request)),
-        popupItem(localizations.customRepeat, onTap: () => showCustomRepeat(request)),
-        popupItem(localizations.editRequest, onTap: () {
-          WidgetsBinding.instance.addPostFrameCallback((_) {
-            requestEdit(request);
-          });
-        }),
-        popupItem(localizations.requestRewrite, onTap: () => showRequestRewriteDialog(context, request)),
+        popupItem(
+          localizations.customRepeat,
+          onTap: () => showCustomRepeat(request),
+        ),
+        popupItem(
+          localizations.editRequest,
+          onTap: () {
+            WidgetsBinding.instance.addPostFrameCallback((_) {
+              requestEdit(request);
+            });
+          },
+        ),
+        popupItem(
+          localizations.requestRewrite,
+          onTap: () => showRequestRewriteDialog(context, request),
+        ),
         const PopupMenuDivider(height: 0.3),
         popupItem(localizations.rename, onTap: () => rename(widget.favorite)),
-        popupItem(localizations.deleteFavorite, onTap: () {
-          widget.onRemove?.call(widget.favorite);
-        })
+        popupItem(
+          localizations.deleteFavorite,
+          onTap: () {
+            widget.onRemove?.call(widget.favorite);
+          },
+        ),
       ],
     );
   }
@@ -212,10 +276,14 @@ class _FavoriteItemState extends State<_FavoriteItem> {
     if (!mounted) return;
 
     showDialog(
-        context: context,
-        builder: (BuildContext context) {
-          return CustomRepeatDialog(onRepeat: () => onRepeat(request), prefs: prefs);
-        });
+      context: context,
+      builder: (BuildContext context) {
+        return CustomRepeatDialog(
+          onRepeat: () => onRepeat(request),
+          prefs: prefs,
+        );
+      },
+    );
   }
 
   void onRepeat(HttpRequest request) {
@@ -224,8 +292,9 @@ class _FavoriteItemState extends State<_FavoriteItem> {
       return;
     }
 
-    var proxyInfo =
-        widget.panel.proxyServer!.isRunning ? ProxyInfo.of("127.0.0.1", widget.panel.proxyServer!.port) : null;
+    var proxyInfo = widget.panel.proxyServer!.isRunning
+        ? ProxyInfo.of("127.0.0.1", widget.panel.proxyServer!.port)
+        : null;
     HttpClients.proxyRequest(httpRequest, proxyInfo: proxyInfo);
 
     if (mounted) {
@@ -234,36 +303,44 @@ class _FavoriteItemState extends State<_FavoriteItem> {
   }
 
   PopupMenuItem popupItem(String text, {VoidCallback? onTap}) {
-    return CustomPopupMenuItem(height: 35, onTap: onTap, child: Text(text, style: const TextStyle(fontSize: 13)));
+    return CustomPopupMenuItem(
+      height: 35,
+      onTap: onTap,
+      child: Text(text, style: const TextStyle(fontSize: 13)),
+    );
   }
 
   //重命名
   void rename(Favorite item) {
     String? name = item.name;
     showDialog(
-        context: context,
-        builder: (context) {
-          return AlertDialog(
-            content: TextFormField(
-              initialValue: name,
-              decoration: InputDecoration(label: Text(localizations.name)),
-              onChanged: (val) => name = val,
+      context: context,
+      builder: (context) {
+        return AlertDialog(
+          content: TextFormField(
+            initialValue: name,
+            decoration: InputDecoration(label: Text(localizations.name)),
+            onChanged: (val) => name = val,
+          ),
+          actions: <Widget>[
+            TextButton(
+              onPressed: () => Navigator.pop(context),
+              child: Text(localizations.cancel),
             ),
-            actions: <Widget>[
-              TextButton(onPressed: () => Navigator.pop(context), child: Text(localizations.cancel)),
-              TextButton(
-                child: Text(localizations.save),
-                onPressed: () {
-                  Navigator.maybePop(context);
-                  setState(() {
-                    item.name = name?.isEmpty == true ? null : name;
-                    FavoriteStorage.flushConfig();
-                  });
-                },
-              ),
-            ],
-          );
-        });
+            TextButton(
+              child: Text(localizations.save),
+              onPressed: () {
+                Navigator.maybePop(context);
+                setState(() {
+                  item.name = name?.isEmpty == true ? null : name;
+                  FavoriteStorage.flushConfig();
+                });
+              },
+            ),
+          ],
+        );
+      },
+    );
   }
 
   ///请求编辑
@@ -274,12 +351,14 @@ class _FavoriteItemState extends State<_FavoriteItem> {
       ratio = WindowManager.instance.getDevicePixelRatio();
     }
 
-    final window = await DesktopMultiWindow.createWindow(jsonEncode(
-      {'name': 'RequestEditor', 'request': request},
-    ));
+    final window = await DesktopMultiWindow.createWindow(
+      jsonEncode({'name': 'RequestEditor', 'request': request}),
+    );
     window.setTitle(localizations.requestEdit);
     window
-      ..setFrame(const Offset(100, 100) & Size(960 * ratio, size.height * ratio))
+      ..setFrame(
+        const Offset(100, 100) & Size(960 * ratio, size.height * ratio),
+      )
       ..center()
       ..show();
   }
@@ -326,7 +405,9 @@ class _FavoritesActions extends StatelessWidget {
                   localizations.favorites,
                   style: TextStyle(
                     fontSize: 12.5,
-                    color: Theme.of(context).textTheme.bodyMedium?.color?.withOpacity(0.82),
+                    color: Theme.of(
+                      context,
+                    ).textTheme.bodyMedium?.color?.withOpacity(0.82),
                   ),
                 ),
                 const Spacer(),
@@ -345,34 +426,58 @@ class _FavoritesActions extends StatelessWidget {
                 IconButton(
                   tooltip: localizations.export,
                   padding: const EdgeInsets.symmetric(horizontal: 6),
-                  constraints: const BoxConstraints(minWidth: 34, minHeight: 34),
+                  constraints: const BoxConstraints(
+                    minWidth: 34,
+                    minHeight: 34,
+                  ),
                   icon: const Icon(Icons.upload_file, size: 18),
                   onPressed: () async {
-                    final path = await FilePicker.platform.saveFile(fileName: 'favorites.json');
+                    final path = await FilePicker.platform.saveFile(
+                      fileName: 'favorites.json',
+                    );
                     if (path == null) return;
                     await FavoriteStorage.exportToFile(path);
-                    if (context.mounted) CustomToast.success(localizations.exportSuccess).show(context);
+                    if (context.mounted)
+                      CustomToast.success(
+                        localizations.exportSuccess,
+                      ).show(context);
                     onChanged();
                   },
                 ),
                 const SizedBox(width: 3),
                 IconButton(
                   tooltip: localizations.import,
-                  constraints: const BoxConstraints(minWidth: 34, minHeight: 34),
-                  icon: const Icon(Icons.download_for_offline_outlined, size: 18),
+                  constraints: const BoxConstraints(
+                    minWidth: 34,
+                    minHeight: 34,
+                  ),
+                  icon: const Icon(
+                    Icons.download_for_offline_outlined,
+                    size: 18,
+                  ),
                   onPressed: () async {
-                    final result =
-                        await FilePicker.platform.pickFiles(type: FileType.custom, allowedExtensions: ['json', 'har']);
-                    final file = result?.files.isNotEmpty == true ? result!.files.first : null;
+                    final result = await FilePicker.platform.pickFiles(
+                      type: FileType.custom,
+                      allowedExtensions: ['json', 'har'],
+                    );
+                    final file = result?.files.isNotEmpty == true
+                        ? result!.files.first
+                        : null;
                     if (file?.path == null) return;
 
                     try {
                       await FavoriteStorage.importFromFile(file!.path!);
-                      if (context.mounted) CustomToast.success(localizations.importSuccess).show(context);
+                      if (context.mounted)
+                        CustomToast.success(
+                          localizations.importSuccess,
+                        ).show(context);
                       onChanged();
                     } catch (e) {
                       logger.e('Import favorites failed: $e');
-                      if (context.mounted) CustomToast.error('${localizations.importFailed}: $e').show(context);
+                      if (context.mounted)
+                        CustomToast.error(
+                          '${localizations.importFailed}: $e',
+                        ).show(context);
                     }
                   },
                 ),

@@ -33,7 +33,8 @@ class RequestMapManager {
   //添加规则
   Future<void> addRule(RequestMapRule rule, RequestMapItem item) async {
     final path = await homePath();
-    String itemPath = "${separator}request_map$separator${RandomUtil.randomString(16)}.json";
+    String itemPath =
+        "${separator}request_map$separator${RandomUtil.randomString(16)}.json";
     var file = File(path + itemPath);
     await file.create(recursive: true);
     final itemJson = jsonEncode(item.toJson());
@@ -103,7 +104,10 @@ class RequestMapManager {
     }
 
     if (Platform.isMacOS) {
-      _homePath = await DesktopMultiWindow.invokeMethod(0, "getApplicationSupportDirectory");
+      _homePath = await DesktopMultiWindow.invokeMethod(
+        0,
+        "getApplicationSupportDirectory",
+      );
     } else {
       _homePath = await getApplicationSupportDirectory().then((it) => it.path);
     }
@@ -158,8 +162,7 @@ class RequestMapManager {
 
 enum RequestMapType {
   local("本地"),
-  script("脚本"),
-  ;
+  script("脚本");
 
   //名称
   final String label;
@@ -167,7 +170,9 @@ enum RequestMapType {
   const RequestMapType(this.label);
 
   static RequestMapType fromName(String name) {
-    return values.firstWhere((element) => element.name == name || element.label == name);
+    return values.firstWhere(
+      (element) => element.name == name || element.label == name,
+    );
   }
 }
 
@@ -180,8 +185,13 @@ class RequestMapRule {
   RegExp _urlReg;
   String? itemPath;
 
-  RequestMapRule({this.enabled = true, this.name, required this.url, required this.type, this.itemPath})
-      : _urlReg = RegExp(url.replaceAll("*", ".*").replaceFirst('?', '\\?'));
+  RequestMapRule({
+    this.enabled = true,
+    this.name,
+    required this.url,
+    required this.type,
+    this.itemPath,
+  }) : _urlReg = RegExp(url.replaceAll("*", ".*").replaceFirst('?', '\\?'));
 
   bool match(String url) {
     if (enabled) {
@@ -193,11 +203,12 @@ class RequestMapRule {
   /// 从json中创建
   factory RequestMapRule.fromJson(Map<dynamic, dynamic> map) {
     return RequestMapRule(
-        enabled: map['enabled'] == true,
-        name: map['name'],
-        url: map['url'],
-        type: RequestMapType.fromName(map['type']),
-        itemPath: map['itemPath']);
+      enabled: map['enabled'] == true,
+      name: map['name'],
+      url: map['url'],
+      type: RequestMapType.fromName(map['type']),
+      itemPath: map['itemPath'],
+    );
   }
 
   void updatePathReg() {
@@ -228,7 +239,14 @@ class RequestMapItem {
 
   String? bodyFile;
 
-  RequestMapItem({this.script, this.statusCode, this.headers, this.body, this.bodyType, this.bodyFile});
+  RequestMapItem({
+    this.script,
+    this.statusCode,
+    this.headers,
+    this.body,
+    this.bodyType,
+    this.bodyFile,
+  });
 
   /// 从json中创建
   factory RequestMapItem.fromJson(Map<dynamic, dynamic> map) {

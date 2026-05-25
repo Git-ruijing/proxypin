@@ -14,12 +14,15 @@ import 'file.dart';
 import 'md5.dart';
 
 class JavaScriptEngine {
-  static Future<JavascriptRuntime> getJavaScript({Function(dynamic args)? consoleLog}) async {
+  static Future<JavascriptRuntime> getJavaScript({
+    Function(dynamic args)? consoleLog,
+  }) async {
     final JavascriptRuntime flutterJs = getJavascriptRuntime(xhr: false);
 
     // register channel callback
     if (consoleLog != null) {
-      final channelCallbacks = JavascriptRuntime.channelFunctionsRegistered[flutterJs.getEngineInstanceId()];
+      final channelCallbacks = JavascriptRuntime
+          .channelFunctionsRegistered[flutterJs.getEngineInstanceId()];
       channelCallbacks!["ConsoleLog"] = consoleLog;
     }
     Md5Bridge.registerMd5(flutterJs);
@@ -30,7 +33,10 @@ class JavaScriptEngine {
   }
 
   /// js结果转换
-  static Future<dynamic> jsResultResolve(JavascriptRuntime flutterJs, JsEvalResult jsResult) async {
+  static Future<dynamic> jsResultResolve(
+    JavascriptRuntime flutterJs,
+    JsEvalResult jsResult,
+  ) async {
     try {
       if (jsResult.isPromise || jsResult.rawResult is Future) {
         jsResult = await flutterJs.handlePromise(jsResult);
@@ -58,7 +64,9 @@ class JavaScriptEngine {
   }
 
   //转换js request
-  static Future<Map<String, dynamic>> convertJsRequest(HttpRequest request) async {
+  static Future<Map<String, dynamic>> convertJsRequest(
+    HttpRequest request,
+  ) async {
     var requestUri = request.requestUri;
     return {
       'host': requestUri?.host,
@@ -68,12 +76,14 @@ class JavaScriptEngine {
       'headers': request.headers.toMap(),
       'method': request.method.name,
       'body': await request.decodeBodyString(),
-      'rawBody': request.body
+      'rawBody': request.body,
     };
   }
 
   //转换js response
-  static Future<Map<String, dynamic>> convertJsResponse(HttpResponse response) async {
+  static Future<Map<String, dynamic>> convertJsResponse(
+    HttpResponse response,
+  ) async {
     dynamic body = await response.decodeBodyString();
     if (response.contentType.isBinary) {
       body = response.body;
@@ -83,20 +93,29 @@ class JavaScriptEngine {
       'headers': response.headers.toMap(),
       'statusCode': response.status.code,
       'body': body,
-      'rawBody': response.body
+      'rawBody': response.body,
     };
   }
 
   //http request
-  static HttpRequest convertHttpRequest(HttpRequest request, Map<dynamic, dynamic> map) {
+  static HttpRequest convertHttpRequest(
+    HttpRequest request,
+    Map<dynamic, dynamic> map,
+  ) {
     request.headers.clear();
-    request.method = http.HttpMethod.values.firstWhere((element) => element.name == map['method']);
+    request.method = http.HttpMethod.values.firstWhere(
+      (element) => element.name == map['method'],
+    );
     String query = UriUtils.mapToQuery(map['queries']);
 
-    var requestUri = request.requestUri!.replace(path: map['path'], query: query);
+    var requestUri = request.requestUri!.replace(
+      path: map['path'],
+      query: query,
+    );
     if (requestUri.isScheme('https')) {
       var query = requestUri.query;
-      request.uri = requestUri.path + (query.isNotEmpty ? '?${requestUri.query}' : '');
+      request.uri =
+          requestUri.path + (query.isNotEmpty ? '?${requestUri.query}' : '');
     } else {
       request.uri = requestUri.toString();
     }
@@ -119,19 +138,26 @@ class JavaScriptEngine {
 
     request.body = map['body']?.toString().codeUnits;
 
-    if (request.body != null && (request.charset == 'utf-8' || request.charset == 'utf8')) {
+    if (request.body != null &&
+        (request.charset == 'utf-8' || request.charset == 'utf8')) {
       request.body = utf8.encode(map['body'].toString());
     }
     return request;
   }
 
   //http response
-  static HttpResponse convertHttpResponse(HttpResponse response, Map<dynamic, dynamic> map) {
+  static HttpResponse convertHttpResponse(
+    HttpResponse response,
+    Map<dynamic, dynamic> map,
+  ) {
     response.headers.clear();
     response.status = HttpStatus.valueOf(map['statusCode']);
     map['headers'].forEach((key, value) {
       if (value is List) {
-        response.headers.addValues(key, value.map((e) => e.toString()).toList());
+        response.headers.addValues(
+          key,
+          value.map((e) => e.toString()).toList(),
+        );
         return;
       }
 
@@ -147,7 +173,8 @@ class JavaScriptEngine {
     }
 
     response.body = map['body']?.toString().codeUnits;
-    if (response.body != null && (response.charset == 'utf-8' || response.charset == 'utf8')) {
+    if (response.body != null &&
+        (response.charset == 'utf-8' || response.charset == 'utf8')) {
       response.body = utf8.encode(map['body'].toString());
     }
 

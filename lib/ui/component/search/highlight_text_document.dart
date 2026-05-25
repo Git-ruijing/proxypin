@@ -14,8 +14,9 @@ class HighlightTextDocument {
   final List<List<HighlightSearchMatch>> lineMatches;
   final List<int> matchLineIndexes;
   final int currentMatchIndex;
+  final Map<int, GlobalKey> matchKeys;
 
-  const HighlightTextDocument._({
+  HighlightTextDocument._({
     required this.text,
     required this.rootStyle,
     required this.segments,
@@ -24,6 +25,7 @@ class HighlightTextDocument {
     required this.lineMatches,
     required this.matchLineIndexes,
     required this.currentMatchIndex,
+    required this.matchKeys,
   });
 
   factory HighlightTextDocument.create(
@@ -34,12 +36,23 @@ class HighlightTextDocument {
     required SearchTextController searchController,
   }) {
     final rootStyle = highlightRootStyle(context, style);
-    final segments = buildHighlightBaseSegments(context, text, language: language, style: style);
+    final segments = buildHighlightBaseSegments(
+      context,
+      text,
+      language: language,
+      style: style,
+    );
     final matches = buildSearchMatches(text, searchController);
     final lines = buildHighlightDocumentLines(segments);
     final groupedMatches = _groupMatchesByLine(lines, matches);
-    final currentMatchIndex = matches.isEmpty ? -1 : searchController.currentMatchIndex.value.clamp(0, matches.length - 1);
-    final matchLineIndexes = _buildMatchLineIndexes(groupedMatches, matches.length);
+    final currentMatchIndex = matches.isEmpty
+        ? -1
+        : searchController.currentMatchIndex.value.clamp(0, matches.length - 1);
+    final matchLineIndexes = _buildMatchLineIndexes(
+      groupedMatches,
+      matches.length,
+    );
+    final matchKeys = <int, GlobalKey>{};
 
     return HighlightTextDocument._(
       text: text,
@@ -50,6 +63,7 @@ class HighlightTextDocument {
       lineMatches: groupedMatches,
       matchLineIndexes: matchLineIndexes,
       currentMatchIndex: currentMatchIndex,
+      matchKeys: matchKeys,
     );
   }
 
@@ -91,12 +105,18 @@ class HighlightTextDocument {
       var localStart = 0;
 
       while (localStart < segment.text.length) {
-        while (matchIndex < matchesForLine.length && matchesForLine[matchIndex].end <= segmentStart + localStart) {
+        while (matchIndex < matchesForLine.length &&
+            matchesForLine[matchIndex].end <= segmentStart + localStart) {
           matchIndex++;
         }
 
-        if (matchIndex >= matchesForLine.length || matchesForLine[matchIndex].start >= segmentEnd) {
-          _appendTextSpan(spans, segment.text.substring(localStart), segment.style);
+        if (matchIndex >= matchesForLine.length ||
+            matchesForLine[matchIndex].start >= segmentEnd) {
+          _appendTextSpan(
+            spans,
+            segment.text.substring(localStart),
+            segment.style,
+          );
           break;
         }
 
@@ -105,23 +125,44 @@ class HighlightTextDocument {
 
         if (match.start > absoluteStart) {
           final plainEnd = match.start - segmentStart;
-          _appendTextSpan(spans, segment.text.substring(localStart, plainEnd), segment.style);
+          _appendTextSpan(
+            spans,
+            segment.text.substring(localStart, plainEnd),
+            segment.style,
+          );
           localStart = plainEnd;
           continue;
         }
 
         final overlapEnd = match.end < segmentEnd ? match.end : segmentEnd;
-        final matchText = segment.text.substring(localStart, overlapEnd - segmentStart);
+        final matchText = segment.text.substring(
+          localStart,
+          overlapEnd - segmentStart,
+        );
         final isCurrentMatch = match.index == currentMatchIndex;
 
         // 复用样式计算，减少对象创建
         final baseStyle = segment.style ?? const TextStyle();
         final highlightedStyle = baseStyle.copyWith(
-          backgroundColor: isCurrentMatch ? colorScheme.primary : colorScheme.inversePrimary,
+          backgroundColor: isCurrentMatch
+              ? colorScheme.primary
+              : colorScheme.inversePrimary,
           color: isCurrentMatch ? colorScheme.onPrimary : baseStyle.color,
         );
 
-        _appendTextSpan(spans, matchText, highlightedStyle);
+        if (isCurrentMatch) {
+          final key = GlobalKey();
+          matchKeys[match.index] = key;
+          spans.add(
+            WidgetSpan(
+              alignment: PlaceholderAlignment.middle,
+              baseline: TextBaseline.ideographic,
+              child: Text(matchText, key: key, style: highlightedStyle),
+            ),
+          );
+        } else {
+          _appendTextSpan(spans, matchText, highlightedStyle);
+        }
 
         localStart = overlapEnd - segmentStart;
       }
@@ -134,16 +175,30 @@ class HighlightTextDocument {
 
   List<InlineSpan> _plainLineSpans(HighlightDocumentLine line) {
     if (line.segments.isEmpty) {
-      return [const TextSpan(text: '', style: TextStyle(color: Colors.transparent))];
+      return [
+        const TextSpan(
+          text: '',
+          style: TextStyle(color: Colors.transparent),
+        ),
+      ];
     }
 
-    return [for (final segment in line.segments) TextSpan(text: segment.text, style: segment.style)];
+    return [
+      for (final segment in line.segments)
+        TextSpan(text: segment.text, style: segment.style),
+    ];
   }
 }
 
 TextStyle highlightRootStyle(BuildContext context, [TextStyle? style]) {
-  final theme = Theme.brightnessOf(context) == Brightness.light ? atomOneLightTheme : atomOneDarkTheme;
-  return _stripBackground((theme['root'] ?? const TextStyle(fontFamily: 'monospace', fontSize: 14.5)).merge(style)) ??
+  final theme = Theme.brightnessOf(context) == Brightness.light
+      ? atomOneLightTheme
+      : atomOneDarkTheme;
+  return _stripBackground(
+        (theme['root'] ??
+                const TextStyle(fontFamily: 'monospace', fontSize: 14.5))
+            .merge(style),
+      ) ??
       const TextStyle(fontFamily: 'monospace', fontSize: 14.5);
 }
 
@@ -158,17 +213,29 @@ List<HighlightStyledSegment> buildHighlightBaseSegments(
   }
 
   try {
-    final parsed = highlight.parse(text, language: language).nodes ?? const <Node>[];
-    final theme = Theme.brightnessOf(context) == Brightness.light ? atomOneLightTheme : atomOneDarkTheme;
+    final parsed =
+        highlight.parse(text, language: language).nodes ?? const <Node>[];
+    final theme = Theme.brightnessOf(context) == Brightness.light
+        ? atomOneLightTheme
+        : atomOneDarkTheme;
 
-    List<HighlightStyledSegment> convert(List<Node> nodes, [TextStyle? inheritedStyle]) {
+    List<HighlightStyledSegment> convert(
+      List<Node> nodes, [
+      TextStyle? inheritedStyle,
+    ]) {
       final spans = <HighlightStyledSegment>[];
       for (final node in nodes) {
-        final nodeStyle = node.className == null ? null : _stripBackground(theme[node.className!]);
-        final mergedStyle = _stripBackground(inheritedStyle?.merge(nodeStyle) ?? nodeStyle);
+        final nodeStyle = node.className == null
+            ? null
+            : _stripBackground(theme[node.className!]);
+        final mergedStyle = _stripBackground(
+          inheritedStyle?.merge(nodeStyle) ?? nodeStyle,
+        );
 
         if (node.value != null) {
-          spans.add(HighlightStyledSegment(text: node.value!, style: mergedStyle));
+          spans.add(
+            HighlightStyledSegment(text: node.value!, style: mergedStyle),
+          );
           continue;
         }
 
@@ -188,7 +255,10 @@ List<HighlightStyledSegment> buildHighlightBaseSegments(
   return [HighlightStyledSegment(text: text, style: _stripBackground(style))];
 }
 
-List<HighlightSearchMatch> buildSearchMatches(String text, SearchTextController searchController) {
+List<HighlightSearchMatch> buildSearchMatches(
+  String text,
+  SearchTextController searchController,
+) {
   if (!searchController.shouldSearch()) {
     return const [];
   }
@@ -201,7 +271,10 @@ List<HighlightSearchMatch> buildSearchMatches(String text, SearchTextController 
   try {
     final regex = searchController.value.isRegExp
         ? RegExp(pattern, caseSensitive: searchController.value.isCaseSensitive)
-        : RegExp(RegExp.escape(pattern), caseSensitive: searchController.value.isCaseSensitive);
+        : RegExp(
+            RegExp.escape(pattern),
+            caseSensitive: searchController.value.isCaseSensitive,
+          );
 
     final matches = <HighlightSearchMatch>[];
     var index = 0;
@@ -209,7 +282,9 @@ List<HighlightSearchMatch> buildSearchMatches(String text, SearchTextController 
       if (match.start == match.end) {
         continue;
       }
-      matches.add(HighlightSearchMatch(index: index, start: match.start, end: match.end));
+      matches.add(
+        HighlightSearchMatch(index: index, start: match.start, end: match.end),
+      );
       index++;
     }
     return matches;
@@ -218,7 +293,9 @@ List<HighlightSearchMatch> buildSearchMatches(String text, SearchTextController 
   }
 }
 
-List<HighlightDocumentLine> buildHighlightDocumentLines(List<HighlightStyledSegment> segments) {
+List<HighlightDocumentLine> buildHighlightDocumentLines(
+  List<HighlightStyledSegment> segments,
+) {
   final lines = <HighlightDocumentLine>[];
   final currentSegments = <HighlightStyledSegment>[];
   var lineStart = 0;
@@ -226,12 +303,14 @@ List<HighlightDocumentLine> buildHighlightDocumentLines(List<HighlightStyledSegm
   var lineNumber = 0;
 
   void pushLine() {
-    lines.add(HighlightDocumentLine(
-      index: lineNumber++,
-      start: lineStart,
-      end: offset,
-      segments: List<HighlightStyledSegment>.from(currentSegments),
-    ));
+    lines.add(
+      HighlightDocumentLine(
+        index: lineNumber++,
+        start: lineStart,
+        end: offset,
+        segments: List<HighlightStyledSegment>.from(currentSegments),
+      ),
+    );
     currentSegments.clear();
   }
 
@@ -240,7 +319,9 @@ List<HighlightDocumentLine> buildHighlightDocumentLines(List<HighlightStyledSegm
     for (var i = 0; i < parts.length; i++) {
       final part = parts[i];
       if (part.isNotEmpty) {
-        currentSegments.add(HighlightStyledSegment(text: part, style: segment.style));
+        currentSegments.add(
+          HighlightStyledSegment(text: part, style: segment.style),
+        );
       }
       offset += part.length;
 
@@ -259,7 +340,11 @@ List<HighlightDocumentLine> buildHighlightDocumentLines(List<HighlightStyledSegm
   return lines;
 }
 
-void _appendTextSpan(List<InlineSpan> spans, String value, TextStyle? textStyle) {
+void _appendTextSpan(
+  List<InlineSpan> spans,
+  String value,
+  TextStyle? textStyle,
+) {
   if (value.isEmpty) {
     return;
   }
@@ -295,7 +380,10 @@ List<List<HighlightSearchMatch>> _groupMatchesByLine(
   return grouped;
 }
 
-List<int> _buildMatchLineIndexes(List<List<HighlightSearchMatch>> groupedMatches, int matchCount) {
+List<int> _buildMatchLineIndexes(
+  List<List<HighlightSearchMatch>> groupedMatches,
+  int matchCount,
+) {
   final indexes = List.filled(matchCount, 0);
   for (var lineIndex = 0; lineIndex < groupedMatches.length; lineIndex++) {
     for (final match in groupedMatches[lineIndex]) {
@@ -319,7 +407,11 @@ class HighlightSearchMatch {
   final int start;
   final int end;
 
-  const HighlightSearchMatch({required this.index, required this.start, required this.end});
+  const HighlightSearchMatch({
+    required this.index,
+    required this.start,
+    required this.end,
+  });
 }
 
 class HighlightDocumentLine {

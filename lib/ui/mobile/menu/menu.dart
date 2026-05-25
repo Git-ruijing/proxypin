@@ -33,7 +33,11 @@ class MoreMenu extends StatelessWidget {
   final ProxyServer proxyServer;
   final ValueNotifier<RemoteModel> remoteDevice;
 
-  const MoreMenu({super.key, required this.proxyServer, required this.remoteDevice});
+  const MoreMenu({
+    super.key,
+    required this.proxyServer,
+    required this.remoteDevice,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -44,110 +48,135 @@ class MoreMenu extends StatelessWidget {
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
       elevation: 8,
       color: Theme.of(context).colorScheme.surface,
-      child: const SizedBox(height: 38, width: 38, child: Icon(Icons.more_vert, size: 26)),
+      child: const SizedBox(
+        height: 38,
+        width: 38,
+        child: Icon(Icons.more_vert, size: 26),
+      ),
       itemBuilder: (BuildContext context) {
         return <PopupMenuEntry>[
           PopupMenuItem(
-              height: 32,
-              child: ListTile(
-                  dense: true,
-                  title: Text(localizations.httpsProxy),
-                  leading:
-                      proxyServer.enableSsl ? Icon(Icons.lock_open) : Icon(Icons.https_outlined, color: Colors.red),
-                  onTap: () {
-                    navigator(context, MobileSslWidget(proxyServer: proxyServer));
-                  })),
+            height: 32,
+            child: ListTile(
+              dense: true,
+              title: Text(localizations.httpsProxy),
+              leading: proxyServer.enableSsl
+                  ? Icon(Icons.lock_open)
+                  : Icon(Icons.https_outlined, color: Colors.red),
+              onTap: () {
+                navigator(context, MobileSslWidget(proxyServer: proxyServer));
+              },
+            ),
+          ),
           if (Platform.isAndroid)
             PopupMenuItem(
-                height: 32,
-                child: ListTile(
-                    dense: true,
-                    title: Text(localizations.appWhitelist),
-                    leading: const Icon(Icons.android_rounded),
-                    onTap: () {
-                      navigator(context, AppWhitelist(proxyServer: proxyServer));
-                    })),
-          PopupMenuItem(
               height: 32,
               child: ListTile(
                 dense: true,
-                leading: const Icon(Icons.devices),
-                title: Text(localizations.remoteDevice),
+                title: Text(localizations.appWhitelist),
+                leading: const Icon(Icons.android_rounded),
                 onTap: () {
-                  Navigator.maybePop(context);
-                  navigator(context, RemoteDevicePage(proxyServer: proxyServer, remoteDevice: remoteDevice));
+                  navigator(context, AppWhitelist(proxyServer: proxyServer));
                 },
-              )),
+              ),
+            ),
           PopupMenuItem(
-              height: 32,
-              child: ListTile(
-                dense: true,
-                leading: const Icon(Icons.cloud_upload_outlined),
-                title: Text(localizations.reportServers),
-                onTap: () {
-                  Navigator.maybePop(context);
-                  navigator(context, const ReportServersPageMobile());
-                },
-              )),
+            height: 32,
+            child: ListTile(
+              dense: true,
+              leading: const Icon(Icons.devices),
+              title: Text(localizations.remoteDevice),
+              onTap: () {
+                Navigator.maybePop(context);
+                navigator(
+                  context,
+                  RemoteDevicePage(
+                    proxyServer: proxyServer,
+                    remoteDevice: remoteDevice,
+                  ),
+                );
+              },
+            ),
+          ),
+          PopupMenuItem(
+            height: 32,
+            child: ListTile(
+              dense: true,
+              leading: const Icon(Icons.cloud_upload_outlined),
+              title: Text(localizations.reportServers),
+              onTap: () {
+                Navigator.maybePop(context);
+                navigator(context, const ReportServersPageMobile());
+              },
+            ),
+          ),
           const PopupMenuDivider(height: 0),
           PopupMenuItem(
-              height: 32,
-              child: ListTile(
-                dense: true,
-                leading: const Icon(Icons.search),
-                title: Text(localizations.search),
-                onTap: () async {
-                  await Navigator.maybePop(context);
+            height: 32,
+            child: ListTile(
+              dense: true,
+              leading: const Icon(Icons.search),
+              title: Text(localizations.search),
+              onTap: () async {
+                await Navigator.maybePop(context);
 
-                  MobileApp.searchStateKey.currentState?.showSearch();
-                },
-              )),
+                MobileApp.searchStateKey.currentState?.showSearch();
+              },
+            ),
+          ),
           PopupMenuItem(
-              height: 32,
-              child: ListTile(
-                dense: true,
-                leading: const Icon(Icons.highlight_outlined),
-                title: Text('${localizations.keyword}${localizations.highlight}'),
-                onTap: () {
-                  navigator(context, const KeywordHighlight());
-                },
-              )),
+            height: 32,
+            child: ListTile(
+              dense: true,
+              leading: const Icon(Icons.highlight_outlined),
+              title: Text('${localizations.keyword}${localizations.highlight}'),
+              onTap: () {
+                navigator(context, const KeywordHighlight());
+              },
+            ),
+          ),
           PopupMenuItem(
-              height: 32,
-              child: ListTile(
-                dense: true,
-                leading: const Icon(Icons.share_outlined),
-                title: Text(localizations.viewExport),
-                onTap: () async {
-                  Navigator.maybePop(context);
-                  var name = formatDate(DateTime.now(), [m, '-', d, ' ', HH, ':', nn, ':', ss]);
-                  MobileApp.requestStateKey.currentState?.export(context, 'ProxyPin$name');
-                },
-              )),
+            height: 32,
+            child: ListTile(
+              dense: true,
+              leading: const Icon(Icons.share_outlined),
+              title: Text(localizations.viewExport),
+              onTap: () async {
+                Navigator.maybePop(context);
+                var name = formatDate(DateTime.now(), [
+                  m,
+                  '-',
+                  d,
+                  ' ',
+                  HH,
+                  ':',
+                  nn,
+                  ':',
+                  ss,
+                ]);
+                MobileApp.requestStateKey.currentState?.export(
+                  context,
+                  'ProxyPin$name',
+                );
+              },
+            ),
+          ),
           PopupMenuItem(
-              height: 32,
-              child: ListTile(
-                dense: true,
-                leading: const Icon(Icons.checklist_rtl_outlined),
-                title: Text(localizations.selectAction),
-                onTap: () async {
-                  await Navigator.maybePop(context);
-                  MobileApp.multiSelectController.toggleSelectionMode();
-                },
-              )),
-          PopupMenuItem(
-              height: 32,
-              child: ListTile(
-                dense: true,
-                leading: const Icon(Icons.sort, size: 16),
-                title: Text(sortDesc ? localizations.timeAsc : localizations.timeDesc),
-                onTap: () async {
-                  await Navigator.maybePop(context);
+            height: 32,
+            child: ListTile(
+              dense: true,
+              leading: const Icon(Icons.sort, size: 16),
+              title: Text(
+                sortDesc ? localizations.timeAsc : localizations.timeDesc,
+              ),
+              onTap: () async {
+                await Navigator.maybePop(context);
 
-                  sortDesc = !sortDesc;
-                  MobileApp.requestStateKey.currentState?.sort(sortDesc);
-                },
-              )),
+                sortDesc = !sortDesc;
+                MobileApp.requestStateKey.currentState?.sort(sortDesc);
+              },
+            ),
+          ),
         ];
       },
     );
@@ -156,9 +185,9 @@ class MoreMenu extends StatelessWidget {
   void navigator(BuildContext context, Widget widget) async {
     await Navigator.maybePop(context);
     if (context.mounted) {
-      Navigator.of(context).push(
-        MaterialPageRoute(builder: (BuildContext context) => widget),
-      );
+      Navigator.of(
+        context,
+      ).push(MaterialPageRoute(builder: (BuildContext context) => widget));
     }
   }
 }
