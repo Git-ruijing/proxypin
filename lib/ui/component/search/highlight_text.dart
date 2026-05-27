@@ -74,11 +74,15 @@ class _HighlightTextWidgetState extends State<HighlightTextWidget> {
               constraints: BoxConstraints(maxHeight: maxScrollHeight),
               child: SingleChildScrollView(
                 controller: _scrollController,
-                child: SelectableText.rich(
-                  TextSpan(children: spans),
-                  showCursor: true,
-                  // selectionColor: highlightSelectionColor(context),
-                  contextMenuBuilder: widget.contextMenuBuilder,
+                child: SizedBox(
+                  // 强制固定宽度和 TextPainter 一致，避免布局不一致导致跳转位置错误
+                  width: constraints.maxWidth,
+                  child: SelectableText.rich(
+                    TextSpan(children: spans),
+                    showCursor: true,
+                    // selectionColor: highlightSelectionColor(context),
+                    contextMenuBuilder: widget.contextMenuBuilder,
+                  ),
                 ),
               ),
             );
@@ -110,7 +114,7 @@ class _HighlightTextWidgetState extends State<HighlightTextWidget> {
     );
 
     textPainter.layout(maxWidth: maxWidth);
-    debugPrint('[HighlightTextWidget] textPainter.size=${textPainter.size}');
+    debugPrint('[HighlightTextWidget] textPainter.size=${textPainter.size}, maxScrollExtent=${_scrollController.hasClients ? _scrollController.position.maxScrollExtent : -1}');
 
     // 使用 match.end 作为 extentOffset，避免空 selection 返回空列表
     final boxes = textPainter.getBoxesForSelection(
