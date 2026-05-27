@@ -192,8 +192,8 @@ class HighlightTextDocument {
           final key = matchKeyBuilder(match.index);
           if (key != null) {
             spans.add(WidgetSpan(
-              alignment: PlaceholderAlignment.middle,
-              baseline: TextBaseline.ideographic,
+              alignment: PlaceholderAlignment.baseline,
+              baseline: TextBaseline.alphabetic,
               child: SizedBox(key: key, width: 0, height: 0),
             ));
           }
