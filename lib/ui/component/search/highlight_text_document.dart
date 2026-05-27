@@ -7,6 +7,10 @@ import 'package:flutter/foundation.dart'; // 引入 debugPrint
 
 import 'search_controller.dart';
 
+/// 为匹配项构建 GlobalKey 的回调
+/// 返回 null 表示不插入 WidgetSpan
+typedef MatchKeyBuilder = GlobalKey? Function(int matchIndex);
+
 class HighlightTextDocument {
   final String text;
   final TextStyle? rootStyle;
@@ -114,10 +118,10 @@ class HighlightTextDocument {
     return matchLineIndexes[matchIndex];
   }
 
-  List<InlineSpan> buildAllSpans(BuildContext context) {
+  List<InlineSpan> buildAllSpans(BuildContext context, {MatchKeyBuilder? matchKeyBuilder}) {
     final spans = <InlineSpan>[];
     for (var i = 0; i < lines.length; i++) {
-      spans.addAll(buildSpansForLine(context, i));
+      spans.addAll(buildSpansForLine(context, i, matchKeyBuilder: matchKeyBuilder));
       if (i != lines.length - 1) {
         spans.add(TextSpan(text: '\n', style: rootStyle));
       }
@@ -135,7 +139,7 @@ class HighlightTextDocument {
     return spans;
   }
 
-  List<InlineSpan> buildSpansForLine(BuildContext context, int lineIndex) {
+  List<InlineSpan> buildSpansForLine(BuildContext context, int lineIndex, {MatchKeyBuilder? matchKeyBuilder}) {
     final line = lines[lineIndex];
     final matchesForLine = lineMatches[lineIndex];
     if (matchesForLine.isEmpty) {
@@ -182,6 +186,18 @@ class HighlightTextDocument {
           backgroundColor: isCurrentMatch ? colorScheme.primary : colorScheme.inversePrimary,
           color: isCurrentMatch ? colorScheme.onPrimary : baseStyle.color,
         );
+
+        // 只在当前匹配项处插入隐形 WidgetSpan，避免大量 WidgetSpan 影响布局性能
+        if (matchKeyBuilder != null && match.index == currentMatchIndex) {
+          final key = matchKeyBuilder(match.index);
+          if (key != null) {
+            spans.add(WidgetSpan(
+              alignment: PlaceholderAlignment.middle,
+              baseline: TextBaseline.ideographic,
+              child: SizedBox(key: key, width: 0, height: 0),
+            ));
+          }
+        }
 
         _appendTextSpan(spans, matchText, highlightedStyle);
 

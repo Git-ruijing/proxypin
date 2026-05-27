@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:math';
 
 import 'package:flutter/material.dart';
@@ -8,7 +9,8 @@ import 'package:proxypin/ui/component/search/search_field.dart';
 class SearchTextController extends ValueNotifier<SearchSettings>
     with WidgetsBindingObserver {
   SearchTextController() : super(SearchSettings.empty) {
-    patternController.addListener(_onPatternControllerChanged);
+    // 不再监听 patternController 的变化，输入时不触发 rebuild
+    // 搜索只在点击上一个/下一个按钮时触发
     WidgetsBinding.instance.addObserver(this); // 添加监听器
   }
 
@@ -32,17 +34,6 @@ class SearchTextController extends ValueNotifier<SearchSettings>
     value = value.copyWith(isRegExp: !value.isRegExp);
   }
 
-  void _onPatternControllerChanged() {
-    value = value.copyWith(
-      pattern: patternController.text,
-      currentMatchIndex: 0,
-    );
-    if (value.pattern.isEmpty) {
-      currentMatchIndex.value = 0;
-      totalMatchCount.value = 0;
-    }
-  }
-
   void updateMatchCount(int count) {
     totalMatchCount.value = count;
     if (count == 0) {
@@ -56,6 +47,22 @@ class SearchTextController extends ValueNotifier<SearchSettings>
   }
 
   void movePrevious() {
+    // 如果 pattern 有变化，先更新 value 触发 rebuild 执行搜索
+    if (value.pattern != patternController.text) {
+      value = value.copyWith(pattern: patternController.text, currentMatchIndex: 0);
+      // 等待 rebuild 完成后再切换
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (totalMatchCount.value == 0) return;
+        if (currentMatchIndex.value == 0) {
+          currentMatchIndex.value = totalMatchCount.value - 1;
+        } else {
+          currentMatchIndex.value--;
+        }
+        value = value.copyWith(currentMatchIndex: currentMatchIndex.value);
+      });
+      return;
+    }
+
     if (totalMatchCount.value == 0) return;
     if (currentMatchIndex.value == 0) {
       currentMatchIndex.value = totalMatchCount.value - 1;
@@ -66,6 +73,22 @@ class SearchTextController extends ValueNotifier<SearchSettings>
   }
 
   void moveNext() {
+    // 如果 pattern 有变化，先更新 value 触发 rebuild 执行搜索
+    if (value.pattern != patternController.text) {
+      value = value.copyWith(pattern: patternController.text, currentMatchIndex: 0);
+      // 等待 rebuild 完成后再切换
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (totalMatchCount.value == 0) return;
+        if (currentMatchIndex.value >= totalMatchCount.value - 1) {
+          currentMatchIndex.value = 0;
+        } else {
+          currentMatchIndex.value++;
+        }
+        value = value.copyWith(currentMatchIndex: currentMatchIndex.value);
+      });
+      return;
+    }
+
     if (totalMatchCount.value == 0) return;
     if (currentMatchIndex.value >= totalMatchCount.value - 1) {
       currentMatchIndex.value = 0;

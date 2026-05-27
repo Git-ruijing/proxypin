@@ -26,7 +26,7 @@ class HighlightTextWidget extends StatefulWidget {
 class _HighlightTextWidgetState extends State<HighlightTextWidget> {
   final ScrollController _scrollController = ScrollController();
   int _lastScrolledMatchIndex = -1;
-  BoxConstraints? _lastConstraints;
+  List<GlobalKey> _matchKeys = [];
 
   @override
   void dispose() {
@@ -46,7 +46,12 @@ class _HighlightTextWidgetState extends State<HighlightTextWidget> {
           language: widget.language,
           searchController: widget.searchController,
         );
-        final spans = document.buildAllSpans(context);
+        // 为每个匹配项创建 GlobalKey，用于 Scrollable.ensureVisible 定位
+        _matchKeys = List.generate(document.matches.length, (_) => GlobalKey());
+        final spans = document.buildAllSpans(
+          context,
+          matchKeyBuilder: (index) => _matchKeys[index],
+        );
 
         WidgetsBinding.instance.addPostFrameCallback((_) {
           widget.searchController.updateMatchCount(document.totalMatchCount);
@@ -62,37 +67,19 @@ class _HighlightTextWidgetState extends State<HighlightTextWidget> {
           }
         });
 
-        return LayoutBuilder(
-          builder: (context, constraints) {
-            _lastConstraints = constraints;
-            // 如果父组件给了无限高度（如 Column），必须给一个固定高度，
-            // 否则 SingleChildScrollView 收不到有限约束，永远不会启用滚动。
-            final hasInfiniteHeight = constraints.maxHeight == double.infinity;
-            final maxScrollHeight = hasInfiniteHeight ? 300.0 : constraints.maxHeight;
-            debugPrint('[HighlightTextWidget] constraints=$constraints, hasInfiniteHeight=$hasInfiniteHeight, maxScrollHeight=$maxScrollHeight');
-            return ConstrainedBox(
-              constraints: BoxConstraints(maxHeight: maxScrollHeight),
-              child: SingleChildScrollView(
-                controller: _scrollController,
-                child: SizedBox(
-                  // 强制固定宽度和 TextPainter 一致，避免布局不一致导致跳转位置错误
-                  width: constraints.maxWidth,
-                  child: SelectableText.rich(
-                    TextSpan(children: spans),
-                    showCursor: true,
-                    // selectionColor: highlightSelectionColor(context),
-                    contextMenuBuilder: widget.contextMenuBuilder,
-                  ),
-                ),
-              ),
-            );
-          },
+        return SingleChildScrollView(
+          controller: _scrollController,
+          child: SelectableText.rich(
+            TextSpan(children: spans),
+            showCursor: true,
+            contextMenuBuilder: widget.contextMenuBuilder,
+          ),
         );
       },
     );
   }
 
-  /// 使用 TextPainter 计算匹配项的精确像素位置并滚动过去
+  /// 使用 Scrollable.ensureVisible 滚动到匹配项位置
   void _scrollToMatch(HighlightTextDocument document, int matchIndex) {
     debugPrint('[HighlightTextWidget] _scrollToMatch called, matchIndex=$matchIndex, matches=${document.matches.length}');
     if (matchIndex < 0 || matchIndex >= document.matches.length) {
@@ -100,46 +87,22 @@ class _HighlightTextWidgetState extends State<HighlightTextWidget> {
       return;
     }
 
-    final match = document.matches[matchIndex];
-    final effectiveStyle = document.rootStyle?.merge(widget.style) ?? widget.style;
+    if (matchIndex >= _matchKeys.length) {
+      debugPrint('[HighlightTextWidget] matchIndex out of _matchKeys range');
+      return;
+    }
 
-    // 优先使用 LayoutBuilder 给出的精确宽度；如果没有（理论上不会发生），回退到屏幕宽度
-    final maxWidth = _lastConstraints?.maxWidth ?? MediaQuery.of(context).size.width;
-    debugPrint('[HighlightTextWidget] maxWidth=$maxWidth, matchStart=${match.start}, matchEnd=${match.end}');
-
-    final textPainter = TextPainter(
-      text: TextSpan(text: document.text, style: effectiveStyle),
-      textDirection: TextDirection.ltr,
-      textScaler: MediaQuery.textScalerOf(context),
-    );
-
-    textPainter.layout(maxWidth: maxWidth);
-    debugPrint('[HighlightTextWidget] textPainter.size=${textPainter.size}, maxScrollExtent=${_scrollController.hasClients ? _scrollController.position.maxScrollExtent : -1}');
-
-    // 使用 match.end 作为 extentOffset，避免空 selection 返回空列表
-    final boxes = textPainter.getBoxesForSelection(
-      TextSelection(baseOffset: match.start, extentOffset: match.end),
-    );
-
-    debugPrint('[HighlightTextWidget] boxes=${boxes.length}, hasClients=${_scrollController.hasClients}');
-
-    if (boxes.isNotEmpty && _scrollController.hasClients) {
-      final targetOffset = boxes.first.top;
-      debugPrint('[HighlightTextWidget] jumping to $targetOffset');
-      _scrollController.jumpTo(targetOffset);
-    } else {
-      // 备选方案：使用 getOffsetForCaret
-      final caretOffset = textPainter.getOffsetForCaret(
-        TextPosition(offset: match.start),
-        Rect.zero,
+    final key = _matchKeys[matchIndex];
+    final ctx = key.currentContext;
+    if (ctx != null) {
+      debugPrint('[HighlightTextWidget] ensuring visible for match $matchIndex');
+      Scrollable.ensureVisible(
+        ctx,
+        duration: const Duration(milliseconds: 300),
+        alignment: 0.5,
       );
-      debugPrint('[HighlightTextWidget] caretOffset=$caretOffset');
-      if (caretOffset != Offset.zero && _scrollController.hasClients) {
-        debugPrint('[HighlightTextWidget] jumping to caretOffset ${caretOffset.dy}');
-        _scrollController.jumpTo(caretOffset.dy);
-      } else {
-        debugPrint('[HighlightTextWidget] skip scroll: boxes.isEmpty=${boxes.isEmpty}, hasClients=${_scrollController.hasClients}');
-      }
+    } else {
+      debugPrint('[HighlightTextWidget] key.currentContext is null');
     }
   }
 }
