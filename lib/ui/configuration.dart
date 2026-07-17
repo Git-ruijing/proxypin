@@ -50,7 +50,7 @@ class ColorMapping {
 class ThemeModel {
   ThemeMode mode;
   bool useMaterial3;
-  String color = "Pink";
+  String color = "Green";
 
   ThemeModel({this.mode = ThemeMode.system, this.useMaterial3 = true});
 
@@ -77,7 +77,7 @@ class AppConfiguration {
   ValueNotifier<bool> pipEnabled = ValueNotifier(Platform.isAndroid);
 
   /// 显示画中画图标
-  ValueNotifier<bool> pipIcon = ValueNotifier(Platform.isAndroid);
+  ValueNotifier<bool> pipIcon = ValueNotifier(false);
 
   /// Headers展示模式: table(逐行) / text(原始文本)
   String headerViewMode = "table";
@@ -200,7 +200,7 @@ class AppConfiguration {
       var mode =
           ThemeMode.values.firstWhere((element) => element.name == config['mode'], orElse: () => ThemeMode.system);
       _theme = ThemeModel(mode: mode, useMaterial3: config['useMaterial3'] ?? true);
-      _theme.color = config['themeColor'] ?? "Blue";
+      _theme.color = config['themeColor'] ?? "Green";
 
       upgradeNoticeV29 = config['upgradeNoticeV29'] ?? true;
       _language = config['language'] == null

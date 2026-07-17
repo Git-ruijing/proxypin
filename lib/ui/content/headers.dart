@@ -45,7 +45,7 @@ class HeadersWidget extends StatefulWidget {
     required this.title,
     required this.message,
     this.valueTextStyle = const TextStyle(fontSize: 14),
-    this.initiallyExpanded = true,
+    this.initiallyExpanded = false,
     this.controller,
   });
 

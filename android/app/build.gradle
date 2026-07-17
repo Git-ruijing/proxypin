@@ -100,17 +100,14 @@ flutter {
     source '../..'
 }
 
-// Set a fixed APK name for release builds
-// Use the older ApplicationVariants API which is compatible across AGP versions
+// Versioned APK name for release builds
 android.applicationVariants.all { variant ->
     if (variant.buildType.name == 'release') {
         variant.outputs.all { output ->
-            def apkName = "proxypin-android.apk"
+            def apkName = "proxypin-v${flutterVersionName}.apk"
             try {
-                // Newer output API
                 output.outputFileName = apkName
             } catch (Exception e) {
-                // Fallback for older API
                 output.outputFile = new File(output.outputFile.parent, apkName)
             }
         }

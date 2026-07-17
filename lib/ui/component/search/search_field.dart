@@ -92,9 +92,8 @@ class _SearchFieldState extends State<SearchField> {
                 ),
               ),
             ),
-            if (Platforms.isDesktop())
-              Obx(() => SizedBox(width: 85, child: _getText())),
-            if (Platforms.isMobile()) SizedBox(width: 10),
+            if (Platforms.isDesktop() || Platforms.isMobile())
+              Obx(() => SizedBox(width: 70, child: _getText())),
             InkWell(
               onTap: widget.searchController.movePrevious,
               child: const Icon(Icons.north, size: 17),
