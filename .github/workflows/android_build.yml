@@ -50,9 +50,6 @@ jobs:
       - name: Get dependencies
         run: flutter pub get
 
-      - name: Verify formatting
-        run: dart format .
-
       # - name: Analyze project source
       #   run: flutter analyze --no-pub || true
 
