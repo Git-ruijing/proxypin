@@ -64,10 +64,11 @@ jobs:
         run: flutter build apk --release --target-platform=android-arm64 --no-tree-shake-icons
 
       - name: Extract version for artifact name
-        run: echo "APP_VERSION=$(grep -oP 'version: \K[^+]*' pubspec.yaml)" >> $GITHUB_ENV
+        id: version
+        run: echo "app_version=$(grep '^version:' pubspec.yaml | awk '{print $2}' | awk -F+ '{print $1}')" >> $GITHUB_OUTPUT
 
       - name: Upload APK artifact
         uses: actions/upload-artifact@v4
         with:
-          name: proxypin-android-v${{ env.APP_VERSION }}
+          name: proxypin-android-v${{ steps.version.outputs.app_version }}
           path: build/app/outputs/flutter-apk/proxypin-*.apk
