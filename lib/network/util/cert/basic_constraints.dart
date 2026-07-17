@@ -5,5 +5,9 @@ class BasicConstraints {
   final int? pathLenConstraint;
   final bool critical;
 
-  BasicConstraints({required this.isCA, this.pathLenConstraint, this.critical = true});
+  BasicConstraints({
+    required this.isCA,
+    this.pathLenConstraint,
+    this.critical = true,
+  });
 }

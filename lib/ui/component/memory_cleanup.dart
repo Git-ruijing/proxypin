@@ -41,10 +41,14 @@ class MemoryCleanupMonitor {
 
   static void _cleanup(int threshold, Function? onCleanup) {
     final memory = ProcessInfo.currentRss / 1024 / 1024;
-    logger.d('Memory cleanup, current memory: ${memory.toInt()}M, threshold: ${threshold}M');
+    logger.d(
+      'Memory cleanup, current memory: ${memory.toInt()}M, threshold: ${threshold}M',
+    );
     if (memory > threshold) {
       onCleanup?.call();
-      logger.i('Memory cleanup, current memory: ${memory.toInt()}M, threshold: ${threshold}M, cleanup');
+      logger.i(
+        'Memory cleanup, current memory: ${memory.toInt()}M, threshold: ${threshold}M, cleanup',
+      );
     }
   }
 }

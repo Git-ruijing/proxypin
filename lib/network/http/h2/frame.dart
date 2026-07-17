@@ -14,7 +14,18 @@
  * limitations under the License.
  */
 
-enum FrameType { data, headers, priority, rstStream, settings, pushPromise, ping, goaway, windowUpdate, continuation }
+enum FrameType {
+  data,
+  headers,
+  priority,
+  rstStream,
+  settings,
+  pushPromise,
+  ping,
+  goaway,
+  windowUpdate,
+  continuation,
+}
 
 class FrameHeader {
   static const flagsEndStream = 0x01;
@@ -43,7 +54,9 @@ class FrameHeader {
     result.addAll(_intToBytes(length, 3)); // length is 24 bits
     result.add(type.index); // type is 8 bits
     result.add(flags); // flags is 8 bits
-    result.addAll(_intToBytes(streamIdentifier, 4)); // streamIdentifier is 32 bits
+    result.addAll(
+      _intToBytes(streamIdentifier, 4),
+    ); // streamIdentifier is 32 bits
     return result;
   }
 
@@ -63,11 +76,11 @@ class Frame {
   Frame(this.header);
 
   Map toJson() => {
-        'length': header.length,
-        'type': header.type.toString().split('.')[1],
-        'flags': header.flags,
-        'streamIdentifier': header.streamIdentifier
-      };
+    'length': header.length,
+    'type': header.type.toString().split('.')[1],
+    'flags': header.flags,
+    'streamIdentifier': header.streamIdentifier,
+  };
 }
 
 class HeadersFrame extends Frame {
@@ -77,8 +90,14 @@ class HeadersFrame extends Frame {
   final int? weight;
   List<int> headerBlockFragment;
 
-  HeadersFrame(super.header, this.padLength, this.exclusiveDependency, this.streamDependency, this.weight,
-      this.headerBlockFragment);
+  HeadersFrame(
+    super.header,
+    this.padLength,
+    this.exclusiveDependency,
+    this.streamDependency,
+    this.weight,
+    this.headerBlockFragment,
+  );
 
   @override
   String toString() {

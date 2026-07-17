@@ -35,16 +35,29 @@ abstract class ChannelHandler<T> {
   void channelActive(ChannelContext context, Channel channel) {}
 
   ///读取数据事件
-  Future<void> channelRead(ChannelContext channelContext, Channel channel, T msg) async {}
+  Future<void> channelRead(
+    ChannelContext channelContext,
+    Channel channel,
+    T msg,
+  ) async {}
 
   ///连接断开
   void channelInactive(ChannelContext channelContext, Channel channel) {
     //log.i("[${channel.id}] close $channel");
   }
 
-  void exceptionCaught(ChannelContext channelContext, Channel channel, dynamic error, {StackTrace? trace}) {
+  void exceptionCaught(
+    ChannelContext channelContext,
+    Channel channel,
+    dynamic error, {
+    StackTrace? trace,
+  }) {
     HostAndPort? host = channelContext.host;
-    log.e("[${channel.id}] exceptionCaught $host $channel", error: error, stackTrace: trace);
+    log.e(
+      "[${channel.id}] exceptionCaught $host $channel",
+      error: error,
+      stackTrace: trace,
+    );
     channel.close();
   }
 }
@@ -69,25 +82,38 @@ class Channel {
   bool useProxy = false;
 
   Channel(this._socket)
-      : _id = DateTime.now().millisecondsSinceEpoch + Random().nextInt(999999),
-        remoteSocketAddress = InetSocketAddress(_socket.remoteAddress, _socket.remotePort);
+    : _id = DateTime.now().millisecondsSinceEpoch + Random().nextInt(999999),
+      remoteSocketAddress = InetSocketAddress(
+        _socket.remoteAddress,
+        _socket.remotePort,
+      );
 
   ///返回此channel的全局唯一标识符。
   String get id => _id.toRadixString(36);
 
   Socket get socket => _socket;
 
-  void serverSecureSocket(SecureSocket secureSocket, ChannelContext channelContext) {
+  void serverSecureSocket(
+    SecureSocket secureSocket,
+    ChannelContext channelContext,
+  ) {
     _socket = secureSocket;
     _socket.done.then((value) => isOpen = false);
     dispatcher.listen(this, channelContext);
   }
 
   //向远程发起ssl连接
-  Future<SecureSocket> secureSocket(ChannelContext channelContext,
-      {String? host, List<String>? supportedProtocols}) async {
-    SecureSocket secureSocket = await SecureSocket.secure(socket,
-        host: host, supportedProtocols: supportedProtocols, onBadCertificate: (certificate) => true);
+  Future<SecureSocket> secureSocket(
+    ChannelContext channelContext, {
+    String? host,
+    List<String>? supportedProtocols,
+  }) async {
+    SecureSocket secureSocket = await SecureSocket.secure(
+      socket,
+      host: host,
+      supportedProtocols: supportedProtocols,
+      onBadCertificate: (certificate) => true,
+    );
 
     _socket = secureSocket;
     _socket.done.then((value) => isOpen = false);
@@ -96,10 +122,17 @@ class Channel {
     return secureSocket;
   }
 
-  Future<SecureSocket> startSecureSocket(ChannelContext channelContext,
-      {String? host, List<String>? supportedProtocols}) async {
-    SecureSocket secureSocket = await SecureSocket.secure(socket,
-        host: host, supportedProtocols: supportedProtocols, onBadCertificate: (certificate) => true);
+  Future<SecureSocket> startSecureSocket(
+    ChannelContext channelContext, {
+    String? host,
+    List<String>? supportedProtocols,
+  }) async {
+    SecureSocket secureSocket = await SecureSocket.secure(
+      socket,
+      host: host,
+      supportedProtocols: supportedProtocols,
+      onBadCertificate: (certificate) => true,
+    );
 
     _socket = secureSocket;
     _socket.done.then((value) => isOpen = false);
@@ -110,7 +143,8 @@ class Channel {
     dispatcher.listen(this, channelContext);
   }
 
-  String? get selectedProtocol => isSsl && isOpen ? (_socket as SecureSocket).selectedProtocol : null;
+  String? get selectedProtocol =>
+      isSsl && isOpen ? (_socket as SecureSocket).selectedProtocol : null;
 
   ///是否是ssl链接
   bool get isSsl => _socket is SecureSocket;
@@ -125,7 +159,10 @@ class Channel {
 
   Future<void> writeBytes(List<int> bytes) async {
     if (isClosed) {
-      logger.w("[$id] $remoteSocketAddress channel is closed", stackTrace: StackTrace.current);
+      logger.w(
+        "[$id] $remoteSocketAddress channel is closed",
+        stackTrace: StackTrace.current,
+      );
     }
 
     //只能有一个写入
@@ -145,7 +182,10 @@ class Channel {
       }
     } catch (e, t) {
       if (e is StateError && e.message == "StreamSink is closed") {
-        logger.w("[$id] $remoteSocketAddress write error channel is closed $e", stackTrace: t);
+        logger.w(
+          "[$id] $remoteSocketAddress write error channel is closed $e",
+          stackTrace: t,
+        );
       } else {
         logger.e("[$id] write error", error: e, stackTrace: t);
       }

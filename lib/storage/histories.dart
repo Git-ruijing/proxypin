@@ -35,7 +35,8 @@ import 'package:share_plus/share_plus.dart';
 class HistoryStorage {
   static HistoryStorage? _instance;
   final File _storageFile;
-  static final StreamController<HistoryItem> _remoteImportedController = StreamController<HistoryItem>.broadcast();
+  static final StreamController<HistoryItem> _remoteImportedController =
+      StreamController<HistoryItem>.broadcast();
 
   HistoryStorage._internal(this._storageFile);
 
@@ -79,7 +80,8 @@ class HistoryStorage {
     return _histories.source;
   }
 
-  static Stream<HistoryItem> get onRemoteImported => _remoteImportedController.stream;
+  static Stream<HistoryItem> get onRemoteImported =>
+      _remoteImportedController.stream;
 
   static const String remoteHistoryPrefix = '[Remote] ';
 
@@ -99,8 +101,17 @@ class HistoryStorage {
   }
 
   /// 添加历史记录
-  Future<HistoryItem> addHistory(String name, File file, int requestLength) async {
-    var historyItem = HistoryItem(name, file.path, requestLength, await file.length());
+  Future<HistoryItem> addHistory(
+    String name,
+    File file,
+    int requestLength,
+  ) async {
+    var historyItem = HistoryItem(
+      name,
+      file.path,
+      requestLength,
+      await file.length(),
+    );
     _histories.add(historyItem);
     refresh();
     return historyItem;
@@ -130,7 +141,9 @@ class HistoryStorage {
     var history = _histories.removeAt(index);
     logger.i('删除历史记录 $history');
     final homePath = await _homePath();
-    var file = File('$homePath${Platform.pathSeparator}${Files.getName(history.path)}');
+    var file = File(
+      '$homePath${Platform.pathSeparator}${Files.getName(history.path)}',
+    );
     file.delete();
     await refresh();
   }
@@ -139,7 +152,8 @@ class HistoryStorage {
   Future<List<HttpRequest>> getRequests(HistoryItem history) async {
     if (history.requests == null) {
       final homePath = await _homePath();
-      String path = '$homePath${Platform.pathSeparator}${Files.getName(history.path)}';
+      String path =
+          '$homePath${Platform.pathSeparator}${Files.getName(history.path)}';
       var file = File(path);
       history.requests = await Har.readFile(file);
       history.requestLength = history.requests!.length;
@@ -150,15 +164,22 @@ class HistoryStorage {
   }
 
   ///刷新requests
-  Future<void> flushRequests(HistoryItem history, List<HttpRequest> requests) async {
+  Future<void> flushRequests(
+    HistoryItem history,
+    List<HttpRequest> requests,
+  ) async {
     logger.i("刷新历史记录 $history");
     final homePath = await _homePath();
-    String path = '$homePath${Platform.pathSeparator}${Files.getName(history.path)}';
+    String path =
+        '$homePath${Platform.pathSeparator}${Files.getName(history.path)}';
     var file = File(path);
     for (int i = 0; i < requests.length; i++) {
       var request = requests[i];
       var har = Har.toHar(request);
-      await file.writeAsString("${jsonEncode(har)},\n", mode: i == 0 ? FileMode.write : FileMode.append);
+      await file.writeAsString(
+        "${jsonEncode(har)},\n",
+        mode: i == 0 ? FileMode.write : FileMode.append,
+      );
     }
 
     history.requestLength = requests.length;
@@ -166,10 +187,15 @@ class HistoryStorage {
     await refresh();
   }
 
-  Future<HistoryItem> addRequests(Iterable<HttpRequest> requests,
-      {String? name, bool notifyRemoteImported = false}) async {
+  Future<HistoryItem> addRequests(
+    Iterable<HttpRequest> requests, {
+    String? name,
+    bool notifyRemoteImported = false,
+  }) async {
     final list = requests.toList();
-    final historyFile = await HistoryStorage.openFile("${DateTime.now().millisecondsSinceEpoch}.txt");
+    final historyFile = await HistoryStorage.openFile(
+      "${DateTime.now().millisecondsSinceEpoch}.txt",
+    );
     final open = await historyFile.open(mode: FileMode.append);
     try {
       for (var request in list) {
@@ -184,7 +210,9 @@ class HistoryStorage {
         ? formatDate(DateTime.now(), [mm, '-', d, ' ', HH, ':', nn, ':', ss])
         : name;
     if (notifyRemoteImported) {
-      final hasRemotePrefix = historyName.startsWith(remoteHistoryPrefix) || historyName.startsWith('【远程】');
+      final hasRemotePrefix =
+          historyName.startsWith(remoteHistoryPrefix) ||
+          historyName.startsWith('【远程】');
       if (!hasRemotePrefix) {
         historyName = '$remoteHistoryPrefix$historyName';
       }
@@ -201,7 +229,17 @@ class HistoryStorage {
     var readAsBytes = await file.readAsString();
     var json = jsonDecode(readAsBytes);
     var log = json['log'];
-    String name = formatDate(DateTime.now(), [mm, '-', d, ' ', HH, ':', nn, ':', ss]);
+    String name = formatDate(DateTime.now(), [
+      mm,
+      '-',
+      d,
+      ' ',
+      HH,
+      ':',
+      nn,
+      ':',
+      ss,
+    ]);
     List? pages = log['pages'] as List?;
     if (pages?.isNotEmpty == true) {
       name = pages?.first['title'];
@@ -236,7 +274,10 @@ class HistoryTask extends ListenerListEvent<HttpRequest> {
     }
   }
 
-  static HistoryTask ensureInstance(Configuration configuration, ListenableList<HttpRequest> sourceList) {
+  static HistoryTask ensureInstance(
+    Configuration configuration,
+    ListenableList<HttpRequest> sourceList,
+  ) {
     return _instance ??= HistoryTask(configuration, sourceList);
   }
 
@@ -245,7 +286,9 @@ class HistoryTask extends ListenerListEvent<HttpRequest> {
     if (configuration.historyCacheTime == 0) {
       return;
     }
-    var overdueTime = DateTime.now().subtract(Duration(days: configuration.historyCacheTime));
+    var overdueTime = DateTime.now().subtract(
+      Duration(days: configuration.historyCacheTime),
+    );
     var historyStorage = await HistoryStorage.instance;
     var histories = historyStorage.histories;
     for (int i = 0; i < histories.length; i++) {
@@ -276,7 +319,10 @@ class HistoryTask extends ListenerListEvent<HttpRequest> {
 
   Future<void> resetList() async {
     locked = true;
-    await open?.lock().timeout(Duration(seconds: 3), onTimeout: () => open!.unlock());
+    await open?.lock().timeout(
+      Duration(seconds: 3),
+      onTimeout: () => open!.unlock(),
+    );
     open = await open?.truncate(0);
     await open?.setPosition(0);
     history?.requestLength = 0;
@@ -303,8 +349,20 @@ class HistoryTask extends ListenerListEvent<HttpRequest> {
     locked = true;
 
     HistoryStorage storage = await HistoryStorage.instance;
-    var name = formatDate(DateTime.now(), [mm, '-', d, ' ', HH, ':', nn, ':', ss]);
-    File file = await HistoryStorage.openFile("${DateTime.now().millisecondsSinceEpoch}.txt");
+    var name = formatDate(DateTime.now(), [
+      mm,
+      '-',
+      d,
+      ' ',
+      HH,
+      ':',
+      nn,
+      ':',
+      ss,
+    ]);
+    File file = await HistoryStorage.openFile(
+      "${DateTime.now().millisecondsSinceEpoch}.txt",
+    );
     history = await storage.addHistory(name, file, 0);
     writeList.clear();
     writeList.addAll(sourceList.source);
@@ -349,13 +407,25 @@ class HistoryItem {
 
   List<HttpRequest>? requests;
 
-  HistoryItem(this.name, this.path, this.requestLength, this.fileSize, {DateTime? createTime})
-      : createTime = createTime ?? DateTime.now();
+  HistoryItem(
+    this.name,
+    this.path,
+    this.requestLength,
+    this.fileSize, {
+    DateTime? createTime,
+  }) : createTime = createTime ?? DateTime.now();
 
   //json反序列化
   factory HistoryItem.formJson(Map<String, dynamic> map) {
-    return HistoryItem(map['name'], map['path'], map['requestLength'], map['fileSize'],
-        createTime: map['createTime'] == null ? null : DateTime.fromMillisecondsSinceEpoch(map['createTime']));
+    return HistoryItem(
+      map['name'],
+      map['path'],
+      map['requestLength'],
+      map['fileSize'],
+      createTime: map['createTime'] == null
+          ? null
+          : DateTime.fromMillisecondsSinceEpoch(map['createTime']),
+    );
   }
 
   //json序列化

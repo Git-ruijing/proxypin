@@ -47,5 +47,5 @@ class AndroidFonts extends Fonts {
 Fonts fonts = Platform.isAndroid
     ? AndroidFonts()
     : Platform.isWindows
-        ? WindowsFonts()
-        : AppleFonts();
+    ? WindowsFonts()
+    : AppleFonts();

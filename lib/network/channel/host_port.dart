@@ -28,7 +28,8 @@ HostAndPort getHostAndPort(HttpRequest request, {bool? ssl}) {
 }
 
 class HostAndPort {
-  static final ipv6Pattern = r'^(([0-9a-fA-F]{1,4}:){7,7}[0-9a-fA-F]{1,4}|'
+  static final ipv6Pattern =
+      r'^(([0-9a-fA-F]{1,4}:){7,7}[0-9a-fA-F]{1,4}|'
       r'([0-9a-fA-F]{1,4}:){1,7}:|'
       r'([0-9a-fA-F]{1,4}:){1,6}:[0-9a-fA-F]{1,4}|'
       r'([0-9a-fA-F]{1,4}:){1,5}(:[0-9a-fA-F]{1,4}){1,2}|'
@@ -69,7 +70,11 @@ class HostAndPort {
   HostAndPort(this.scheme, this.host, this.port, {bool? ipv6}) : _ipv6 = ipv6;
 
   factory HostAndPort.host(String host, int port, {String? scheme}) {
-    return HostAndPort(scheme ?? (port == 443 ? httpsScheme : httpScheme), host, port);
+    return HostAndPort(
+      scheme ?? (port == 443 ? httpsScheme : httpScheme),
+      host,
+      port,
+    );
   }
 
   /// 是否是url
@@ -92,20 +97,30 @@ class HostAndPort {
         return HostAndPort('${uri.scheme}://', uri.host, uri.port);
       } catch (e) {
         //httpScheme
-        scheme = schemes.firstWhere((element) => url.startsWith(element), orElse: () => httpScheme);
+        scheme = schemes.firstWhere(
+          (element) => url.startsWith(element),
+          orElse: () => httpScheme,
+        );
         domain = url.substring(scheme.length).split("/")[0];
       }
 
       //说明支持ipv6
       if (domain.startsWith('[') && domain.endsWith(']')) {
-        return HostAndPort(scheme, domain, scheme == httpScheme ? 80 : 443, ipv6: true);
+        return HostAndPort(
+          scheme,
+          domain,
+          scheme == httpScheme ? 80 : 443,
+          ipv6: true,
+        );
       }
     }
 
     //ip格式 host:port
     var indexOf = domain.lastIndexOf(':');
     String host = domain.substring(0, indexOf == -1 ? domain.length : indexOf);
-    String? port = indexOf == -1 ? null : domain.substring(indexOf + 1, domain.length);
+    String? port = indexOf == -1
+        ? null
+        : domain.substring(indexOf + 1, domain.length);
     bool? ipv6 = host.startsWith('[') && host.endsWith(']') ? true : null;
 
     if (port != null) {
@@ -114,7 +129,12 @@ class HostAndPort {
       return HostAndPort(scheme, host, int.parse(port), ipv6: ipv6);
     }
     scheme ??= (ssl == true ? httpsScheme : httpScheme);
-    return HostAndPort(scheme, host, scheme == httpScheme ? 80 : 443, ipv6: ipv6);
+    return HostAndPort(
+      scheme,
+      host,
+      scheme == httpScheme ? 80 : 443,
+      ipv6: ipv6,
+    );
   }
 
   String get domain {
@@ -126,7 +146,11 @@ class HostAndPort {
   }
 
   HostAndPort copyWith({String? scheme, String? host, int? port}) {
-    return HostAndPort(scheme ?? this.scheme, host ?? this.host, port ?? this.port);
+    return HostAndPort(
+      scheme ?? this.scheme,
+      host ?? this.host,
+      port ?? this.port,
+    );
   }
 
   @override

@@ -11,27 +11,37 @@ import 'package:proxypin/utils/lang.dart';
 class PictureInPicture {
   static bool inPip = false;
 
-  static final MethodChannel _channel = const MethodChannel('com.proxy/pictureInPicture')
-    ..setMethodCallHandler((call) async {
-      logger.d("pictureInPicture MethodCallHandler ${call.method}");
-      if (call.method == 'cleanSession') {
-        MobileApp.requestStateKey.currentState?.clean();
-      } else if (call.method == 'exitPictureInPictureMode') {
-        inPip = false;
-        Vpn.isRunning().then((value) {
-          Vpn.isVpnStarted = value;
-          SocketLaunch.startStatus.value = ValueWrap.of(value);
-        });
-      }
+  static final MethodChannel _channel =
+      const MethodChannel('com.proxy/pictureInPicture')
+        ..setMethodCallHandler((call) async {
+          logger.d("pictureInPicture MethodCallHandler ${call.method}");
+          if (call.method == 'cleanSession') {
+            MobileApp.requestStateKey.currentState?.clean();
+          } else if (call.method == 'exitPictureInPictureMode') {
+            inPip = false;
+            Vpn.isRunning().then((value) {
+              Vpn.isVpnStarted = value;
+              SocketLaunch.startStatus.value = ValueWrap.of(value);
+            });
+          }
 
-      return Future.value();
-    });
+          return Future.value();
+        });
 
   ///进入画中画模式
-  static Future<bool> enterPictureInPictureMode(String host, int port,
-      {List<String>? appList, List<String>? disallowApps}) async {
-    final bool enterPictureInPictureMode = await _channel.invokeMethod('enterPictureInPictureMode',
-        {"proxyHost": host, "proxyPort": port, "allowApps": appList, "disallowApps": disallowApps});
+  static Future<bool> enterPictureInPictureMode(
+    String host,
+    int port, {
+    List<String>? appList,
+    List<String>? disallowApps,
+  }) async {
+    final bool enterPictureInPictureMode = await _channel
+        .invokeMethod('enterPictureInPictureMode', {
+          "proxyHost": host,
+          "proxyPort": port,
+          "allowApps": appList,
+          "disallowApps": disallowApps,
+        });
     inPip = true;
 
     return enterPictureInPictureMode;
@@ -39,7 +49,9 @@ class PictureInPicture {
 
   ///退出画中画模式
   static Future<bool> exitPictureInPictureMode() async {
-    final bool exitPictureInPictureMode = await _channel.invokeMethod('exitPictureInPictureMode');
+    final bool exitPictureInPictureMode = await _channel.invokeMethod(
+      'exitPictureInPictureMode',
+    );
     return exitPictureInPictureMode;
   }
 

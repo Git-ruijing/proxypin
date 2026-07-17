@@ -29,7 +29,9 @@ class RequestBlockInterceptor extends Interceptor {
   @override
   Future<HttpRequest?> onRequest(HttpRequest request) async {
     var uri = request.domainPath;
-    var blockRequest = (await RequestBlockManager.instance).enableBlockRequest(uri);
+    var blockRequest = (await RequestBlockManager.instance).enableBlockRequest(
+      uri,
+    );
     if (blockRequest) {
       logger.d("[${request.requestId}] 屏蔽请求 $uri");
       return null;
@@ -38,9 +40,13 @@ class RequestBlockInterceptor extends Interceptor {
   }
 
   @override
-  Future<HttpResponse?> onResponse(HttpRequest request, HttpResponse response) async {
+  Future<HttpResponse?> onResponse(
+    HttpRequest request,
+    HttpResponse response,
+  ) async {
     var uri = request.domainPath;
-    var blockResponse = (await RequestBlockManager.instance).enableBlockResponse(uri);
+    var blockResponse = (await RequestBlockManager.instance)
+        .enableBlockResponse(uri);
     if (blockResponse) {
       logger.d("[${request.requestId}] 屏蔽响应 $uri");
       return null;

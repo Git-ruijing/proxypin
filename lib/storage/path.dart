@@ -35,7 +35,9 @@ class Paths {
 
   static Future<File> createFile(String dir, String filename) async {
     final directory = await getApplicationSupportDirectory();
-    var file = File('${directory.path}${Platform.pathSeparator}$dir${Platform.pathSeparator}$filename');
+    var file = File(
+      '${directory.path}${Platform.pathSeparator}$dir${Platform.pathSeparator}$filename',
+    );
     return file.create(recursive: true);
   }
 }

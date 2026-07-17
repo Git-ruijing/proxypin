@@ -61,21 +61,37 @@ class SocksServerHandler extends ChannelHandler<Uint8List> {
 
   SocksState socksState = SocksState.init;
 
-  SocksServerHandler(this.originalDecoder, this.originalEncoder, this.originalHandler);
+  SocksServerHandler(
+    this.originalDecoder,
+    this.originalEncoder,
+    this.originalHandler,
+  );
 
   @override
-  Future<void> channelRead(ChannelContext channelContext, Channel channel, Uint8List msg) async {
+  Future<void> channelRead(
+    ChannelContext channelContext,
+    Channel channel,
+    Uint8List msg,
+  ) async {
     int idx = 0;
     final int version = msg[idx++];
     if (version != Socks5.version) {
-      await channel.writeBytes(Uint8List.fromList([Socks5.version, Socks5.methodNoAcceptable]));
-      channel.dispatcher.exceptionCaught(channelContext, channel, Exception('Unsupported SOCKS version: $version'));
+      await channel.writeBytes(
+        Uint8List.fromList([Socks5.version, Socks5.methodNoAcceptable]),
+      );
+      channel.dispatcher.exceptionCaught(
+        channelContext,
+        channel,
+        Exception('Unsupported SOCKS version: $version'),
+      );
       return;
     }
 
     if (socksState == SocksState.init) {
       //no auth
-      await channel.writeBytes(Uint8List.fromList([Socks5.version, Socks5.methodNoAuth]));
+      await channel.writeBytes(
+        Uint8List.fromList([Socks5.version, Socks5.methodNoAuth]),
+      );
       socksState = SocksState.connect;
       return;
     }
@@ -85,7 +101,11 @@ class SocksServerHandler extends ChannelHandler<Uint8List> {
       if (cmd != Socks5.cmdConnect) {
         var out = encodeCommandResponse(Socks5.repCommandNotSupported);
         await channel.writeBytes(out);
-        channel.dispatcher.exceptionCaught(channelContext, channel, Exception('Unsupported SOCKS cmd: $cmd'));
+        channel.dispatcher.exceptionCaught(
+          channelContext,
+          channel,
+          Exception('Unsupported SOCKS cmd: $cmd'),
+        );
         return;
       }
 
@@ -111,26 +131,44 @@ class SocksServerHandler extends ChannelHandler<Uint8List> {
       } else {
         var out = encodeCommandResponse(Socks5.repAddressTypeNotSupported);
         await channel.writeBytes(out);
-        channel.dispatcher.exceptionCaught(channelContext, channel, Exception('Unsupported SOCKS atyp: $dstAddrType'));
+        channel.dispatcher.exceptionCaught(
+          channelContext,
+          channel,
+          Exception('Unsupported SOCKS atyp: $dstAddrType'),
+        );
         return;
       }
 
       final int port = msg[idx++] << 8 | msg[idx++];
       final proxyInfo = ProxyInfo.of(host, port);
 
-      logger.d('[${channel.id}] Socks5 connect ${proxyInfo.host}:${proxyInfo.port}');
+      logger.d(
+        '[${channel.id}] Socks5 connect ${proxyInfo.host}:${proxyInfo.port}',
+      );
       channelContext.putAttribute(AttributeKeys.socks5Proxy, proxyInfo);
 
-      final out = encodeCommandResponse(Socks5.repSuccess, bndAddrType: Socks5.repSocks5ServerAtypIpv4);
+      final out = encodeCommandResponse(
+        Socks5.repSuccess,
+        bndAddrType: Socks5.repSocks5ServerAtypIpv4,
+      );
       await channel.writeBytes(out);
 
-      channel.dispatcher.handle(originalDecoder, originalEncoder, originalHandler);
+      channel.dispatcher.handle(
+        originalDecoder,
+        originalEncoder,
+        originalHandler,
+      );
       socksState = SocksState.connected;
       return;
     }
   }
 
-  Uint8List encodeCommandResponse(int status, {int bndAddrType = 0, String? bndAddr, int bndPort = 0}) {
+  Uint8List encodeCommandResponse(
+    int status, {
+    int bndAddrType = 0,
+    String? bndAddr,
+    int bndPort = 0,
+  }) {
     var out = BytesBuilder();
     out.addByte(Socks5.version);
     out.addByte(status);
@@ -138,7 +176,9 @@ class SocksServerHandler extends ChannelHandler<Uint8List> {
     out.addByte(bndAddrType);
 
     if (bndAddr != null) {
-      out.add(Int8List.fromList(bndAddr.split('.').map((e) => int.parse(e)).toList()));
+      out.add(
+        Int8List.fromList(bndAddr.split('.').map((e) => int.parse(e)).toList()),
+      );
     } else {
       out.add(Int8List.fromList([0, 0, 0, 0]));
     }
@@ -148,9 +188,4 @@ class SocksServerHandler extends ChannelHandler<Uint8List> {
   }
 }
 
-enum SocksState {
-  init,
-  auth,
-  connect,
-  connected,
-}
+enum SocksState { init, auth, connect, connected }

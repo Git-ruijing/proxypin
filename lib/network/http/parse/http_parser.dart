@@ -75,12 +75,15 @@ class HttpParse {
     }
 
     //\r\n \r\n结束
-    return _isLineEnd(data, data.readerIndex - 4) && _isLineEnd(data, data.readerIndex - 2);
+    return _isLineEnd(data, data.readerIndex - 4) &&
+        _isLineEnd(data, data.readerIndex - 2);
   }
 
   //是否行结束
   bool _isLineEnd(ByteBuf data, int index) {
-    return index + 1 < data.length && data.get(index) == HttpConstants.cr && data.get(index + 1) == HttpConstants.lf;
+    return index + 1 < data.length &&
+        data.get(index) == HttpConstants.cr &&
+        data.get(index + 1) == HttpConstants.lf;
   }
 
   //分割头

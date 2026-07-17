@@ -8,15 +8,15 @@ class VerticalSplitView extends StatefulWidget {
   final double maxRatio;
   final Function(double ratio)? onRatioChanged;
 
-  const VerticalSplitView(
-      {super.key,
-      required this.left,
-      required this.right,
-      this.ratio = 0.5,
-      this.minRatio = 0,
-      this.maxRatio = 1,
-      this.onRatioChanged})
-      : assert(ratio >= 0 && ratio <= 1);
+  const VerticalSplitView({
+    super.key,
+    required this.left,
+    required this.right,
+    this.ratio = 0.5,
+    this.minRatio = 0,
+    this.maxRatio = 1,
+    this.onRatioChanged,
+  }) : assert(ratio >= 0 && ratio <= 1);
 
   @override
   State<VerticalSplitView> createState() => _VerticalSplitViewState();
@@ -41,23 +41,21 @@ class _VerticalSplitViewState extends State<VerticalSplitView> {
 
   @override
   Widget build(BuildContext context) {
-    return LayoutBuilder(builder: (context, BoxConstraints constraints) {
-      if (_maxWidth != constraints.maxWidth) {
-        _maxWidth = constraints.maxWidth - _dividerWidth;
-      }
+    return LayoutBuilder(
+      builder: (context, BoxConstraints constraints) {
+        if (_maxWidth != constraints.maxWidth) {
+          _maxWidth = constraints.maxWidth - _dividerWidth;
+        }
 
-      return SizedBox(
-        width: constraints.maxWidth,
-        child: Row(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: <Widget>[
-            SizedBox(
-              width: _width1 - 5,
-              child: widget.left,
-            ),
-            GestureDetector(
-              behavior: HitTestBehavior.translucent,
-              child: MouseRegion(
+        return SizedBox(
+          width: constraints.maxWidth,
+          child: Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: <Widget>[
+              SizedBox(width: _width1 - 5, child: widget.left),
+              GestureDetector(
+                behavior: HitTestBehavior.translucent,
+                child: MouseRegion(
                   cursor: SystemMouseCursors.resizeColumn,
                   child: SizedBox(
                     width: _dividerWidth,
@@ -65,29 +63,28 @@ class _VerticalSplitViewState extends State<VerticalSplitView> {
                     child: (_ratio <= 0 || _ratio >= 1)
                         ? const Icon(Icons.drag_handle, size: 16)
                         : const VerticalDivider(thickness: 1),
-                  )),
-              onPanEnd: (DragEndDetails details) {
-                widget.onRatioChanged?.call(_ratio);
-              },
-              onPanUpdate: (DragUpdateDetails details) {
-                setState(() {
-                  _ratio += details.delta.dx / _maxWidth;
+                  ),
+                ),
+                onPanEnd: (DragEndDetails details) {
+                  widget.onRatioChanged?.call(_ratio);
+                },
+                onPanUpdate: (DragUpdateDetails details) {
+                  setState(() {
+                    _ratio += details.delta.dx / _maxWidth;
 
-                  if (_ratio > widget.maxRatio) {
-                    _ratio = widget.maxRatio;
-                  } else if (_ratio < widget.minRatio) {
-                    _ratio = widget.minRatio;
-                  }
-                });
-              },
-            ),
-            SizedBox(
-              width: _width2,
-              child: widget.right,
-            ),
-          ],
-        ),
-      );
-    });
+                    if (_ratio > widget.maxRatio) {
+                      _ratio = widget.maxRatio;
+                    } else if (_ratio < widget.minRatio) {
+                      _ratio = widget.minRatio;
+                    }
+                  });
+                },
+              ),
+              SizedBox(width: _width2, child: widget.right),
+            ],
+          ),
+        );
+      },
+    );
   }
 }

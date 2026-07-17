@@ -9,7 +9,9 @@ abstract interface class LifecycleListener {
 }
 
 class AppLifecycleBinding {
-  static const MethodChannel _methodChannel = MethodChannel('com.proxy/appLifecycle');
+  static const MethodChannel _methodChannel = MethodChannel(
+    'com.proxy/appLifecycle',
+  );
 
   //单例对象
   static AppLifecycleBinding get instance {

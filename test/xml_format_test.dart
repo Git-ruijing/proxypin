@@ -38,9 +38,11 @@ void main() {
 
   test('xhtml keeps html content type', () {
     final response = HttpResponse(HttpStatus.ok);
-    response.headers.set('content-type', 'application/xhtml+xml; charset=utf-8');
+    response.headers.set(
+      'content-type',
+      'application/xhtml+xml; charset=utf-8',
+    );
 
     expect(response.contentType, ContentType.html);
   });
 }
-

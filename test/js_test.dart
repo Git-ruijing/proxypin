@@ -14,7 +14,7 @@ import 'package:proxypin/network/components/js/md5.dart';
 //   };
 // }
 
-main() async {
+Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
   var flutterJs = getJavascriptRuntime();
   Md5Bridge.registerMd5(flutterJs);
@@ -30,10 +30,10 @@ main() async {
     var file = File('/Users/wanghongen/Downloads/test.html');
     console.log(file.path);
     // console.log(file.readAsStringSync());
-   
+
     async function onRequest() {
        await file.writeAsString('await');
-    
+
        var text = await file.readAsString();
        console.log(text);
        File('/Users/wanghongen/Downloads/test.txt').create();

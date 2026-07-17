@@ -75,7 +75,10 @@ class CryptoUtils {
   /// * SHA-512/256
   /// * MD5
   ///
-  static Uint8List getHashPlain(Uint8List bytes, {String algorithmName = 'SHA-256'}) {
+  static Uint8List getHashPlain(
+    Uint8List bytes, {
+    String algorithmName = 'SHA-256',
+  }) {
     Uint8List hash;
     switch (algorithmName) {
       case 'SHA-1':
@@ -135,7 +138,11 @@ class CryptoUtils {
   /// * 8192
   ///
   static AsymmetricKeyPair generateRSAKeyPair({int keySize = 2048}) {
-    var keyParams = RSAKeyGeneratorParameters(BigInt.parse('65537'), keySize, 12);
+    var keyParams = RSAKeyGeneratorParameters(
+      BigInt.parse('65537'),
+      keySize,
+      12,
+    );
 
     var secureRandom = getSecureRandom();
 
@@ -164,7 +171,9 @@ class CryptoUtils {
     if (topLevelSeq.elements![1].runtimeType == ASN1BitString) {
       var publicKeyBitString = topLevelSeq.elements![1] as ASN1BitString;
 
-      var publicKeyAsn = ASN1Parser(publicKeyBitString.stringValues as Uint8List?);
+      var publicKeyAsn = ASN1Parser(
+        publicKeyBitString.stringValues as Uint8List?,
+      );
       publicKeySeq = publicKeyAsn.nextObject() as ASN1Sequence;
     } else {
       publicKeySeq = topLevelSeq;
@@ -193,13 +202,22 @@ class CryptoUtils {
   ///
   /// The PEM header check can be skipped by setting the optional paramter [checkHeader] to false.
   ///
-  static Uint8List getBytesFromPEMString(String pem, {bool checkHeader = true}) {
-    var lines = LineSplitter.split(pem).map((line) => line.trim()).where((line) => line.isNotEmpty).toList();
+  static Uint8List getBytesFromPEMString(
+    String pem, {
+    bool checkHeader = true,
+  }) {
+    var lines = LineSplitter.split(
+      pem,
+    ).map((line) => line.trim()).where((line) => line.isNotEmpty).toList();
     String base64;
     if (checkHeader) {
-      if (lines.length < 2 || !lines.first.startsWith('-----BEGIN') || !lines.last.startsWith('-----END')) {
-        throw ArgumentError('The given string does not have the correct '
-            'begin/end markers expected in a PEM file.');
+      if (lines.length < 2 ||
+          !lines.first.startsWith('-----BEGIN') ||
+          !lines.last.startsWith('-----END')) {
+        throw ArgumentError(
+          'The given string does not have the correct '
+          'begin/end markers expected in a PEM file.',
+        );
       }
       base64 = lines.sublist(1, lines.length - 1).join('');
     } else {
@@ -231,7 +249,12 @@ class CryptoUtils {
     //ASN1Integer exp2 = pkSeq.elements[7] as ASN1Integer;
     //ASN1Integer co = pkSeq.elements[8] as ASN1Integer;
 
-    var rsaPrivateKey = RSAPrivateKey(modulus.integer!, privateExponent.integer!, p.integer, q.integer);
+    var rsaPrivateKey = RSAPrivateKey(
+      modulus.integer!,
+      privateExponent.integer!,
+      p.integer,
+      q.integer,
+    );
 
     return rsaPrivateKey;
   }
@@ -248,7 +271,9 @@ class CryptoUtils {
     var publicKeySeq = ASN1Sequence();
     publicKeySeq.add(ASN1Integer(publicKey.modulus));
     publicKeySeq.add(ASN1Integer(publicKey.exponent));
-    var publicKeySeqBitString = ASN1BitString(stringValues: Uint8List.fromList(publicKeySeq.encode()));
+    var publicKeySeqBitString = ASN1BitString(
+      stringValues: Uint8List.fromList(publicKeySeq.encode()),
+    );
 
     var topLevelSeq = ASN1Sequence();
     topLevelSeq.add(algorithmSeq);
@@ -286,9 +311,11 @@ class CryptoUtils {
 
     var p = ASN1Integer(rsaPrivateKey.p);
     var q = ASN1Integer(rsaPrivateKey.q);
-    var dP = rsaPrivateKey.privateExponent! % (rsaPrivateKey.p! - BigInt.from(1));
+    var dP =
+        rsaPrivateKey.privateExponent! % (rsaPrivateKey.p! - BigInt.from(1));
     var exp1 = ASN1Integer(dP);
-    var dQ = rsaPrivateKey.privateExponent! % (rsaPrivateKey.q! - BigInt.from(1));
+    var dQ =
+        rsaPrivateKey.privateExponent! % (rsaPrivateKey.q! - BigInt.from(1));
     var exp2 = ASN1Integer(dQ);
     var iQ = rsaPrivateKey.q!.modInverse(rsaPrivateKey.p!);
     var co = ASN1Integer(iQ);
@@ -324,8 +351,21 @@ class CryptoUtils {
     var version = ASN1Integer(BigInt.from(0));
 
     var algorithmSeq = ASN1Sequence();
-    var algorithmAsn1Obj =
-        ASN1Object.fromBytes(Uint8List.fromList([0x6, 0x9, 0x2a, 0x86, 0x48, 0x86, 0xf7, 0xd, 0x1, 0x1, 0x1]));
+    var algorithmAsn1Obj = ASN1Object.fromBytes(
+      Uint8List.fromList([
+        0x6,
+        0x9,
+        0x2a,
+        0x86,
+        0x48,
+        0x86,
+        0xf7,
+        0xd,
+        0x1,
+        0x1,
+        0x1,
+      ]),
+    );
     var paramsAsn1Obj = ASN1Object.fromBytes(Uint8List.fromList([0x5, 0x0]));
     algorithmSeq.add(algorithmAsn1Obj);
     algorithmSeq.add(paramsAsn1Obj);
@@ -336,9 +376,11 @@ class CryptoUtils {
     var privateExponent = ASN1Integer(rsaPrivateKey.privateExponent);
     var p = ASN1Integer(rsaPrivateKey.p);
     var q = ASN1Integer(rsaPrivateKey.q);
-    var dP = rsaPrivateKey.privateExponent! % (rsaPrivateKey.p! - BigInt.from(1));
+    var dP =
+        rsaPrivateKey.privateExponent! % (rsaPrivateKey.p! - BigInt.from(1));
     var exp1 = ASN1Integer(dP);
-    var dQ = rsaPrivateKey.privateExponent! % (rsaPrivateKey.q! - BigInt.from(1));
+    var dQ =
+        rsaPrivateKey.privateExponent! % (rsaPrivateKey.q! - BigInt.from(1));
     var exp2 = ASN1Integer(dQ);
     var iQ = rsaPrivateKey.q!.modInverse(rsaPrivateKey.p!);
     var co = ASN1Integer(iQ);
@@ -352,7 +394,9 @@ class CryptoUtils {
     privateKeySeq.add(exp1);
     privateKeySeq.add(exp2);
     privateKeySeq.add(co);
-    var publicKeySeqOctetString = ASN1OctetString(octets: Uint8List.fromList(privateKeySeq.encode()));
+    var publicKeySeqOctetString = ASN1OctetString(
+      octets: Uint8List.fromList(privateKeySeq.encode()),
+    );
 
     var topLevelSeq = ASN1Sequence();
     topLevelSeq.add(version);

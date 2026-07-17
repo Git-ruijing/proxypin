@@ -11,7 +11,9 @@ void main() {
     final manager = await RequestRewriteManager.instance;
     final previousEnabled = manager.enabled;
     final previousRules = List<RequestRewriteRule>.from(manager.rules);
-    final previousCache = Map<RequestRewriteRule, List<RewriteItem>>.from(manager.rewriteItemsCache);
+    final previousCache = Map<RequestRewriteRule, List<RewriteItem>>.from(
+      manager.rewriteItemsCache,
+    );
 
     addTearDown(() {
       manager.enabled = previousEnabled;
@@ -28,7 +30,8 @@ void main() {
       url: 'https://example.com/api',
       type: RuleType.responseReplace,
     );
-    final item = RewriteItem(RewriteType.replaceResponseBody, true)..body = '{"ok":true}';
+    final item = RewriteItem(RewriteType.replaceResponseBody, true)
+      ..body = '{"ok":true}';
 
     manager.enabled = true;
     manager.rules
@@ -43,10 +46,12 @@ void main() {
       ..request = request
       ..body = utf8.encode('upstream failed');
 
-    final matched = await RequestRewriteInterceptor.instance.responseRewrite(request.requestUrl, response);
+    final matched = await RequestRewriteInterceptor.instance.responseRewrite(
+      request.requestUrl,
+      response,
+    );
 
     expect(matched, isTrue);
     expect(response.getBodyString(), '{"ok":true}');
   });
 }
-

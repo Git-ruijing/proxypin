@@ -69,7 +69,11 @@ class ByteBuf {
   Uint8List readAvailableBytes() => readBytes(readableBytes());
 
   Uint8List readBytes(int length) {
-    Uint8List result = Uint8List.sublistView(_buffer, readerIndex, readerIndex + length);
+    Uint8List result = Uint8List.sublistView(
+      _buffer,
+      readerIndex,
+      readerIndex + length,
+    );
     readerIndex += length;
     return result;
   }
@@ -89,7 +93,8 @@ class ByteBuf {
   }
 
   int readInt() {
-    int value = (_buffer[readerIndex] << 24) |
+    int value =
+        (_buffer[readerIndex] << 24) |
         (_buffer[readerIndex + 1] << 16) |
         (_buffer[readerIndex + 2] << 8) |
         _buffer[readerIndex + 3];

@@ -1,4 +1,3 @@
-
 import 'package:flutter_test/flutter_test.dart';
 
 void main() {
@@ -13,8 +12,10 @@ void main() {
       int closeBracketIndex = authority.indexOf(']');
       if (closeBracketIndex != -1) {
         host = authority.substring(0, closeBracketIndex + 1);
-        if (authority.length > closeBracketIndex + 1 && authority[closeBracketIndex + 1] == ':') {
-          port = int.tryParse(authority.substring(closeBracketIndex + 2)) ?? port;
+        if (authority.length > closeBracketIndex + 1 &&
+            authority[closeBracketIndex + 1] == ':') {
+          port =
+              int.tryParse(authority.substring(closeBracketIndex + 2)) ?? port;
         }
       }
     } else {
@@ -43,8 +44,10 @@ void main() {
       int closeBracketIndex = authority.indexOf(']');
       if (closeBracketIndex != -1) {
         host = authority.substring(0, closeBracketIndex + 1);
-        if (authority.length > closeBracketIndex + 1 && authority[closeBracketIndex + 1] == ':') {
-          port = int.tryParse(authority.substring(closeBracketIndex + 2)) ?? port;
+        if (authority.length > closeBracketIndex + 1 &&
+            authority[closeBracketIndex + 1] == ':') {
+          port =
+              int.tryParse(authority.substring(closeBracketIndex + 2)) ?? port;
         }
       }
     } else {
@@ -77,61 +80,62 @@ void main() {
       int closeBracketIndex = authority.indexOf(']');
       if (closeBracketIndex != -1) {
         host = authority.substring(0, closeBracketIndex + 1);
-        if (authority.length > closeBracketIndex + 1 && authority[closeBracketIndex + 1] == ':') {
-          port = int.tryParse(authority.substring(closeBracketIndex + 2)) ?? port;
+        if (authority.length > closeBracketIndex + 1 &&
+            authority[closeBracketIndex + 1] == ':') {
+          port =
+              int.tryParse(authority.substring(closeBracketIndex + 2)) ?? port;
         }
       }
     } else {
-       // ...
+      // ...
     }
     // Logic says: if start with [ but no ], host remains authority.
     expect(host, "[240c");
   });
 
   test('Parsed IPv4 authority correctly', () {
-      var authority = "192.168.1.1:8080";
-      var scheme = "http";
+    var authority = "192.168.1.1:8080";
+    var scheme = "http";
 
-      String host = authority;
-      int port = (scheme == 'https' ? 443 : 80);
+    String host = authority;
+    int port = (scheme == 'https' ? 443 : 80);
 
-      if (authority.startsWith("[")) {
-          // ...
-      } else {
-        int lastColonIndex = authority.lastIndexOf(':');
-        if (lastColonIndex != -1) {
-          var p = int.tryParse(authority.substring(lastColonIndex + 1));
-          if (p != null) {
-            host = authority.substring(0, lastColonIndex);
-            port = p;
-          }
+    if (authority.startsWith("[")) {
+      // ...
+    } else {
+      int lastColonIndex = authority.lastIndexOf(':');
+      if (lastColonIndex != -1) {
+        var p = int.tryParse(authority.substring(lastColonIndex + 1));
+        if (p != null) {
+          host = authority.substring(0, lastColonIndex);
+          port = p;
         }
       }
-      expect(host, "192.168.1.1");
-      expect(port, 8080);
+    }
+    expect(host, "192.168.1.1");
+    expect(port, 8080);
   });
 
   test('Parsed simple hostname correctly', () {
-      var authority = "example.com";
-      var scheme = "https";
+    var authority = "example.com";
+    var scheme = "https";
 
-      String host = authority;
-      int port = (scheme == 'https' ? 443 : 80);
+    String host = authority;
+    int port = (scheme == 'https' ? 443 : 80);
 
-      if (authority.startsWith("[")) {
-          // ...
-      } else {
-        int lastColonIndex = authority.lastIndexOf(':');
-        if (lastColonIndex != -1) {
-          var p = int.tryParse(authority.substring(lastColonIndex + 1));
-          if (p != null) {
-            host = authority.substring(0, lastColonIndex);
-            port = p;
-          }
+    if (authority.startsWith("[")) {
+      // ...
+    } else {
+      int lastColonIndex = authority.lastIndexOf(':');
+      if (lastColonIndex != -1) {
+        var p = int.tryParse(authority.substring(lastColonIndex + 1));
+        if (p != null) {
+          host = authority.substring(0, lastColonIndex);
+          port = p;
         }
       }
-      expect(host, "example.com");
-      expect(port, 443);
+    }
+    expect(host, "example.com");
+    expect(port, 443);
   });
 }
-

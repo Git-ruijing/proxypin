@@ -16,7 +16,7 @@ String hexToBase64(String hex) {
   var arr = hex.split(' ');
   // 将十六进制字符串转换为字节数组
   List<int> bytes = [];
-  for (int i = 0; i < arr.length; i ++) {
+  for (int i = 0; i < arr.length; i++) {
     bytes.add(int.parse(arr[i], radix: 16));
   }
   print(bytes);

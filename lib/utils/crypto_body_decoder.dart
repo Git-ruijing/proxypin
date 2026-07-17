@@ -29,15 +29,25 @@ class CryptoBodyDecoder {
     return _tryDecode(message, match.config, rule: match);
   }
 
-  static CryptoDecodedResult? decode(HttpMessage message, CryptoKeyConfig config) {
+  static CryptoDecodedResult? decode(
+    HttpMessage message,
+    CryptoKeyConfig config,
+  ) {
     return _tryDecode(message, config);
   }
 
-  static CryptoDecodedResult? decodeWithConfig(HttpMessage message, CryptoKeyConfig config) {
+  static CryptoDecodedResult? decodeWithConfig(
+    HttpMessage message,
+    CryptoKeyConfig config,
+  ) {
     return _tryDecode(message, config);
   }
 
-  static CryptoDecodedResult? _tryDecode(HttpMessage message, CryptoKeyConfig config, {CryptoRule? rule}) {
+  static CryptoDecodedResult? _tryDecode(
+    HttpMessage message,
+    CryptoKeyConfig config, {
+    CryptoRule? rule,
+  }) {
     final raw = message.body;
     if (raw == null || raw.isEmpty || !config.isReady) {
       return null;
@@ -45,7 +55,9 @@ class CryptoBodyDecoder {
 
     // If rule specifies a field, try to parse body as JSON and extract that field for decryption
     final fieldPath = rule?.field?.trim();
-    logger.d("CryptoBodyDecoder _tryDecode with config: $config and rule: $rule fieldPath: $fieldPath");
+    logger.d(
+      "CryptoBodyDecoder _tryDecode with config: $config and rule: $rule fieldPath: $fieldPath",
+    );
     if (fieldPath != null && fieldPath.isNotEmpty) {
       // parse body as text
       final content = _bytesToString(raw, message.charset);
@@ -72,7 +84,11 @@ class CryptoBodyDecoder {
           final decrypted = _decryptCandidate(candidate, config);
           // print("CryptoBodyDecoder _tryDecode decrypted bytes: $decrypted");
           if (decrypted != null) {
-            return CryptoDecodedResult(bytes: decrypted, text: _bytesToString(decrypted, message.charset), rule: rule);
+            return CryptoDecodedResult(
+              bytes: decrypted,
+              text: _bytesToString(decrypted, message.charset),
+              rule: rule,
+            );
           }
         } catch (e) {
           logger.d("CryptoBodyDecoder _tryDecode decryption error: $e");
@@ -95,7 +111,11 @@ class CryptoBodyDecoder {
         final decrypted = _decryptCandidate(candidate, config);
         // logger.d("CryptoBodyDecoder _tryDecode decrypted bytes: $decrypted");
         if (decrypted != null) {
-          return CryptoDecodedResult(bytes: decrypted, text: _bytesToString(decrypted, message.charset), rule: rule);
+          return CryptoDecodedResult(
+            bytes: decrypted,
+            text: _bytesToString(decrypted, message.charset),
+            rule: rule,
+          );
         }
       } catch (e) {
         logger.d("CryptoBodyDecoder _tryDecode decryption error: $e");
@@ -106,7 +126,10 @@ class CryptoBodyDecoder {
   }
 
   // Attempt to decrypt a single candidate, handling ivSource == 'prefix' by extracting IV bytes.
-  static Uint8List? _decryptCandidate(Uint8List candidate, CryptoKeyConfig config) {
+  static Uint8List? _decryptCandidate(
+    Uint8List candidate,
+    CryptoKeyConfig config,
+  ) {
     const int aesBlockSize = 16;
     // If using prefix-mode, split IV and cipher bytes and ensure cipher bytes length is valid for non-PKCS7 paddings
     if (config.mode == 'CBC' && config.ivSource == 'prefix') {
@@ -115,11 +138,18 @@ class CryptoBodyDecoder {
       final ivBytes = candidate.sublist(0, n);
       final cipherBytes = candidate.sublist(n);
       // For non-PKCS7 paddings (e.g., ZeroPadding/raw) the cipher bytes length must be multiple of block size
-      if (config.padding != 'PKCS7' && (cipherBytes.length % aesBlockSize != 0)) return null;
+      if (config.padding != 'PKCS7' && (cipherBytes.length % aesBlockSize != 0))
+        return null;
       final ivStr = 'base64:' + base64.encode(ivBytes);
       try {
-        return AesUtils.decrypt(cipherBytes,
-            key: config.key, keyLength: config.keyLength, mode: config.mode, padding: config.padding, iv: ivStr);
+        return AesUtils.decrypt(
+          cipherBytes,
+          key: config.key,
+          keyLength: config.keyLength,
+          mode: config.mode,
+          padding: config.padding,
+          iv: ivStr,
+        );
       } catch (e) {
         logger.d('CryptoBodyDecoder _decryptCandidate error (prefix): $e');
         return null;
@@ -127,11 +157,18 @@ class CryptoBodyDecoder {
     } else {
       // iv provided in config.iv (may include base64: prefix or be plain text)
       // For non-PKCS7 paddings ensure candidate length is block-aligned before attempting raw decrypt
-      if (config.padding != 'PKCS7' && (candidate.length % aesBlockSize != 0)) return null;
+      if (config.padding != 'PKCS7' && (candidate.length % aesBlockSize != 0))
+        return null;
       final ivParam = (config.mode == 'CBC') ? config.iv : null;
       try {
-        return AesUtils.decrypt(candidate,
-            key: config.key, keyLength: config.keyLength, mode: config.mode, padding: config.padding, iv: ivParam);
+        return AesUtils.decrypt(
+          candidate,
+          key: config.key,
+          keyLength: config.keyLength,
+          mode: config.mode,
+          padding: config.padding,
+          iv: ivParam,
+        );
       } catch (e) {
         logger.d('CryptoBodyDecoder _decryptCandidate error: $e');
         return null;
@@ -158,7 +195,9 @@ class CryptoBodyDecoder {
     for (final part in parts) {
       if (current == null) return null;
       // check for array index like key[index]
-      final arrayMatch = RegExp(r"^([a-zA-Z0-9_\-]+)\[(\d+)\]").firstMatch(part);
+      final arrayMatch = RegExp(
+        r"^([a-zA-Z0-9_\-]+)\[(\d+)\]",
+      ).firstMatch(part);
       if (arrayMatch != null) {
         final key = arrayMatch.group(1)!;
         final idx = int.parse(arrayMatch.group(2)!);

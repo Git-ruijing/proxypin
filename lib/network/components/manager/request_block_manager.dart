@@ -42,7 +42,9 @@ class RequestBlockManager {
   }
 
   static Future<File> configFile() async {
-    var directory = await getApplicationSupportDirectory().then((it) => it.path);
+    var directory = await getApplicationSupportDirectory().then(
+      (it) => it.path,
+    );
     var file = File('$directory${Platform.pathSeparator}request_block.json');
     if (!await file.exists()) {
       await file.create(recursive: true);
@@ -121,7 +123,11 @@ class RequestBlockItem {
   }
 
   factory RequestBlockItem.fromJson(Map<String, dynamic> json) {
-    return RequestBlockItem(json['enabled'], json['url'], BlockType.nameOf(json['type']));
+    return RequestBlockItem(
+      json['enabled'],
+      json['url'],
+      BlockType.nameOf(json['type']),
+    );
   }
 
   Map<String, dynamic> toJson() {

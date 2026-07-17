@@ -59,12 +59,13 @@ class RemoteModel {
 
   factory RemoteModel.fromJson(Map<String, dynamic> json) {
     return RemoteModel(
-        connect: json['connect'],
-        host: json['host'],
-        port: json['port'],
-        os: json['os'],
-        hostname: json['hostname'],
-        ipProxy: json['ipProxy'] == true);
+      connect: json['connect'],
+      host: json['host'],
+      port: json['port'],
+      os: json['os'],
+      hostname: json['hostname'],
+      ipProxy: json['ipProxy'] == true,
+    );
   }
 
   RemoteModel copyWith({
@@ -93,7 +94,14 @@ class RemoteModel {
   }
 
   Map<String, dynamic> toJson() {
-    return {'connect': connect, 'host': host, 'port': port, 'os': os, 'hostname': hostname, 'ipProxy': ipProxy};
+    return {
+      'connect': connect,
+      'host': host,
+      'port': port,
+      'os': os,
+      'hostname': hostname,
+      'ipProxy': ipProxy,
+    };
   }
 }
 
@@ -101,7 +109,11 @@ class RemoteDevicePage extends StatefulWidget {
   final ProxyServer proxyServer;
   final ValueNotifier<RemoteModel> remoteDevice;
 
-  const RemoteDevicePage({super.key, required this.proxyServer, required this.remoteDevice});
+  const RemoteDevicePage({
+    super.key,
+    required this.proxyServer,
+    required this.remoteDevice,
+  });
 
   @override
   State<RemoteDevicePage> createState() => _RemoteDevicePageState();
@@ -117,49 +129,59 @@ class _RemoteDevicePageState extends State<RemoteDevicePage> {
     return Scaffold(
       appBar: AppBar(
         centerTitle: true,
-        title: Text(localizations.remoteDevice, style: const TextStyle(fontSize: 16)),
+        title: Text(
+          localizations.remoteDevice,
+          style: const TextStyle(fontSize: 16),
+        ),
         actions: [
           PopupMenuButton(
-            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(10),
+            ),
             elevation: 8,
             color: Theme.of(context).colorScheme.surface,
             icon: const Icon(Icons.add_outlined),
             itemBuilder: (BuildContext context) {
               return <PopupMenuEntry>[
                 CustomPopupMenuItem(
-                    height: 32,
-                    child: ListTile(
-                        leading: const Icon(Icons.qr_code_scanner_outlined),
-                        dense: true,
-                        title: Text(localizations.scanCode),
-                        onTap: () {
-                          Navigator.maybePop(context);
-                          connectRemote();
-                        })),
+                  height: 32,
+                  child: ListTile(
+                    leading: const Icon(Icons.qr_code_scanner_outlined),
+                    dense: true,
+                    title: Text(localizations.scanCode),
+                    onTap: () {
+                      Navigator.maybePop(context);
+                      connectRemote();
+                    },
+                  ),
+                ),
                 CustomPopupMenuItem(
-                    height: 32,
-                    child: ListTile(
-                        leading: const Icon(Icons.edit_rounded),
-                        dense: true,
-                        title: Text(localizations.inputAddress),
-                        onTap: () async {
-                          Navigator.maybePop(context);
-                          inputAddress(await localIp());
-                        })),
+                  height: 32,
+                  child: ListTile(
+                    leading: const Icon(Icons.edit_rounded),
+                    dense: true,
+                    title: Text(localizations.inputAddress),
+                    onTap: () async {
+                      Navigator.maybePop(context);
+                      inputAddress(await localIp());
+                    },
+                  ),
+                ),
                 PopupMenuItem(
-                    height: 32,
-                    child: ListTile(
-                      dense: true,
-                      leading: const Icon(Icons.phone_android),
-                      title: Text(localizations.myQRCode),
-                      onTap: () async {
-                        Navigator.maybePop(context);
-                        var ip = await localIp(readCache: false);
-                        if (context.mounted) {
-                          qrCode(context, ip, widget.proxyServer.port);
-                        }
-                      },
-                    )),
+                  height: 32,
+                  child: ListTile(
+                    dense: true,
+                    leading: const Icon(Icons.phone_android),
+                    title: Text(localizations.myQRCode),
+                    onTap: () async {
+                      Navigator.maybePop(context);
+                      var ip = await localIp(readCache: false);
+                      if (context.mounted) {
+                        qrCode(context, ip, widget.proxyServer.port);
+                      }
+                    },
+                  ),
+                ),
               ];
             },
           ),
@@ -173,9 +195,14 @@ class _RemoteDevicePageState extends State<RemoteDevicePage> {
           children: [
             remoteDeviceStatus(), //远程设备状态
             const SizedBox(height: 20),
-            Text(localizations.remoteDeviceList, style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w500)),
+            Text(
+              localizations.remoteDeviceList,
+              style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w500),
+            ),
             const SizedBox(height: 10),
-            Expanded(child: futureWidget(SharedPreferences.getInstance(), rows)), //远程设备列表
+            Expanded(
+              child: futureWidget(SharedPreferences.getInstance(), rows),
+            ), //远程设备列表
           ],
         ),
       ),
@@ -188,23 +215,29 @@ class _RemoteDevicePageState extends State<RemoteDevicePage> {
     return ListView(
       children: remoteDeviceList.map((remoteDevice) {
         return Dismissible(
-            key: Key(remoteDevice.identification),
-            onDismissed: (direction) async {
-              remoteDeviceList.removeWhere((it) => it.equals(remoteDevice));
-              await setRemoteDeviceList(prefs, remoteDeviceList);
+          key: Key(remoteDevice.identification),
+          onDismissed: (direction) async {
+            remoteDeviceList.removeWhere((it) => it.equals(remoteDevice));
+            await setRemoteDeviceList(prefs, remoteDeviceList);
 
-              setState(() {});
-              if (mounted) FlutterToastr.show(localizations.deleteSuccess, context);
+            setState(() {});
+            if (mounted)
+              FlutterToastr.show(localizations.deleteSuccess, context);
+          },
+          child: ListTile(
+            contentPadding: const EdgeInsets.symmetric(horizontal: 5),
+            title: Text(remoteDevice.hostname ?? ''),
+            subtitle: Text('${remoteDevice.host}:${remoteDevice.port}'),
+            trailing: getIcon(remoteDevice.os!),
+            onTap: () {
+              doConnect(
+                remoteDevice.host!,
+                remoteDevice.port!,
+                ipProxy: remoteDevice.ipProxy,
+              );
             },
-            child: ListTile(
-              contentPadding: const EdgeInsets.symmetric(horizontal: 5),
-              title: Text(remoteDevice.hostname ?? ''),
-              subtitle: Text('${remoteDevice.host}:${remoteDevice.port}'),
-              trailing: getIcon(remoteDevice.os!),
-              onTap: () {
-                doConnect(remoteDevice.host!, remoteDevice.port!, ipProxy: remoteDevice.ipProxy);
-              },
-            ));
+          ),
+        );
       }).toList(),
     );
   }
@@ -225,10 +258,15 @@ class _RemoteDevicePageState extends State<RemoteDevicePage> {
 
   List<RemoteModel> getRemoteDeviceList(SharedPreferences prefs) {
     var remoteDeviceList = prefs.getStringList('remoteDeviceList') ?? [];
-    return remoteDeviceList.map((it) => RemoteModel.fromJson(jsonDecode(it))).toList();
+    return remoteDeviceList
+        .map((it) => RemoteModel.fromJson(jsonDecode(it)))
+        .toList();
   }
 
-  Future<bool> setRemoteDeviceList(SharedPreferences prefs, Iterable<RemoteModel> remoteDeviceList) {
+  Future<bool> setRemoteDeviceList(
+    SharedPreferences prefs,
+    Iterable<RemoteModel> remoteDeviceList,
+  ) {
     var list = remoteDeviceList.map((it) => jsonEncode(it.toJson())).toList();
     return prefs.setStringList('remoteDeviceList', list);
   }
@@ -237,24 +275,34 @@ class _RemoteDevicePageState extends State<RemoteDevicePage> {
   Widget remoteDeviceStatus() {
     if (widget.remoteDevice.value.connect) {
       return Center(
-          child: Column(
-        children: [
-          const Icon(Icons.check_circle_outline_outlined, size: 55, color: Colors.green),
-          const SizedBox(height: 6),
-          if (Platform.isIOS)
-            Row(
-              children: [
-                Expanded(
+        child: Column(
+          children: [
+            const Icon(
+              Icons.check_circle_outline_outlined,
+              size: 55,
+              color: Colors.green,
+            ),
+            const SizedBox(height: 6),
+            if (Platform.isIOS)
+              Row(
+                children: [
+                  Expanded(
                     child: ListTile(
-                        title: Text(localizations.ipLayerProxy), subtitle: Text(localizations.ipLayerProxyDesc))),
-                SwitchWidget(
+                      title: Text(localizations.ipLayerProxy),
+                      subtitle: Text(localizations.ipLayerProxyDesc),
+                    ),
+                  ),
+                  SwitchWidget(
                     value: widget.remoteDevice.value.ipProxy ?? false,
                     scale: 0.85,
                     onChanged: (val) async {
-                      widget.remoteDevice.value = widget.remoteDevice.value.copyWith(ipProxy: val);
+                      widget.remoteDevice.value = widget.remoteDevice.value
+                          .copyWith(ipProxy: val);
                       SharedPreferences.getInstance().then((prefs) {
                         var remoteDeviceList = getRemoteDeviceList(prefs);
-                        remoteDeviceList.removeWhere((it) => it.equals(widget.remoteDevice.value));
+                        remoteDeviceList.removeWhere(
+                          (it) => it.equals(widget.remoteDevice.value),
+                        );
                         remoteDeviceList.insert(0, widget.remoteDevice.value);
 
                         setRemoteDeviceList(prefs, remoteDeviceList);
@@ -263,103 +311,133 @@ class _RemoteDevicePageState extends State<RemoteDevicePage> {
                       if ((await Vpn.isRunning())) {
                         Vpn.stopVpn();
                         Future.delayed(const Duration(milliseconds: 1500), () {
-                          Vpn.startVpn(widget.remoteDevice.value.host!, widget.remoteDevice.value.port!,
-                              widget.proxyServer.configuration,
-                              ipProxy: val);
+                          Vpn.startVpn(
+                            widget.remoteDevice.value.host!,
+                            widget.remoteDevice.value.port!,
+                            widget.proxyServer.configuration,
+                            ipProxy: val,
+                          );
                         });
                       }
-                    }),
+                    },
+                  ),
+                ],
+              ),
+            const SizedBox(height: 6),
+            Text(
+              '${localizations.connected}：${widget.remoteDevice.value.hostname}',
+              style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w500),
+            ),
+            const SizedBox(height: 6),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceAround,
+              children: [
+                TextButton.icon(
+                  style: ButtonStyle(
+                    shape: WidgetStateProperty.all<RoundedRectangleBorder>(
+                      RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(8.0),
+                      ),
+                    ),
+                  ),
+                  onPressed: pullConfig,
+                  icon: const Icon(Icons.sync),
+                  label: Text(localizations.syncConfig),
+                ),
+                TextButton.icon(
+                  label: Text(localizations.disconnect),
+                  style: ButtonStyle(
+                    shape: WidgetStateProperty.all<RoundedRectangleBorder>(
+                      RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(8.0),
+                      ),
+                    ),
+                  ),
+                  icon: const Icon(Icons.cancel_outlined),
+                  onPressed: () {
+                    widget.remoteDevice.value = RemoteModel(connect: false);
+                    setState(() {});
+                  },
+                ),
               ],
             ),
-          const SizedBox(height: 6),
-          Text('${localizations.connected}：${widget.remoteDevice.value.hostname}',
-              style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w500)),
-          const SizedBox(height: 6),
-          Row(mainAxisAlignment: MainAxisAlignment.spaceAround, children: [
-            TextButton.icon(
-              style: ButtonStyle(
-                  shape: WidgetStateProperty.all<RoundedRectangleBorder>(
-                      RoundedRectangleBorder(borderRadius: BorderRadius.circular(8.0)))),
-              onPressed: pullConfig,
-              icon: const Icon(Icons.sync),
-              label: Text(localizations.syncConfig),
-            ),
-            TextButton.icon(
-              label: Text(localizations.disconnect),
-              style: ButtonStyle(
-                shape: WidgetStateProperty.all<RoundedRectangleBorder>(
-                    RoundedRectangleBorder(borderRadius: BorderRadius.circular(8.0))),
-              ),
-              icon: const Icon(Icons.cancel_outlined),
-              onPressed: () {
-                widget.remoteDevice.value = RemoteModel(connect: false);
-                setState(() {});
-              },
-            ),
-          ])
-        ],
-      ));
+          ],
+        ),
+      );
     }
 
     return Center(
-        child: Column(children: [
-      const Icon(Icons.cancel_outlined, size: 55, color: Colors.red),
-      const SizedBox(height: 6),
-      Text(localizations.notConnected, style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w500)),
-    ]));
+      child: Column(
+        children: [
+          const Icon(Icons.cancel_outlined, size: 55, color: Colors.red),
+          const SizedBox(height: 6),
+          Text(
+            localizations.notConnected,
+            style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w500),
+          ),
+        ],
+      ),
+    );
   }
 
   ///输入地址链接
   inputAddress(var host) {
     //输入账号密码连接
-    host = host.substring(0, host.contains('.') ? host.lastIndexOf('.') + 1 : host.length);
+    host = host.substring(
+      0,
+      host.contains('.') ? host.lastIndexOf('.') + 1 : host.length,
+    );
     int? port = 9099;
     if (!context.mounted) return;
 
     showDialog(
-        context: context,
-        builder: (context) {
-          return AlertDialog(
-            title: Text(localizations.inputAddress),
-            content: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                TextFormField(
-                  initialValue: host,
-                  decoration: const InputDecoration(hintText: 'Host'),
-                  keyboardType: TextInputType.url,
-                  onChanged: (value) => host = value,
-                ),
-                TextFormField(
-                    initialValue: port.toString(),
-                    decoration: const InputDecoration(hintText: 'Port'),
-                    keyboardType: TextInputType.number,
-                    onChanged: (value) {
-                      port = value.isEmpty ? null : int.tryParse(value);
-                    }),
-              ],
-            ),
-            actions: [
-              TextButton(
-                  onPressed: () {
-                    Navigator.pop(context);
-                  },
-                  child: Text(localizations.cancel)),
-              TextButton(
-                  onPressed: () async {
-                    if (host.isEmpty || port == null) {
-                      FlutterToastr.show(localizations.cannotBeEmpty, context);
-                      return;
-                    }
-
-                    if ((await doConnect(host, port!)) && context.mounted) {
-                      Navigator.pop(context);
-                    }
-                  },
-                  child: Text(localizations.connectRemote)),
+      context: context,
+      builder: (context) {
+        return AlertDialog(
+          title: Text(localizations.inputAddress),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              TextFormField(
+                initialValue: host,
+                decoration: const InputDecoration(hintText: 'Host'),
+                keyboardType: TextInputType.url,
+                onChanged: (value) => host = value,
+              ),
+              TextFormField(
+                initialValue: port.toString(),
+                decoration: const InputDecoration(hintText: 'Port'),
+                keyboardType: TextInputType.number,
+                onChanged: (value) {
+                  port = value.isEmpty ? null : int.tryParse(value);
+                },
+              ),
             ],
-          );
-        });
+          ),
+          actions: [
+            TextButton(
+              onPressed: () {
+                Navigator.pop(context);
+              },
+              child: Text(localizations.cancel),
+            ),
+            TextButton(
+              onPressed: () async {
+                if (host.isEmpty || port == null) {
+                  FlutterToastr.show(localizations.cannotBeEmpty, context);
+                  return;
+                }
+
+                if ((await doConnect(host, port!)) && context.mounted) {
+                  Navigator.pop(context);
+                }
+              },
+              child: Text(localizations.connectRemote),
+            ),
+          ],
+        );
+      },
+    );
   }
 
   ///扫码连接
@@ -369,7 +447,8 @@ class _RemoteDevicePageState extends State<RemoteDevicePage> {
     if (scanRes == null) return;
 
     if (scanRes == "-1") {
-      if (context.mounted) FlutterToastr.show(localizations.invalidQRCode, context);
+      if (context.mounted)
+        FlutterToastr.show(localizations.invalidQRCode, context);
       return;
     }
 
@@ -401,7 +480,10 @@ class _RemoteDevicePageState extends State<RemoteDevicePage> {
     doConnecting = true;
 
     try {
-      var response = await HttpClients.get("http://$host:$port/ping", timeout: const Duration(milliseconds: 3000));
+      var response = await HttpClients.get(
+        "http://$host:$port/ping",
+        timeout: const Duration(milliseconds: 3000),
+      );
       if (response.bodyAsString == "pong") {
         widget.remoteDevice.value = RemoteModel(
           connect: true,
@@ -415,7 +497,9 @@ class _RemoteDevicePageState extends State<RemoteDevicePage> {
         //去重记录5条连接记录
         SharedPreferences prefs = await SharedPreferences.getInstance();
         var remoteDeviceList = getRemoteDeviceList(prefs);
-        remoteDeviceList.removeWhere((it) => it.equals(widget.remoteDevice.value));
+        remoteDeviceList.removeWhere(
+          (it) => it.equals(widget.remoteDevice.value),
+        );
         remoteDeviceList.insert(0, widget.remoteDevice.value);
 
         var list = remoteDeviceList.take(5);
@@ -425,15 +509,17 @@ class _RemoteDevicePageState extends State<RemoteDevicePage> {
 
         if (mounted) {
           CustomToast.success(
-                  "${localizations.connectSuccess}${Vpn.isVpnStarted ? '' : ', ${localizations.remoteConnectSuccessTips}'}")
-              .show(context);
+            "${localizations.connectSuccess}${Vpn.isVpnStarted ? '' : ', ${localizations.remoteConnectSuccessTips}'}",
+          ).show(context);
         }
       }
       return true;
     } catch (e) {
       logger.e(e);
       if (mounted) {
-        CustomToast.error(localizations.remoteConnectFail).show(context, alignment: Alignment.topCenter);
+        CustomToast.error(
+          localizations.remoteConnectFail,
+        ).show(context, alignment: Alignment.topCenter);
       }
       return false;
     } finally {
@@ -446,60 +532,79 @@ class _RemoteDevicePageState extends State<RemoteDevicePage> {
     AppLocalizations localizations = AppLocalizations.of(context)!;
 
     showDialog(
-        context: context,
-        builder: (context) {
-          return AlertDialog(
-            contentPadding: const EdgeInsets.all(15),
-            actionsPadding: const EdgeInsets.only(bottom: 10, right: 10),
-            title: Text(localizations.remoteConnectForward, style: const TextStyle(fontSize: 16)),
-            content: SizedBox(
-                height: 280,
-                width: 300,
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
+      context: context,
+      builder: (context) {
+        return AlertDialog(
+          contentPadding: const EdgeInsets.all(15),
+          actionsPadding: const EdgeInsets.only(bottom: 10, right: 10),
+          title: Text(
+            localizations.remoteConnectForward,
+            style: const TextStyle(fontSize: 16),
+          ),
+          content: SizedBox(
+            height: 280,
+            width: 300,
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                QrImageView(
+                  backgroundColor: Colors.white,
+                  data:
+                      "proxypin://connect?host=$host&port=${widget.proxyServer.port}",
+                  version: QrVersions.auto,
+                  size: 200.0,
+                ),
+                const SizedBox(height: 10),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
                   children: [
-                    QrImageView(
-                        backgroundColor: Colors.white,
-                        data: "proxypin://connect?host=$host&port=${widget.proxyServer.port}",
-                        version: QrVersions.auto,
-                        size: 200.0),
-                    const SizedBox(height: 10),
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        Text('${localizations.localIP}:'),
-                        const SizedBox(width: 5),
-                        SelectableText('$host:$port'),
-                      ],
-                    ),
-                    const SizedBox(height: 10),
-                    Text(localizations.mobileScan),
+                    Text('${localizations.localIP}:'),
+                    const SizedBox(width: 5),
+                    SelectableText('$host:$port'),
                   ],
-                )),
-            actions: [
-              TextButton(onPressed: () => Navigator.of(context).pop(), child: Text(localizations.cancel)),
-            ],
-          );
-        });
+                ),
+                const SizedBox(height: 10),
+                Text(localizations.mobileScan),
+              ],
+            ),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(context).pop(),
+              child: Text(localizations.cancel),
+            ),
+          ],
+        );
+      },
+    );
   }
 
   //拉取桌面配置
   pullConfig() {
     var desktopModel = widget.remoteDevice.value;
-    HttpClients.get('http://${desktopModel.host}:${desktopModel.port}/config').then((response) {
-      if (response.status.isSuccessful() && mounted) {
-        var config = jsonDecode(response.bodyAsString);
-        syncConfig = true;
-        showDialog(
-            context: context,
-            builder: (context) {
-              return ConfigSyncWidget(configuration: widget.proxyServer.configuration, config: config);
-            });
-      }
-    }).onError((error, stackTrace) {
-      logger.e('拉取配置失败', error: error, stackTrace: stackTrace);
-      if (mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(localizations.pullConfigFail)));
-    });
+    HttpClients.get('http://${desktopModel.host}:${desktopModel.port}/config')
+        .then((response) {
+          if (response.status.isSuccessful() && mounted) {
+            var config = jsonDecode(response.bodyAsString);
+            syncConfig = true;
+            showDialog(
+              context: context,
+              builder: (context) {
+                return ConfigSyncWidget(
+                  configuration: widget.proxyServer.configuration,
+                  config: config,
+                );
+              },
+            );
+          }
+        })
+        .onError((error, stackTrace) {
+          logger.e('拉取配置失败', error: error, stackTrace: stackTrace);
+          if (mounted)
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(content: Text(localizations.pullConfigFail)),
+            );
+        });
   }
 }
 
@@ -507,7 +612,11 @@ class ConfigSyncWidget extends StatefulWidget {
   final Configuration configuration;
   final Map<String, dynamic> config;
 
-  const ConfigSyncWidget({super.key, required this.configuration, required this.config});
+  const ConfigSyncWidget({
+    super.key,
+    required this.configuration,
+    required this.config,
+  });
 
   @override
   State<StatefulWidget> createState() {
@@ -526,82 +635,103 @@ class ConfigSyncState extends State<ConfigSyncWidget> {
   @override
   Widget build(BuildContext context) {
     return AlertDialog(
-      title: Text(localizations.syncConfig, style: const TextStyle(fontSize: 16)),
-      content: Wrap(children: [
-        SwitchWidget(
+      title: Text(
+        localizations.syncConfig,
+        style: const TextStyle(fontSize: 16),
+      ),
+      content: Wrap(
+        children: [
+          SwitchWidget(
             title: "${localizations.sync} ${localizations.domainWhitelist}",
             value: syncWhiteList,
             onChanged: (val) {
               setState(() {
                 syncWhiteList = val;
               });
-            }),
-        const SizedBox(height: 5),
-        SwitchWidget(
+            },
+          ),
+          const SizedBox(height: 5),
+          SwitchWidget(
             title: "${localizations.sync} ${localizations.domainBlacklist}",
             value: syncBlackList,
             onChanged: (val) {
               setState(() {
                 syncBlackList = val;
               });
-            }),
-        const SizedBox(height: 5),
-        SwitchWidget(
+            },
+          ),
+          const SizedBox(height: 5),
+          SwitchWidget(
             title: "${localizations.sync} ${localizations.requestRewrite}",
             value: syncRewrite,
             onChanged: (val) {
               setState(() {
                 syncRewrite = val;
               });
-            }),
-        const SizedBox(height: 5),
-        SwitchWidget(
+            },
+          ),
+          const SizedBox(height: 5),
+          SwitchWidget(
             title: "${localizations.sync} ${localizations.script}",
             value: syncScript,
             onChanged: (val) {
               setState(() {
                 syncScript = val;
               });
-            }),
-      ]),
+            },
+          ),
+        ],
+      ),
       actions: [
         TextButton(
-            child: Text(localizations.cancel),
-            onPressed: () {
-              Navigator.pop(context);
-            }),
+          child: Text(localizations.cancel),
+          onPressed: () {
+            Navigator.pop(context);
+          },
+        ),
         TextButton(
-            child: Text('${localizations.start} ${localizations.sync}'),
-            onPressed: () async {
-              if (syncWhiteList) {
-                HostFilter.whitelist.load(widget.config['whitelist']);
-              }
-              if (syncBlackList) {
-                HostFilter.blacklist.load(widget.config['blacklist']);
-              }
-              widget.configuration.flushConfig();
+          child: Text('${localizations.start} ${localizations.sync}'),
+          onPressed: () async {
+            if (syncWhiteList) {
+              HostFilter.whitelist.load(widget.config['whitelist']);
+            }
+            if (syncBlackList) {
+              HostFilter.blacklist.load(widget.config['blacklist']);
+            }
+            widget.configuration.flushConfig();
 
-              if (syncRewrite) {
-                var requestRewrites = await RequestRewriteManager.instance;
-                await requestRewrites.syncConfig(widget.config['requestRewrites']);
-              }
+            if (syncRewrite) {
+              var requestRewrites = await RequestRewriteManager.instance;
+              await requestRewrites.syncConfig(
+                widget.config['requestRewrites'],
+              );
+            }
 
-              if (syncScript) {
-                var scriptManager = await ScriptManager.instance;
-                await scriptManager.clean();
-                scriptManager.list.clear();
-                for (var item in widget.config['scripts']) {
-                  await scriptManager.addScript(ScriptItem.fromJson(item), item['script']);
-                }
-                await scriptManager.flushConfig();
+            if (syncScript) {
+              var scriptManager = await ScriptManager.instance;
+              await scriptManager.clean();
+              scriptManager.list.clear();
+              for (var item in widget.config['scripts']) {
+                await scriptManager.addScript(
+                  ScriptItem.fromJson(item),
+                  item['script'],
+                );
               }
+              await scriptManager.flushConfig();
+            }
 
-              if (mounted) {
-                Navigator.pop(this.context);
-                ScaffoldMessenger.of(this.context)
-                    .showSnackBar(SnackBar(content: Text('${localizations.sync}${localizations.success}')));
-              }
-            }),
+            if (mounted) {
+              Navigator.pop(this.context);
+              ScaffoldMessenger.of(this.context).showSnackBar(
+                SnackBar(
+                  content: Text(
+                    '${localizations.sync}${localizations.success}',
+                  ),
+                ),
+              );
+            }
+          },
+        ),
       ],
     );
   }

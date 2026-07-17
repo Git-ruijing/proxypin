@@ -14,7 +14,8 @@ class ReportServersPageMobile extends StatefulWidget {
   const ReportServersPageMobile({super.key});
 
   @override
-  State<ReportServersPageMobile> createState() => _ReportServersPageMobileState();
+  State<ReportServersPageMobile> createState() =>
+      _ReportServersPageMobileState();
 }
 
 class _ReportServersPageMobileState extends State<ReportServersPageMobile> {
@@ -25,7 +26,8 @@ class _ReportServersPageMobileState extends State<ReportServersPageMobile> {
 
   Future<void> _openGuide() async {
     final locale = AppLocalizations.of(context)?.localeName ?? '';
-    final cn = 'https://gitee.com/wanghongenpin/proxypin/wikis/%E4%B8%8A%E6%8A%A5%E6%9C%8D%E5%8A%A1%E5%99%A8';
+    final cn =
+        'https://gitee.com/wanghongenpin/proxypin/wikis/%E4%B8%8A%E6%8A%A5%E6%9C%8D%E5%8A%A1%E5%99%A8';
     final en = 'https://github.com/wanghongenpin/proxypin/wiki/Report-Server';
     final url = (locale.startsWith('zh')) ? cn : en;
     final uri = Uri.parse(url);
@@ -83,18 +85,24 @@ class _ReportServersPageMobileState extends State<ReportServersPageMobile> {
   }
 
   Future<void> _confirmDelete(int index) async {
-    showConfirmDialog(context, onConfirm: () async {
-      final manager = await ReportServerManager.instance;
-      await manager.removeAt(index);
-      await _load();
-    });
+    showConfirmDialog(
+      context,
+      onConfirm: () async {
+        final manager = await ReportServerManager.instance;
+        await manager.removeAt(index);
+        await _load();
+      },
+    );
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text(localizations.reportServers, style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w500)),
+        title: Text(
+          localizations.reportServers,
+          style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w500),
+        ),
         centerTitle: true,
         actions: [
           IconButton(
@@ -107,44 +115,52 @@ class _ReportServersPageMobileState extends State<ReportServersPageMobile> {
             onPressed: _addServer,
             icon: const Icon(Icons.add, size: 26),
           ),
-          SizedBox(width: 5)
+          SizedBox(width: 5),
         ],
       ),
       body: _loading
           ? const Center(child: CircularProgressIndicator())
           : _servers.isEmpty
-              ? Center(child: Text(localizations.emptyData))
-              : ListView.separated(
-                  itemCount: _servers.length,
-                  separatorBuilder: (_, __) => const Divider(height: 0, thickness: 0.3),
-                  itemBuilder: (ctx, idx) {
-                    final s = _servers[idx];
-                    return ListTile(
-                      contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 0),
-                      leading: SizedBox(
-                          width: 32,
-                          child: Checkbox(
-                              value: s.enabled,
-                              onChanged: (v) async {
-                                final manager = await ReportServerManager.instance;
-                                await manager.toggleEnabled(idx, v == true);
-                                await _load();
-                              })),
-                      title: Text(s.name.isEmpty ? '-' : s.name),
-                      subtitle: Text(s.serverUrl),
-                      trailing: Row(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          // IconButton(
-                          //     onPressed: () => _editServer(idx), icon: const Icon(Icons.edit_outlined, size: 23)),
-                          IconButton(
-                              onPressed: () => _confirmDelete(idx), icon: const Icon(Icons.delete_outline, size: 23)),
-                        ],
+          ? Center(child: Text(localizations.emptyData))
+          : ListView.separated(
+              itemCount: _servers.length,
+              separatorBuilder: (_, __) =>
+                  const Divider(height: 0, thickness: 0.3),
+              itemBuilder: (ctx, idx) {
+                final s = _servers[idx];
+                return ListTile(
+                  contentPadding: const EdgeInsets.symmetric(
+                    horizontal: 12,
+                    vertical: 0,
+                  ),
+                  leading: SizedBox(
+                    width: 32,
+                    child: Checkbox(
+                      value: s.enabled,
+                      onChanged: (v) async {
+                        final manager = await ReportServerManager.instance;
+                        await manager.toggleEnabled(idx, v == true);
+                        await _load();
+                      },
+                    ),
+                  ),
+                  title: Text(s.name.isEmpty ? '-' : s.name),
+                  subtitle: Text(s.serverUrl),
+                  trailing: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      // IconButton(
+                      //     onPressed: () => _editServer(idx), icon: const Icon(Icons.edit_outlined, size: 23)),
+                      IconButton(
+                        onPressed: () => _confirmDelete(idx),
+                        icon: const Icon(Icons.delete_outline, size: 23),
                       ),
-                      onTap: () => _editServer(idx),
-                    );
-                  },
-                ),
+                    ],
+                  ),
+                  onTap: () => _editServer(idx),
+                );
+              },
+            ),
     );
   }
 }
@@ -156,10 +172,12 @@ class ReportServerEditPageMobile extends StatefulWidget {
   const ReportServerEditPageMobile({super.key, this.initial});
 
   @override
-  State<ReportServerEditPageMobile> createState() => _ReportServerEditPageMobileState();
+  State<ReportServerEditPageMobile> createState() =>
+      _ReportServerEditPageMobileState();
 }
 
-class _ReportServerEditPageMobileState extends State<ReportServerEditPageMobile> {
+class _ReportServerEditPageMobileState
+    extends State<ReportServerEditPageMobile> {
   late TextEditingController _nameCtrl;
   late TextEditingController _matchUrlCtrl;
   late TextEditingController _serverUrlCtrl;
@@ -182,28 +200,37 @@ class _ReportServerEditPageMobileState extends State<ReportServerEditPageMobile>
   }
 
   InputDecoration dec({String? hint}) => InputDecoration(
-        hintText: hint,
-        hintStyle: TextStyle(color: Colors.grey.shade500, fontSize: 14),
-        contentPadding: const EdgeInsets.symmetric(horizontal: 8, vertical: 12),
-        focusedBorder:
-            OutlineInputBorder(borderSide: BorderSide(color: Theme.of(context).colorScheme.primary, width: 2)),
-        isDense: true,
-        border: const OutlineInputBorder(),
-      );
+    hintText: hint,
+    hintStyle: TextStyle(color: Colors.grey.shade500, fontSize: 14),
+    contentPadding: const EdgeInsets.symmetric(horizontal: 8, vertical: 12),
+    focusedBorder: OutlineInputBorder(
+      borderSide: BorderSide(
+        color: Theme.of(context).colorScheme.primary,
+        width: 2,
+      ),
+    ),
+    isDense: true,
+    border: const OutlineInputBorder(),
+  );
 
   Widget labeled(String label, Widget field, {bool expanded = true}) => Row(
-        children: [
-          SizedBox(width: AppLocalizations.of(context)!.localeName == 'en' ? 95 : 85, child: Text(label)),
-          const SizedBox(width: 12),
-          expanded ? Expanded(child: field) : field,
-        ],
-      );
+    children: [
+      SizedBox(
+        width: AppLocalizations.of(context)!.localeName == 'en' ? 95 : 85,
+        child: Text(label),
+      ),
+      const SizedBox(width: 12),
+      expanded ? Expanded(child: field) : field,
+    ],
+  );
 
   void _onSave() {
     if (!(_formKey.currentState as FormState).validate()) {
       FlutterToastr.show(
-          "${AppLocalizations.of(context)!.serverUrl} ${AppLocalizations.of(context)!.cannotBeEmpty}", context,
-          position: FlutterToastr.top);
+        "${AppLocalizations.of(context)!.serverUrl} ${AppLocalizations.of(context)!.cannotBeEmpty}",
+        context,
+        position: FlutterToastr.top,
+      );
       return;
     }
 
@@ -229,7 +256,11 @@ class _ReportServerEditPageMobileState extends State<ReportServerEditPageMobile>
     final localizations = AppLocalizations.of(context)!;
     return Scaffold(
       appBar: AppBar(
-        title: Text(widget.initial == null ? localizations.addReportServer : localizations.editReportServer),
+        title: Text(
+          widget.initial == null
+              ? localizations.addReportServer
+              : localizations.editReportServer,
+        ),
         centerTitle: true,
         actions: [
           TextButton(onPressed: _onSave, child: Text(localizations.save)),
@@ -244,25 +275,32 @@ class _ReportServerEditPageMobileState extends State<ReportServerEditPageMobile>
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 const SizedBox(height: 6),
-                labeled('${localizations.name}: ',
-                    TextField(controller: _nameCtrl, decoration: dec(hint: localizations.pleaseEnter))),
+                labeled(
+                  '${localizations.name}: ',
+                  TextField(
+                    controller: _nameCtrl,
+                    decoration: dec(hint: localizations.pleaseEnter),
+                  ),
+                ),
                 const SizedBox(height: 12),
                 labeled(
                   '${localizations.match} URL: ',
                   TextFormField(
-                      controller: _matchUrlCtrl,
-                      keyboardType: TextInputType.url,
-                      validator: (v) => v?.isNotEmpty == true ? null : "",
-                      decoration: dec(hint: 'https://example.com/api/*')),
+                    controller: _matchUrlCtrl,
+                    keyboardType: TextInputType.url,
+                    validator: (v) => v?.isNotEmpty == true ? null : "",
+                    decoration: dec(hint: 'https://example.com/api/*'),
+                  ),
                 ),
                 const SizedBox(height: 12),
                 labeled(
                   '${localizations.serverUrl}: ',
                   TextFormField(
-                      controller: _serverUrlCtrl,
-                      keyboardType: TextInputType.url,
-                      validator: (v) => v?.isNotEmpty == true ? null : "",
-                      decoration: dec(hint: 'http://example.com/report')),
+                    controller: _serverUrlCtrl,
+                    keyboardType: TextInputType.url,
+                    validator: (v) => v?.isNotEmpty == true ? null : "",
+                    decoration: dec(hint: 'http://example.com/report'),
+                  ),
                 ),
                 const SizedBox(height: 12),
                 labeled(
@@ -274,10 +312,14 @@ class _ReportServerEditPageMobileState extends State<ReportServerEditPageMobile>
                       value: _compression,
                       decoration: dec(),
                       items: [
-                        DropdownMenuItem(value: 'none', child: Text(localizations.compressionNone)),
+                        DropdownMenuItem(
+                          value: 'none',
+                          child: Text(localizations.compressionNone),
+                        ),
                         DropdownMenuItem(value: 'gzip', child: Text('GZIP')),
                       ],
-                      onChanged: (v) => setState(() => _compression = v ?? 'none'),
+                      onChanged: (v) =>
+                          setState(() => _compression = v ?? 'none'),
                     ),
                   ),
                 ),
@@ -285,15 +327,25 @@ class _ReportServerEditPageMobileState extends State<ReportServerEditPageMobile>
                 labeled(
                   '${localizations.enable}: ',
                   Align(
-                      alignment: Alignment.centerLeft,
-                      child: SwitchWidget(value: _enabled, scale: 0.9, onChanged: (v) => setState(() => _enabled = v))),
+                    alignment: Alignment.centerLeft,
+                    child: SwitchWidget(
+                      value: _enabled,
+                      scale: 0.9,
+                      onChanged: (v) => setState(() => _enabled = v),
+                    ),
+                  ),
                 ),
                 const SizedBox(height: 12),
                 labeled(
                   '${localizations.splitReport}: ',
                   Align(
-                      alignment: Alignment.centerLeft,
-                      child: SwitchWidget(value: _splitReport, scale: 0.9, onChanged: (v) => setState(() => _splitReport = v))),
+                    alignment: Alignment.centerLeft,
+                    child: SwitchWidget(
+                      value: _splitReport,
+                      scale: 0.9,
+                      onChanged: (v) => setState(() => _splitReport = v),
+                    ),
+                  ),
                 ),
               ],
             ),

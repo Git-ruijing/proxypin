@@ -68,7 +68,9 @@ abstract class HttpMessage {
   String? remoteHost;
   int? remotePort;
 
-  String requestId = (DateTime.now().millisecondsSinceEpoch).toRadixString(36) + RandomUtil.randomString(8); //请求id
+  String requestId =
+      (DateTime.now().millisecondsSinceEpoch).toRadixString(36) +
+      RandomUtil.randomString(8); //请求id
   int? streamId; // http2 streamId
 
   /// 大 body 流式转发模式：为 true 时 encoder 只输出 headers，
@@ -92,8 +94,10 @@ abstract class HttpMessage {
   bool get isWebSocket => headers.get("Upgrade") == 'websocket';
 
   ContentType get contentType => contentTypes.entries
-      .firstWhere((element) => headers.contentType.contains(element.key),
-          orElse: () => const MapEntry("unknown", ContentType.http))
+      .firstWhere(
+        (element) => headers.contentType.contains(element.key),
+        orElse: () => const MapEntry("unknown", ContentType.http),
+      )
       .value;
 
   List<int>? get body => _body;
@@ -199,7 +203,8 @@ class HttpRequest extends HttpMessage {
     _requestUri = null;
   }
 
-  HttpRequest(this.method, this._uri, {String protocolVersion = "HTTP/1.1"}) : super(protocolVersion);
+  HttpRequest(this.method, this._uri, {String protocolVersion = "HTTP/1.1"})
+    : super(protocolVersion);
 
   String? remoteDomain() {
     if (hostAndPort == null && HostAndPort.startsWithScheme(uri)) {
@@ -235,7 +240,9 @@ class HttpRequest extends HttpMessage {
       _requestUri ??= Uri.parse(requestUrl);
       return _requestUri;
     } catch (e) {
-      logger.w('parse uri error $requestUrl  ${hostAndPort?.scheme} ${hostAndPort?.host}: $e');
+      logger.w(
+        'parse uri error $requestUrl  ${hostAndPort?.scheme} ${hostAndPort?.host}: $e',
+      );
       return null;
     }
   }
@@ -247,7 +254,8 @@ class HttpRequest extends HttpMessage {
   String get path => requestUri?.path ?? '';
 
   /// path and query
-  String get pathAndQuery => '${requestUri?.path}${requestUri?.hasQuery == true ? '?${requestUri?.query}' : ''}';
+  String get pathAndQuery =>
+      '${requestUri?.path}${requestUri?.hasQuery == true ? '?${requestUri?.query}' : ''}';
 
   Map<String, String> get queries => requestUri?.queryParameters ?? {};
 
@@ -259,7 +267,11 @@ class HttpRequest extends HttpMessage {
 
   ///复制请求
   HttpRequest copy({String? uri}) {
-    var request = HttpRequest(method, uri ?? this.uri, protocolVersion: protocolVersion);
+    var request = HttpRequest(
+      method,
+      uri ?? this.uri,
+      protocolVersion: protocolVersion,
+    );
     request.headers.addAll(headers);
     if (uri != null && !uri.startsWith('/')) {
       request.hostAndPort = HostAndPort.of(uri);
@@ -288,14 +300,19 @@ class HttpRequest extends HttpMessage {
   }
 
   factory HttpRequest.fromJson(Map<String, dynamic> json) {
-    var request = HttpRequest(HttpMethod.valueOf(json['method']), json['uri'],
-        protocolVersion: json['protocolVersion'] ?? "HTTP/1.1");
+    var request = HttpRequest(
+      HttpMethod.valueOf(json['method']),
+      json['uri'],
+      protocolVersion: json['protocolVersion'] ?? "HTTP/1.1",
+    );
 
     request.requestId = json['_id'] ?? request.requestId;
     request.headers.addAll(HttpHeaders.fromJson(json['headers']));
     request.body = json['body']?.toString().codeUnits;
     if (json['requestTime'] != null) {
-      request.requestTime = DateTime.fromMillisecondsSinceEpoch(json['requestTime']);
+      request.requestTime = DateTime.fromMillisecondsSinceEpoch(
+        json['requestTime'],
+      );
     }
 
     if (json['messages'] is List) {
@@ -324,7 +341,8 @@ class HttpResponse extends HttpMessage {
   @override
   String? get requestUrl => request?.requestUrl ?? _requestUrl;
 
-  HttpResponse(this.status, {String protocolVersion = "HTTP/1.1"}) : super(protocolVersion);
+  HttpResponse(this.status, {String protocolVersion = "HTTP/1.1"})
+    : super(protocolVersion);
 
   /// 复制响应
   HttpResponse copy() {
@@ -349,12 +367,17 @@ class HttpResponse extends HttpMessage {
 
   //json序列化
   factory HttpResponse.fromJson(Map<String, dynamic> json) {
-    var httpResponse = HttpResponse(HttpStatus(json['status']['code'], json['status']['reasonPhrase']),
-        protocolVersion: json['protocolVersion'])
-      ..headers.addAll(HttpHeaders.fromJson(json['headers']))
-      ..body = json['body']?.toString().codeUnits;
+    var httpResponse =
+        HttpResponse(
+            HttpStatus(json['status']['code'], json['status']['reasonPhrase']),
+            protocolVersion: json['protocolVersion'],
+          )
+          ..headers.addAll(HttpHeaders.fromJson(json['headers']))
+          ..body = json['body']?.toString().codeUnits;
     if (json['responseTime'] != null) {
-      httpResponse.responseTime = DateTime.fromMillisecondsSinceEpoch(json['responseTime']);
+      httpResponse.responseTime = DateTime.fromMillisecondsSinceEpoch(
+        json['responseTime'],
+      );
     }
     if (json['messages'] is List) {
       httpResponse.messages = (json['messages'] as List)
@@ -374,10 +397,7 @@ class HttpResponse extends HttpMessage {
       'requestUrl': request?.requestUrl ?? _requestUrl,
       'protocolVersion': protocolVersion,
       'packageSize': packageSize,
-      'status': {
-        'code': status.code,
-        'reasonPhrase': status.reasonPhrase,
-      },
+      'status': {'code': status.code, 'reasonPhrase': status.reasonPhrase},
       'headers': headers.toJson(),
       'body': body == null ? null : String.fromCharCodes(body!),
       'responseTime': responseTime.millisecondsSinceEpoch,
@@ -403,8 +423,7 @@ enum HttpMethod {
   trace("TRACE"),
   connect("CONNECT"),
   propfind("PROPFIND"),
-  report("REPORT"),
-  ;
+  report("REPORT");
 
   final String name;
 
@@ -412,7 +431,9 @@ enum HttpMethod {
 
   static HttpMethod valueOf(String name) {
     try {
-      return HttpMethod.values.firstWhere((element) => element.name == name.toUpperCase());
+      return HttpMethod.values.firstWhere(
+        (element) => element.name == name.toUpperCase(),
+      );
     } catch (error) {
       logger.e("HttpMethod error $name :$error");
       rethrow;
@@ -420,7 +441,12 @@ enum HttpMethod {
   }
 
   static List<HttpMethod> methods() {
-    return values.where((method) => method != HttpMethod.propfind && method != HttpMethod.report).toList();
+    return values
+        .where(
+          (method) =>
+              method != HttpMethod.propfind && method != HttpMethod.report,
+        )
+        .toList();
   }
 }
 
@@ -442,13 +468,19 @@ class HttpStatus {
   static final HttpStatus notFound = newStatus(404, "Not Found");
 
   /// 500 Internal Server Error
-  static final HttpStatus internalServerError = newStatus(500, "Internal Server Error");
+  static final HttpStatus internalServerError = newStatus(
+    500,
+    "Internal Server Error",
+  );
 
   /// 502 Bad Gateway
   static final HttpStatus badGateway = newStatus(502, "Bad Gateway");
 
   /// 503 Service Unavailable
-  static final HttpStatus serviceUnavailable = newStatus(503, "Service Unavailable");
+  static final HttpStatus serviceUnavailable = newStatus(
+    503,
+    "Service Unavailable",
+  );
 
   /// 504 Gateway Timeout
   static final HttpStatus gatewayTimeout = newStatus(504, "Gateway Timeout");

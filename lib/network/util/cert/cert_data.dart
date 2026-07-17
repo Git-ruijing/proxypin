@@ -223,7 +223,8 @@ class X509CertificatePublicKeyData {
   }
 
   X509CertificatePublicKeyData.fromSubjectPublicKeyInfo(
-      SubjectPublicKeyInfo info) {
+    SubjectPublicKeyInfo info,
+  ) {
     algorithm = info.algorithm;
     length = info.length;
     sha1Thumbprint = info.sha1Thumbprint;

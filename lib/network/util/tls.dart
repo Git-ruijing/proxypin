@@ -44,7 +44,7 @@ class TLS {
         int extensionLength = data.buffer.asByteData().getUint16(pos + 2);
         pos += 4;
 
-        if (extensionType == 16 /* ALPN */) {
+        if (extensionType == 16 /* ALPN */ ) {
           if (pos + 2 > end) return protocols;
           int alpnExtensionLength = data.buffer.asByteData().getUint16(pos);
           pos += 2;
@@ -56,7 +56,9 @@ class TLS {
             pos += 1;
             if (pos + protocolLength > alpnEnd) return protocols;
 
-            String protocol = String.fromCharCodes(data.sublist(pos, pos + protocolLength));
+            String protocol = String.fromCharCodes(
+              data.sublist(pos, pos + protocolLength),
+            );
             protocols.add(protocol);
 
             pos += protocolLength;
@@ -76,9 +78,9 @@ class TLS {
   ///判断是否是TLS Client Hello
   static bool isTLSClientHello(Uint8List data) {
     if (data.length < 43) return false;
-    if (data[0] != 0x16 /* handshake */) return false;
+    if (data[0] != 0x16 /* handshake */ ) return false;
     if (data[1] != 0x03 || data[2] < 0x00 || data[2] > 0x03) return false;
-    if (data[5] != 0x01 /* client_hello */) return false;
+    if (data[5] != 0x01 /* client_hello */ ) return false;
     if (data[9] != 0x03 || data[10] < 0x00 || data[10] > 0x03) return false;
     return true;
   }
@@ -108,7 +110,7 @@ class TLS {
         int extensionLength = data.buffer.asByteData().getUint16(pos + 2);
         pos += 4;
 
-        if (extensionType == 0 /* server_name */) {
+        if (extensionType == 0 /* server_name */ ) {
           if (pos + 5 > end) return null;
           int serverNameListLength = data.buffer.asByteData().getUint16(pos);
           pos += 2;
@@ -117,16 +119,18 @@ class TLS {
           int serverNameType = data[pos];
           int serverNameLength = data.buffer.asByteData().getUint16(pos + 1);
           pos += 3;
-          if (serverNameType != 0 /* host_name */) return null;
+          if (serverNameType != 0 /* host_name */ ) return null;
           if (pos + serverNameLength > end) return null;
 
-          return String.fromCharCodes(data.sublist(pos, pos + serverNameLength));
+          return String.fromCharCodes(
+            data.sublist(pos, pos + serverNameLength),
+          );
         } else {
           pos += extensionLength;
         }
       }
     } catch (_) {
-// Ignore errors, just return null
+      // Ignore errors, just return null
     }
 
     return null;

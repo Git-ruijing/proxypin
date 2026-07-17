@@ -56,7 +56,6 @@ class Header {
     // header field names MUST be treated as malformed (Section 8.1.2.6).`
     return Header(ascii.encode(name.toLowerCase()), ascii.encode(value));
   }
-
 }
 
 /// A stateful HPACK decoder.

@@ -29,7 +29,8 @@ import 'manager/report_server_manager.dart';
 /// Hosts interceptor
 /// @author wanghongen
 class ReportServerInterceptor extends Interceptor {
-  Future<ReportServerManager> get reportServerManager async => await ReportServerManager.instance;
+  Future<ReportServerManager> get reportServerManager async =>
+      await ReportServerManager.instance;
 
   static HttpClient httpClient = HttpClient();
 
@@ -43,15 +44,24 @@ class ReportServerInterceptor extends Interceptor {
   }
 
   @override
-  Future<HttpResponse?> onResponse(HttpRequest request, HttpResponse response) async {
+  Future<HttpResponse?> onResponse(
+    HttpRequest request,
+    HttpResponse response,
+  ) async {
     unawaited(reportServer(request, response));
     return response;
   }
 
   @override
-  Future<void> onError(HttpRequest? request, error, StackTrace? stackTrace) async {
+  Future<void> onError(
+    HttpRequest? request,
+    error,
+    StackTrace? stackTrace,
+  ) async {
     if (request != null) {
-      unawaited(reportServer(request, null, error: error, stackTrace: stackTrace));
+      unawaited(
+        reportServer(request, null, error: error, stackTrace: stackTrace),
+      );
     }
     return;
   }
@@ -67,8 +77,12 @@ class ReportServerInterceptor extends Interceptor {
     await _sendReport(server, payload, requestUrl, phase: "request");
   }
 
-  Future<void> reportServer(HttpRequest request, HttpResponse? response,
-      {dynamic error, StackTrace? stackTrace}) async {
+  Future<void> reportServer(
+    HttpRequest request,
+    HttpResponse? response, {
+    dynamic error,
+    StackTrace? stackTrace,
+  }) async {
     if (response != null) {
       request.response = response;
     }
@@ -94,16 +108,24 @@ class ReportServerInterceptor extends Interceptor {
     await _sendReport(server, payload, requestUrl, phase: phase);
   }
 
-  Future<void> _sendReport(ReportServer server, Map payload, String requestUrl, {String? phase}) async {
+  Future<void> _sendReport(
+    ReportServer server,
+    Map payload,
+    String requestUrl, {
+    String? phase,
+  }) async {
     try {
-      logger.i("reportServer start: $requestUrl -> ${server.name} (${server.serverUrl})");
+      logger.i(
+        "reportServer start: $requestUrl -> ${server.name} (${server.serverUrl})",
+      );
 
       var serverUrl = (server.serverUrl).trim();
       if (serverUrl.isEmpty) {
         logger.w('reportServer skipped: serverUrl empty for ${server.name}');
         return;
       }
-      if (!serverUrl.startsWith('http://') && !serverUrl.startsWith('https://')) {
+      if (!serverUrl.startsWith('http://') &&
+          !serverUrl.startsWith('https://')) {
         serverUrl = 'http://$serverUrl';
       }
 
@@ -119,7 +141,9 @@ class ReportServerInterceptor extends Interceptor {
         }
       }
 
-      final ioReq = await httpClient.postUrl(uri).timeout(const Duration(seconds: 5));
+      final ioReq = await httpClient
+          .postUrl(uri)
+          .timeout(const Duration(seconds: 5));
 
       final matchedRule = server.name;
       if (matchedRule.isNotEmpty) {
@@ -131,7 +155,10 @@ class ReportServerInterceptor extends Interceptor {
         ioReq.headers.set('X-Report-Phase', phase);
       }
 
-      ioReq.headers.set(HttpHeaders.contentTypeHeader, 'application/json; charset=utf-8');
+      ioReq.headers.set(
+        HttpHeaders.contentTypeHeader,
+        'application/json; charset=utf-8',
+      );
       if (compression == 'gzip') {
         ioReq.headers.set(HttpHeaders.contentEncodingHeader, 'gzip');
       }
@@ -140,9 +167,13 @@ class ReportServerInterceptor extends Interceptor {
       final ioResp = await ioReq.close().timeout(const Duration(seconds: 30));
       final respText = await ioResp.transform(utf8.decoder).join();
       if (ioResp.statusCode >= 200 && ioResp.statusCode < 300) {
-        logger.i('reportServer delivered to ${server.name} (${uri.toString()}), status=${ioResp.statusCode}');
+        logger.i(
+          'reportServer delivered to ${server.name} (${uri.toString()}), status=${ioResp.statusCode}',
+        );
       } else {
-        logger.w('reportServer delivery to ${server.name} failed, status=${ioResp.statusCode}, body=$respText');
+        logger.w(
+          'reportServer delivery to ${server.name} failed, status=${ioResp.statusCode}, body=$respText',
+        );
       }
     } catch (e, st) {
       logger.e("reportServer error $requestUrl", error: e, stackTrace: st);

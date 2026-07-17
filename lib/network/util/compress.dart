@@ -42,7 +42,6 @@ Future<List<int>?> zstdDecode(List<int> byteBuffer) async {
   }
 }
 
-
 ///zlib
 List<int> zlibDecode(List<int> byteBuffer) {
   try {

@@ -30,7 +30,8 @@ class FavoriteStorage {
 
   // Keep only recent websocket/sse messages per favorite to control favorites.json size.
   static const int maxWebSocketMessagesPerFavorite = 200;
-  static const int maxWebSocketPayloadBytesPerFavorite = 1 * 1024 * 1024; //  1 MB
+  static const int maxWebSocketPayloadBytesPerFavorite =
+      1 * 1024 * 1024; //  1 MB
 
   static Function()? addNotifier;
 
@@ -60,7 +61,9 @@ class FavoriteStorage {
   /// 添加收藏
   static Future<void> addFavorite(HttpRequest request) async {
     var favorites = await FavoriteStorage.favorites;
-    if (favorites.any((element) => element.request.requestId == request.requestId)) {
+    if (favorites.any(
+      (element) => element.request.requestId == request.requestId,
+    )) {
       return;
     }
 
@@ -88,7 +91,9 @@ class FavoriteStorage {
   //刷新配置
   static Future<void> flushConfig() async {
     var list = await favorites;
-    await Paths.getPath("favorites.json").then((file) => file.writeAsString(toJson(list)));
+    await Paths.getPath(
+      "favorites.json",
+    ).then((file) => file.writeAsString(toJson(list)));
   }
 
   static String toJson(Queue<Favorite> list) {
@@ -103,7 +108,10 @@ class FavoriteStorage {
   }
 
   /// Export all favorites as HAR to a given file path
-  static Future<void> exportToHarFile(String path, {String title = 'Favorites'}) async {
+  static Future<void> exportToHarFile(
+    String path, {
+    String title = 'Favorites',
+  }) async {
     var current = await favorites;
     final requests = current.map((f) => f.request).toList(growable: false);
     await Har.writeFile(requests, File(path), title: title);
@@ -129,7 +137,9 @@ class FavoriteStorage {
         return;
       }
       final decoded = jsonDecode(content) as List<dynamic>;
-      imported = decoded.map((e) => Favorite.fromJson(e as Map<String, dynamic>)).toList(growable: false);
+      imported = decoded
+          .map((e) => Favorite.fromJson(e as Map<String, dynamic>))
+          .toList(growable: false);
     }
 
     final current = await favorites;
@@ -164,8 +174,12 @@ class FavoriteStorage {
       ...responseFrames.map((e) => _FrameRef(isRequest: false, frame: e)),
     ]..sort((a, b) => a.frame.time.compareTo(b.frame.time));
 
-    final totalBytes = refs.fold<int>(0, (sum, e) => sum + e.frame.payloadData.length);
-    if (refs.length <= maxWebSocketMessagesPerFavorite && totalBytes <= maxWebSocketPayloadBytesPerFavorite) {
+    final totalBytes = refs.fold<int>(
+      0,
+      (sum, e) => sum + e.frame.payloadData.length,
+    );
+    if (refs.length <= maxWebSocketMessagesPerFavorite &&
+        totalBytes <= maxWebSocketPayloadBytesPerFavorite) {
       return false;
     }
 
@@ -175,7 +189,9 @@ class FavoriteStorage {
       final ref = refs[i];
       final bytes = ref.frame.payloadData.length;
       final hitCount = kept.length >= maxWebSocketMessagesPerFavorite;
-      final hitBytes = kept.isNotEmpty && (keptBytes + bytes > maxWebSocketPayloadBytesPerFavorite);
+      final hitBytes =
+          kept.isNotEmpty &&
+          (keptBytes + bytes > maxWebSocketPayloadBytesPerFavorite);
       if (hitCount || hitBytes) {
         continue;
       }
@@ -187,8 +203,14 @@ class FavoriteStorage {
     }
 
     kept.sort((a, b) => a.frame.time.compareTo(b.frame.time));
-    favorite.request.messages = kept.where((e) => e.isRequest).map((e) => e.frame).toList(growable: false);
-    response?.messages = kept.where((e) => !e.isRequest).map((e) => e.frame).toList(growable: false);
+    favorite.request.messages = kept
+        .where((e) => e.isRequest)
+        .map((e) => e.frame)
+        .toList(growable: false);
+    response?.messages = kept
+        .where((e) => !e.isRequest)
+        .map((e) => e.frame)
+        .toList(growable: false);
     return true;
   }
 }
@@ -212,8 +234,13 @@ class Favorite {
   }
 
   factory Favorite.fromJson(Map<String, dynamic> json) {
-    return Favorite(HttpRequest.fromJson(json['request']),
-        name: json['name'], response: json['response'] == null ? null : HttpResponse.fromJson(json['response']));
+    return Favorite(
+      HttpRequest.fromJson(json['request']),
+      name: json['name'],
+      response: json['response'] == null
+          ? null
+          : HttpResponse.fromJson(json['response']),
+    );
   }
 
   Map<String, dynamic> toJson() {
@@ -224,5 +251,6 @@ class Favorite {
     };
   }
 
-  int get websocketMessageCount => request.messages.length + (response?.messages.length ?? 0);
+  int get websocketMessageCount =>
+      request.messages.length + (response?.messages.length ?? 0);
 }

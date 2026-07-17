@@ -2,16 +2,13 @@ import 'package:flutter/material.dart';
 import 'package:toastification/toastification.dart';
 
 class AppAlertDialog extends StatelessWidget {
-  const AppAlertDialog({
-    super.key,
-    this.title,
-    required this.message,
-  });
+  const AppAlertDialog({super.key, this.title, required this.message});
 
   final String? title;
   final String message;
 
-  factory AppAlertDialog.fromErr(({String type, String? message}) err) => AppAlertDialog(
+  factory AppAlertDialog.fromErr(({String type, String? message}) err) =>
+      AppAlertDialog(
         title: err.message == null ? null : err.type,
         message: err.message ?? err.type,
       );
@@ -31,10 +28,7 @@ class AppAlertDialog extends StatelessWidget {
     return AlertDialog(
       title: title != null ? Text(title!) : null,
       content: SingleChildScrollView(
-        child: SizedBox(
-          width: 468,
-          child: Text(message),
-        ),
+        child: SizedBox(width: 468, child: Text(message)),
       ),
       actions: [
         TextButton(
@@ -54,10 +48,10 @@ enum AlertType {
   success;
 
   ToastificationType get _toastificationType => switch (this) {
-        success => ToastificationType.success,
-        error => ToastificationType.error,
-        info => ToastificationType.info,
-      };
+    success => ToastificationType.success,
+    error => ToastificationType.error,
+    info => ToastificationType.info,
+  };
 }
 
 class CustomToast extends StatelessWidget {
@@ -73,15 +67,15 @@ class CustomToast extends StatelessWidget {
     this.message, {
     super.key,
     this.duration = const Duration(seconds: 5),
-  })  : type = AlertType.error,
-        icon = Icons.error;
+  }) : type = AlertType.error,
+       icon = Icons.error;
 
   const CustomToast.success(
     this.message, {
     super.key,
     this.duration = const Duration(seconds: 2),
-  })  : type = AlertType.success,
-        icon = Icons.check_circle;
+  }) : type = AlertType.success,
+       icon = Icons.check_circle;
 
   final String message;
   final AlertType type;
@@ -98,14 +92,15 @@ class CustomToast extends StatelessWidget {
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
       child: Row(
         mainAxisSize: MainAxisSize.min,
-        children: [
-          Flexible(child: Text(message)),
-        ],
+        children: [Flexible(child: Text(message))],
       ),
     );
   }
 
-  void show(BuildContext context, {Alignment alignment = Alignment.bottomLeft}) {
+  void show(
+    BuildContext context, {
+    Alignment alignment = Alignment.bottomLeft,
+  }) {
     toastification.show(
       context: context,
       title: Text(message),

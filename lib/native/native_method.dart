@@ -9,11 +9,15 @@ class NativeMethod {
   /// 返回 `true` 如果本地网络可用，否则返回 `false`。
   static Future<bool> requestLocalNetworkAccess() async {
     try {
-      final bool isAvailable = await _channel.invokeMethod('requestLocalNetwork');
+      final bool isAvailable = await _channel.invokeMethod(
+        'requestLocalNetwork',
+      );
       logger.d("[NativeMethod] requestLocalNetworkAccess => $isAvailable");
       return isAvailable;
     } on PlatformException catch (e) {
-      logger.e("[NativeMethod] requestLocalNetworkAccess error: '${e.message}'.");
+      logger.e(
+        "[NativeMethod] requestLocalNetworkAccess error: '${e.message}'.",
+      );
       return false;
     }
   }
@@ -21,7 +25,9 @@ class NativeMethod {
   /// iOS: 检查给定 PEM 证书是否已安装到系统钥匙串
   static Future<bool> isCaInstalled(String pem) async {
     try {
-      final bool installed = await _channel.invokeMethod('isCaInstalled', {"pem": pem});
+      final bool installed = await _channel.invokeMethod('isCaInstalled', {
+        "pem": pem,
+      });
       return installed;
     } on PlatformException catch (e) {
       logger.e("[NativeMethod] isCaInstalled error: ${e.message}");
@@ -30,7 +36,11 @@ class NativeMethod {
   }
 
   /// iOS: 基于 SSL 策略校验证书链（leaf + CA），仅当 CA 被系统信任时返回 true
-  static Future<bool> evaluateChainTrusted(String leafPem, String caPem, {String? host}) async {
+  static Future<bool> evaluateChainTrusted(
+    String leafPem,
+    String caPem, {
+    String? host,
+  }) async {
     try {
       final bool trusted = await _channel.invokeMethod('evaluateChainTrusted', {
         'leafPem': leafPem,
@@ -43,5 +53,4 @@ class NativeMethod {
       return false;
     }
   }
-
 }

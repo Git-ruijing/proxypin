@@ -4,9 +4,7 @@ class SystemChineseFont {
   const SystemChineseFont._();
 
   /// Chinese font family fallback, for windows
-  static const List<String> windowsFontFamily = [
-    'Microsoft YaHei',
-  ];
+  static const List<String> windowsFontFamily = ['Microsoft YaHei'];
 
   static const systemFont = "system-font";
 
@@ -14,11 +12,7 @@ class SystemChineseFont {
 
   /// Chinese font family fallback, for most platforms
   static List<String> get fontFamilyFallback {
-    return [
-      systemFont,
-      "sans-serif",
-      ...windowsFontFamily,
-    ];
+    return [systemFont, "sans-serif", ...windowsFontFamily];
   }
 
   /// Text style with updated fontFamilyFallback & fontVariations
@@ -42,7 +36,8 @@ extension TextStyleUseSystemChineseFont on TextStyle {
       ],
       fontVariations: [
         ...?fontVariations,
-        if (fontWeight != null) FontVariation('wght', (fontWeight!.index + 1) * 100),
+        if (fontWeight != null)
+          FontVariation('wght', (fontWeight!.index + 1) * 100),
       ],
     );
   }

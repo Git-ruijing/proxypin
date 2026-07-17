@@ -24,8 +24,11 @@ class QuickShareService {
     return remoteHost != null && remoteHost.trim().isNotEmpty;
   }
 
-  static Future<bool> sendRequestToRemote(ProxyServer proxyServer, HttpRequest request,
-      {Duration timeout = const Duration(seconds: 5)}) async {
+  static Future<bool> sendRequestToRemote(
+    ProxyServer proxyServer,
+    HttpRequest request, {
+    Duration timeout = const Duration(seconds: 5),
+  }) async {
     final remoteHost = proxyServer.configuration.remoteHost;
     if (remoteHost == null || remoteHost.trim().isEmpty) {
       return false;
@@ -35,25 +38,39 @@ class QuickShareService {
       final shareUrl = _buildShareUrl(remoteHost);
       final payload = utf8.encode(jsonEncode({'entry': Har.toHar(request)}));
       if (payload.length > _maxHistoryPayloadBytes) {
-        logger.w('Quick share payload too large', error: 'bytes=${payload.length}');
+        logger.w(
+          'Quick share payload too large',
+          error: 'bytes=${payload.length}',
+        );
         return false;
       }
       final quickShareRequest = _createJsonPostRequest(shareUrl, payload);
 
-      final response = await HttpClients.request(HostAndPort.of(shareUrl), quickShareRequest, timeout: timeout);
+      final response = await HttpClients.request(
+        HostAndPort.of(shareUrl),
+        quickShareRequest,
+        timeout: timeout,
+      );
       return response.status.isSuccessful();
     } catch (_) {
       return false;
     }
   }
 
-  static Future<QuickShareBatchResult> sendRequestsToRemote(ProxyServer proxyServer, Iterable<HttpRequest> requests,
-      {Duration timeout = const Duration(seconds: 10)}) async {
+  static Future<QuickShareBatchResult> sendRequestsToRemote(
+    ProxyServer proxyServer,
+    Iterable<HttpRequest> requests, {
+    Duration timeout = const Duration(seconds: 10),
+  }) async {
     return sendHistoryToRemote(proxyServer, requests, timeout: timeout);
   }
 
-  static Future<QuickShareBatchResult> sendHistoryToRemote(ProxyServer proxyServer, Iterable<HttpRequest> requests,
-      {String? historyName, Duration timeout = const Duration(seconds: 10)}) async {
+  static Future<QuickShareBatchResult> sendHistoryToRemote(
+    ProxyServer proxyServer,
+    Iterable<HttpRequest> requests, {
+    String? historyName,
+    Duration timeout = const Duration(seconds: 10),
+  }) async {
     final remoteHost = proxyServer.configuration.remoteHost;
     if (remoteHost == null || remoteHost.trim().isEmpty) {
       return const QuickShareBatchResult(success: 0, failed: 0);
@@ -111,27 +128,39 @@ class QuickShareService {
       ..body = payload;
   }
 
-  static Future<bool> _sendHistoryBatch(String shareUrl, List<Map> entries,
-      {String? historyName,
-      required String batchId,
-      required int batchIndex,
-      required int batchTotal,
-      required Duration timeout}) async {
-    final payload = utf8.encode(jsonEncode({
-      'shareType': 'history',
-      'historyName': historyName,
-      'batchId': batchId,
-      'batchIndex': batchIndex,
-      'batchTotal': batchTotal,
-      'entries': entries,
-    }));
+  static Future<bool> _sendHistoryBatch(
+    String shareUrl,
+    List<Map> entries, {
+    String? historyName,
+    required String batchId,
+    required int batchIndex,
+    required int batchTotal,
+    required Duration timeout,
+  }) async {
+    final payload = utf8.encode(
+      jsonEncode({
+        'shareType': 'history',
+        'historyName': historyName,
+        'batchId': batchId,
+        'batchIndex': batchIndex,
+        'batchTotal': batchTotal,
+        'entries': entries,
+      }),
+    );
 
     final quickShareRequest = _createJsonPostRequest(shareUrl, payload);
-    final response = await HttpClients.request(HostAndPort.of(shareUrl), quickShareRequest, timeout: timeout);
+    final response = await HttpClients.request(
+      HostAndPort.of(shareUrl),
+      quickShareRequest,
+      timeout: timeout,
+    );
     return response.status.isSuccessful();
   }
 
-  static _HistorySplitResult _splitHistoryEntries(List<Map> entries, String? historyName) {
+  static _HistorySplitResult _splitHistoryEntries(
+    List<Map> entries,
+    String? historyName,
+  ) {
     final batches = <List<Map>>[];
     final current = <Map>[];
     final basePayloadSize = _historyPayloadBaseSize(historyName);
@@ -147,7 +176,8 @@ class QuickShareService {
         continue;
       }
 
-      final withDelimiterSize = currentPayloadSize + (current.isEmpty ? 0 : 1) + entrySize;
+      final withDelimiterSize =
+          currentPayloadSize + (current.isEmpty ? 0 : 1) + entrySize;
       if (withDelimiterSize > _maxHistoryPayloadBytes) {
         batches.add(List<Map>.from(current));
         current
@@ -165,19 +195,24 @@ class QuickShareService {
       batches.add(current);
     }
 
-    return _HistorySplitResult(batches: batches, oversizedFailed: oversizedFailed);
+    return _HistorySplitResult(
+      batches: batches,
+      oversizedFailed: oversizedFailed,
+    );
   }
 
   static int _historyPayloadBaseSize(String? historyName) {
     return utf8
-        .encode(jsonEncode({
-          'shareType': 'history',
-          'historyName': historyName,
-          'batchId': '0',
-          'batchIndex': 1,
-          'batchTotal': 1,
-          'entries': const <Map>[]
-        }))
+        .encode(
+          jsonEncode({
+            'shareType': 'history',
+            'historyName': historyName,
+            'batchId': '0',
+            'batchIndex': 1,
+            'batchTotal': 1,
+            'entries': const <Map>[],
+          }),
+        )
         .length;
   }
 
@@ -192,6 +227,8 @@ class _HistorySplitResult {
   final List<List<Map>> batches;
   final int oversizedFailed;
 
-  const _HistorySplitResult({required this.batches, required this.oversizedFailed});
+  const _HistorySplitResult({
+    required this.batches,
+    required this.oversizedFailed,
+  });
 }
-

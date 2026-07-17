@@ -58,22 +58,37 @@ class _PictureInPictureWindowState extends State<PictureInPictureWindow> {
   @override
   Widget build(BuildContext context) {
     if (widget.container.isEmpty) {
-      return Material(child: Center(child: Text(localizations.emptyData, style: const TextStyle(color: Colors.grey))));
+      return Material(
+        child: Center(
+          child: Text(
+            localizations.emptyData,
+            style: const TextStyle(color: Colors.grey),
+          ),
+        ),
+      );
     }
 
     return Material(
-        child: ListView.separated(
-            padding: const EdgeInsets.only(left: 2),
-            itemCount: widget.container.length,
-            separatorBuilder: (context, index) => const Divider(thickness: 0.3, height: 0.5),
-            itemBuilder: (context, index) {
-              return Text.rich(
-                  overflow: TextOverflow.ellipsis,
-                  TextSpan(
-                      text: widget.container.elementAt(widget.container.length - index - 1).requestUrl.fixAutoLines(),
-                      style: const TextStyle(fontSize: 9)),
-                  maxLines: 2);
-            }));
+      child: ListView.separated(
+        padding: const EdgeInsets.only(left: 2),
+        itemCount: widget.container.length,
+        separatorBuilder: (context, index) =>
+            const Divider(thickness: 0.3, height: 0.5),
+        itemBuilder: (context, index) {
+          return Text.rich(
+            overflow: TextOverflow.ellipsis,
+            TextSpan(
+              text: widget.container
+                  .elementAt(widget.container.length - index - 1)
+                  .requestUrl
+                  .fixAutoLines(),
+              style: const TextStyle(fontSize: 9),
+            ),
+            maxLines: 2,
+          );
+        },
+      ),
+    );
   }
 }
 
@@ -81,10 +96,7 @@ class _PictureInPictureWindowState extends State<PictureInPictureWindow> {
 class PictureInPictureIcon extends StatefulWidget {
   final ProxyServer proxyServer;
 
-  const PictureInPictureIcon(
-    this.proxyServer, {
-    super.key,
-  });
+  const PictureInPictureIcon(this.proxyServer, {super.key});
 
   @override
   State<PictureInPictureIcon> createState() => _PictureInPictureState();
@@ -110,7 +122,8 @@ class _PictureInPictureState extends State<PictureInPictureIcon> {
 
   @override
   Widget build(BuildContext context) {
-    if (AppConfiguration.current?.pipIcon.value != true) return const SizedBox();
+    if (AppConfiguration.current?.pipIcon.value != true)
+      return const SizedBox();
 
     size ??= MediaQuery.sizeOf(context);
     if (size == null || size!.isEmpty) {
@@ -122,37 +135,47 @@ class _PictureInPictureState extends State<PictureInPictureIcon> {
       xPosition = size!.width - 48;
       yPosition = size!.height * 0.35;
       _top = MediaQuery.of(context).padding.top;
-      _bottom = size!.height - 48 - (AppConfiguration.current?.bottomNavigation == false ? 0 : 56);
+      _bottom =
+          size!.height -
+          48 -
+          (AppConfiguration.current?.bottomNavigation == false ? 0 : 56);
     }
 
     return Positioned(
       top: yPosition,
       left: xPosition,
       child: GestureDetector(
-          onPanUpdate: (tapInfo) {
-            // if (xPosition + tapInfo.delta.dx < 0) return;
-            // if (yPosition + tapInfo.delta.dy < 0) return;
+        onPanUpdate: (tapInfo) {
+          // if (xPosition + tapInfo.delta.dx < 0) return;
+          // if (yPosition + tapInfo.delta.dy < 0) return;
 
-            setState(() {
-              xPosition = (xPosition + tapInfo.delta.dx).clamp(0, size!.width);
-              yPosition = (yPosition + tapInfo.delta.dy).clamp(_top, _bottom);
-            });
+          setState(() {
+            xPosition = (xPosition + tapInfo.delta.dx).clamp(0, size!.width);
+            yPosition = (yPosition + tapInfo.delta.dy).clamp(_top, _bottom);
+          });
+        },
+        child: IconButton(
+          tooltip: localizations.windowMode,
+          onPressed: () async {
+            var configuration = widget.proxyServer.configuration;
+            List<String>? appList = configuration.appWhitelistEnabled
+                ? configuration.appWhitelist
+                : [];
+            List<String>? disallowApps;
+            if (appList.isEmpty) {
+              disallowApps = configuration.appBlacklist ?? [];
+            }
+
+            PictureInPicture.enterPictureInPictureMode(
+              Platform.isAndroid ? await localIp() : "127.0.0.1",
+              widget.proxyServer.port,
+              appList: appList,
+              disallowApps: disallowApps,
+            );
           },
-          child: IconButton(
-              tooltip: localizations.windowMode,
-              onPressed: () async {
-                var configuration = widget.proxyServer.configuration;
-                List<String>? appList = configuration.appWhitelistEnabled ? configuration.appWhitelist : [];
-                List<String>? disallowApps;
-                if (appList.isEmpty) {
-                  disallowApps = configuration.appBlacklist ?? [];
-                }
-
-                PictureInPicture.enterPictureInPictureMode(
-                    Platform.isAndroid ? await localIp() : "127.0.0.1", widget.proxyServer.port,
-                    appList: appList, disallowApps: disallowApps);
-              },
-              icon: const Icon(Icons.picture_in_picture_alt))),
+          icon: const Icon(Icons.picture_in_picture_alt),
+        ),
+      ),
     );
   }
 }

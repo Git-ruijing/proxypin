@@ -41,14 +41,14 @@ class NetworkTabController extends StatefulWidget {
   final Widget? title;
   final TextStyle? tabStyle;
 
-  NetworkTabController(
-      {HttpRequest? httpRequest,
-      HttpResponse? httpResponse,
-      this.title,
-      this.tabStyle,
-      this.proxyServer,
-      this.windowId})
-      : super(key: GlobalKey<NetworkTabState>()) {
+  NetworkTabController({
+    HttpRequest? httpRequest,
+    HttpResponse? httpResponse,
+    this.title,
+    this.tabStyle,
+    this.proxyServer,
+    this.windowId,
+  }) : super(key: GlobalKey<NetworkTabState>()) {
     currentKey = key as GlobalKey<NetworkTabState>;
     request.set(httpRequest);
     response.set(httpResponse);
@@ -71,22 +71,21 @@ class NetworkTabController extends StatefulWidget {
     return NetworkTabState();
   }
 
-  static NetworkTabController? get current => currentKey?.currentWidget as NetworkTabController?;
+  static NetworkTabController? get current =>
+      currentKey?.currentWidget as NetworkTabController?;
 }
 
-class NetworkTabState extends State<NetworkTabController> with SingleTickerProviderStateMixin {
-  final tabs = [
-    'General',
-    'Request',
-    'Response',
-    'Cookies',
-  ];
+class NetworkTabState extends State<NetworkTabController>
+    with SingleTickerProviderStateMixin {
+  final tabs = ['General', 'Request', 'Response', 'Cookies'];
 
   final TextStyle textStyle = const TextStyle(fontSize: 14);
   late TabController _tabController;
 
-  final GlobalKey<HttpBodyState> requestHttpBodyKey = GlobalKey<HttpBodyState>();
-  final GlobalKey<HttpBodyState> responseHttpBodyKey = GlobalKey<HttpBodyState>();
+  final GlobalKey<HttpBodyState> requestHttpBodyKey =
+      GlobalKey<HttpBodyState>();
+  final GlobalKey<HttpBodyState> responseHttpBodyKey =
+      GlobalKey<HttpBodyState>();
 
   void changeState() {
     setState(() {});
@@ -120,7 +119,8 @@ class NetworkTabState extends State<NetworkTabController> with SingleTickerProvi
   }
 
   bool onKeyEvent(KeyEvent event) {
-    if ((HardwareKeyboard.instance.isMetaPressed || HardwareKeyboard.instance.isControlPressed) &&
+    if ((HardwareKeyboard.instance.isMetaPressed ||
+            HardwareKeyboard.instance.isControlPressed) &&
         event.logicalKey == LogicalKeyboardKey.keyW) {
       HardwareKeyboard.instance.removeHandler(onKeyEvent);
       WindowController.fromWindowId(widget.windowId!).close();
@@ -133,7 +133,11 @@ class NetworkTabState extends State<NetworkTabController> with SingleTickerProvi
   @override
   Widget build(BuildContext context) {
     bool isWebSocket = widget.request.get()?.isWebSocket == true;
-    bool isSse = widget.response.get()?.headers.contentType.toLowerCase().startsWith('text/event-stream') == true;
+    bool isSse =
+        widget.response.get()?.headers.contentType.toLowerCase().startsWith(
+          'text/event-stream',
+        ) ==
+        true;
     bool isStreamMessages = isWebSocket || isSse;
     if (isSse) {
       tabs[tabs.length - 1] = "SSE";
@@ -148,7 +152,12 @@ class NetworkTabState extends State<NetworkTabController> with SingleTickerProvi
       controller: _tabController,
       dividerColor: Theme.of(context).dividerColor.withValues(alpha: 0.15),
       labelPadding: const EdgeInsets.symmetric(horizontal: 10),
-      tabs: tabs.map((title) => Tab(child: Text(title, style: widget.tabStyle, maxLines: 1))).toList(),
+      tabs: tabs
+          .map(
+            (title) =>
+                Tab(child: Text(title, style: widget.tabStyle, maxLines: 1)),
+          )
+          .toList(),
     );
 
     Widget appBar = widget.title == null
@@ -159,7 +168,10 @@ class NetworkTabState extends State<NetworkTabController> with SingleTickerProvi
             centerTitle: true,
             actions: [
               ShareWidget(
-                  proxyServer: widget.proxyServer, request: widget.request.get(), response: widget.response.get()),
+                proxyServer: widget.proxyServer,
+                request: widget.request.get(),
+                response: widget.response.get(),
+              ),
               const SizedBox(width: 3),
               DetailMenuWidget(request: widget.request.get()),
               const SizedBox(width: 10),
@@ -170,20 +182,24 @@ class NetworkTabState extends State<NetworkTabController> with SingleTickerProvi
       endDrawerEnableOpenDragGesture: false,
       appBar: appBar as PreferredSizeWidget?,
       body: Padding(
-          padding: const EdgeInsets.only(left: 20, right: 20, top: 10),
-          child: TabBarView(
-            physics: Platforms.isDesktop() ? const NeverScrollableScrollPhysics() : null, //桌面禁止滑动
-            controller: _tabController,
-            children: [
-              SelectionArea(child: General(widget.request, widget.response)),
-              KeepAliveWrapper(child: request()),
-              KeepAliveWrapper(child: response()),
-              SelectionArea(
-                  child: isStreamMessages
-                      ? Websocket(widget.request, widget.response)
-                      : Cookies(widget.request, widget.response)),
-            ],
-          )),
+        padding: const EdgeInsets.only(left: 20, right: 20, top: 10),
+        child: TabBarView(
+          physics: Platforms.isDesktop()
+              ? const NeverScrollableScrollPhysics()
+              : null, //桌面禁止滑动
+          controller: _tabController,
+          children: [
+            SelectionArea(child: General(widget.request, widget.response)),
+            KeepAliveWrapper(child: request()),
+            KeepAliveWrapper(child: response()),
+            SelectionArea(
+              child: isStreamMessages
+                  ? Websocket(widget.request, widget.response)
+                  : Cookies(widget.request, widget.response),
+            ),
+          ],
+        ),
+      ),
     );
   }
 
@@ -199,12 +215,15 @@ class NetworkTabState extends State<NetworkTabController> with SingleTickerProvi
     } catch (_) {}
 
     return SingleChildScrollView(
-        controller: scrollController,
-        child: Column(children: [
+      controller: scrollController,
+      child: Column(
+        children: [
           RowWidget("Path", path),
           RequestParams(widget.request),
-          ...message(widget.request.get(), "Request", scrollController)
-        ]));
+          ...message(widget.request.get(), "Request", scrollController),
+        ],
+      ),
+    );
   }
 
   Widget response() {
@@ -214,34 +233,53 @@ class NetworkTabState extends State<NetworkTabController> with SingleTickerProvi
 
     var scrollController = ScrollController();
     return SingleChildScrollView(
-        controller: scrollController,
-        child: Column(children: [
+      controller: scrollController,
+      child: Column(
+        children: [
           RowWidget("StatusCode", widget.response.get()?.status.toString()),
-          ...message(widget.response.get(), "Response", scrollController)
-        ]));
+          ...message(widget.response.get(), "Response", scrollController),
+        ],
+      ),
+    );
   }
 
-  List<Widget> message(HttpMessage? message, String type, ScrollController scrollController) {
+  List<Widget> message(
+    HttpMessage? message,
+    String type,
+    ScrollController scrollController,
+  ) {
     Widget bodyWidgets = HttpBodyWidget(
-        key: type == "Request" ? requestHttpBodyKey : responseHttpBodyKey,
-        hideRequestRewrite: widget.windowId != null,
-        httpMessage: message,
-        scrollController: scrollController);
+      key: type == "Request" ? requestHttpBodyKey : responseHttpBodyKey,
+      hideRequestRewrite: widget.windowId != null,
+      httpMessage: message,
+      scrollController: scrollController,
+    );
 
-    return [HeadersWidget(title: type, message: message, valueTextStyle: textStyle), bodyWidgets];
+    return [
+      HeadersWidget(title: type, message: message, valueTextStyle: textStyle),
+      bodyWidgets,
+    ];
   }
 }
 
-Widget expansionTile(String title, List<Widget> content,
-    {bool initiallyExpanded = true, ValueChanged<bool>? onExpansionChanged}) {
+Widget expansionTile(
+  String title,
+  List<Widget> content, {
+  bool initiallyExpanded = true,
+  ValueChanged<bool>? onExpansionChanged,
+}) {
   return ExpansionTile(
-      title: Text(title, style: const TextStyle(fontWeight: FontWeight.w500, fontSize: 14)),
-      tilePadding: const EdgeInsets.only(left: 0),
-      expandedAlignment: Alignment.topLeft,
-      initiallyExpanded: initiallyExpanded,
-      onExpansionChanged: onExpansionChanged,
-      shape: const Border(),
-      children: content);
+    title: Text(
+      title,
+      style: const TextStyle(fontWeight: FontWeight.w500, fontSize: 14),
+    ),
+    tilePadding: const EdgeInsets.only(left: 0),
+    expandedAlignment: Alignment.topLeft,
+    initiallyExpanded: initiallyExpanded,
+    onExpansionChanged: onExpansionChanged,
+    shape: const Border(),
+    children: content,
+  );
 }
 
 class RequestParams extends StatelessWidget {
@@ -269,11 +307,15 @@ class RequestParams extends StatelessWidget {
       }
     });
 
-    return expansionTile("Request Params", content, initiallyExpanded: initiallyExpanded,
-        onExpansionChanged: (expanded) {
-      //保存展开状态
-      initiallyExpanded = expanded;
-    });
+    return expansionTile(
+      "Request Params",
+      content,
+      initiallyExpanded: initiallyExpanded,
+      onExpansionChanged: (expanded) {
+        //保存展开状态
+        initiallyExpanded = expanded;
+      },
+    );
   }
 }
 
@@ -305,8 +347,10 @@ class General extends StatelessWidget {
       const SizedBox(height: 15),
       RowWidget("Status Code", response?.status.toString()),
       const SizedBox(height: 15),
-      RowWidget("Remote Address",
-          '${response?.remoteHost ?? ''}${response?.remotePort == null ? '' : ':${response?.remotePort}'}'),
+      RowWidget(
+        "Remote Address",
+        '${response?.remoteHost ?? ''}${response?.remotePort == null ? '' : ':${response?.remotePort}'}',
+      ),
       const SizedBox(height: 15),
       RowWidget("Request Time", request.requestTime.formatMillisecond()),
       const SizedBox(height: 15),
@@ -339,23 +383,39 @@ class Cookies extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    var requestCookie = request.get()?.cookies.expand((cookie) => _cookieWidget(cookie)!);
+    var requestCookie = request.get()?.cookies.expand(
+      (cookie) => _cookieWidget(cookie)!,
+    );
 
-    var responseCookie = response.get()?.headers.getList("Set-Cookie")?.expand((e) => _cookieWidget(e)!);
-    return ListView(children: [
-      requestCookie == null ? const SizedBox() : expansionTile("Request Cookies", requestCookie.toList()),
-      const SizedBox(height: 15),
-      responseCookie == null ? const SizedBox() : expansionTile("Response Cookies", responseCookie.toList()),
-    ]);
+    var responseCookie = response
+        .get()
+        ?.headers
+        .getList("Set-Cookie")
+        ?.expand((e) => _cookieWidget(e)!);
+    return ListView(
+      children: [
+        requestCookie == null
+            ? const SizedBox()
+            : expansionTile("Request Cookies", requestCookie.toList()),
+        const SizedBox(height: 15),
+        responseCookie == null
+            ? const SizedBox()
+            : expansionTile("Response Cookies", responseCookie.toList()),
+      ],
+    );
   }
 
   Iterable<Widget>? _cookieWidget(String? cookie) {
     var headers = <Widget>[];
 
-    cookie?.split(";").map((e) => Strings.splitFirst(e, "=")).where((element) => element != null).forEach((e) {
-      headers.add(RowWidget(e!.key.trim(), e.value));
-      headers.add(const Divider(thickness: 0.1, height: 10));
-    });
+    cookie
+        ?.split(";")
+        .map((e) => Strings.splitFirst(e, "="))
+        .where((element) => element != null)
+        .forEach((e) {
+          headers.add(RowWidget(e!.key.trim(), e.value));
+          headers.add(const Divider(thickness: 0.1, height: 10));
+        });
 
     return headers;
   }
@@ -370,13 +430,29 @@ class RowWidget extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Row(children: [
-      Expanded(
+    return Row(
+      children: [
+        Expanded(
           flex: 2,
-          child: SelectableText(name,
-              contextMenuBuilder: contextMenu,
-              style: const TextStyle(fontWeight: FontWeight.w500, fontSize: 14, color: Colors.deepOrangeAccent))),
-      Expanded(flex: 4, child: SelectableText(contextMenuBuilder: contextMenu, style: textStyle, value ?? ''))
-    ]);
+          child: SelectableText(
+            name,
+            contextMenuBuilder: contextMenu,
+            style: const TextStyle(
+              fontWeight: FontWeight.w500,
+              fontSize: 14,
+              color: Colors.deepOrangeAccent,
+            ),
+          ),
+        ),
+        Expanded(
+          flex: 4,
+          child: SelectableText(
+            contextMenuBuilder: contextMenu,
+            style: textStyle,
+            value ?? '',
+          ),
+        ),
+      ],
+    );
   }
 }

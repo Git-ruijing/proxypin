@@ -88,7 +88,9 @@ class RequestRewriteManager {
       try {
         var rule = RequestRewriteRule.formJson(element);
         List list = element['items'] as List;
-        List<RewriteItem> items = list.map((e) => RewriteItem.fromJson(e)).toList();
+        List<RewriteItem> items = list
+            .map((e) => RewriteItem.fromJson(e))
+            .toList();
         await addRule(rule, items);
       } catch (e) {
         logger.e('加载请求重写配置失败 $element', error: e);
@@ -100,7 +102,9 @@ class RequestRewriteManager {
   /// 加载请求重写配置文件
   static Future<Map<String, dynamic>?> _loadRequestRewriteConfig() async {
     var home = await FileRead.homeDir();
-    var file = File('${home.path}${Platform.pathSeparator}request_rewrite.json');
+    var file = File(
+      '${home.path}${Platform.pathSeparator}request_rewrite.json',
+    );
     var exits = await file.exists();
     if (!exits) {
       return null;
@@ -114,7 +118,9 @@ class RequestRewriteManager {
   /// 保存请求重写配置文件
   Future<void> flushRequestRewriteConfig() async {
     var home = await FileRead.homeDir();
-    var file = File('${home.path}${Platform.pathSeparator}request_rewrite.json');
+    var file = File(
+      '${home.path}${Platform.pathSeparator}request_rewrite.json',
+    );
     bool exists = await file.exists();
     if (!exists) {
       await file.create(recursive: true);
@@ -128,7 +134,8 @@ class RequestRewriteManager {
   Future<void> addRule(RequestRewriteRule rule, List<RewriteItem> items) async {
     final home = await FileRead.homeDir();
 
-    String rewritePath = "${separator}rewrite$separator${RandomUtil.randomString(16)}.json";
+    String rewritePath =
+        "${separator}rewrite$separator${RandomUtil.randomString(16)}.json";
     var file = File(home.path + rewritePath);
     await file.create(recursive: true);
     file.writeAsString(jsonEncode(items.map((e) => e.toJson()).toList()));
@@ -139,7 +146,11 @@ class RequestRewriteManager {
   }
 
   ///更新规则
-  Future<void> updateRule(int index, RequestRewriteRule rule, List<RewriteItem>? items) async {
+  Future<void> updateRule(
+    int index,
+    RequestRewriteRule rule,
+    List<RewriteItem>? items,
+  ) async {
     rewriteItemsCache.remove(rules[index]);
     final home = await FileRead.homeDir();
     rule.updatePathReg();
@@ -150,7 +161,8 @@ class RequestRewriteManager {
     }
     bool isExist = rule.rewritePath != null;
     if (rule.rewritePath == null) {
-      String rewritePath = "${separator}rewrite$separator${RandomUtil.randomString(16)}.json";
+      String rewritePath =
+          "${separator}rewrite$separator${RandomUtil.randomString(16)}.json";
       rule.rewritePath = rewritePath;
     }
 
@@ -182,7 +194,8 @@ class RequestRewriteManager {
   RequestRewriteRule getRequestRewriteRule(HttpRequest request, RuleType type) {
     var url = request.domainPath;
     for (var rule in rules) {
-      if (rule.match(url, type: type, method: request.method) && rule.type == type) {
+      if (rule.match(url, type: type, method: request.method) &&
+          rule.type == type) {
         return rule;
       }
     }
@@ -225,10 +238,7 @@ class RequestRewriteManager {
   }
 
   Map<String, Object> toJson() {
-    return {
-      'enabled': enabled,
-      'rules': rules.map((e) => e.toJson()).toList(),
-    };
+    return {'enabled': enabled, 'rules': rules.map((e) => e.toJson()).toList()};
   }
 
   Future<Map<String, dynamic>> toFullJson() async {
@@ -239,9 +249,6 @@ class RequestRewriteManager {
       rulesJson.add(json);
     }
 
-    return {
-      'enabled': enabled,
-      'rules': rulesJson,
-    };
+    return {'enabled': enabled, 'rules': rulesJson};
   }
 }

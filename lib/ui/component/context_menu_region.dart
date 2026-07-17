@@ -66,8 +66,9 @@ class _ContextMenuRegionState extends State<ContextMenuRegion> {
       context: context,
       contextMenuBuilder: (context) {
         return AdaptiveTextSelectionToolbar.buttonItems(
-            buttonItems: widget.contextMenuBuilder.call(),
-            anchors: TextSelectionToolbarAnchors(primaryAnchor: position));
+          buttonItems: widget.contextMenuBuilder.call(),
+          anchors: TextSelectionToolbarAnchors(primaryAnchor: position),
+        );
       },
     );
   }

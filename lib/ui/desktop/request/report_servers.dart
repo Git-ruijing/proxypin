@@ -43,7 +43,8 @@ class _ReportServersPageState extends State<ReportServersPage> {
 
   Future<void> _openGuide() async {
     final locale = AppLocalizations.of(context)?.localeName ?? '';
-    final cn = 'https://gitee.com/wanghongenpin/proxypin/wikis/%E4%B8%8A%E6%8A%A5%E6%9C%8D%E5%8A%A1%E5%99%A8';
+    final cn =
+        'https://gitee.com/wanghongenpin/proxypin/wikis/%E4%B8%8A%E6%8A%A5%E6%9C%8D%E5%8A%A1%E5%99%A8';
     final en = 'https://github.com/wanghongenpin/proxypin/wiki/Report-Server';
     final url = (locale.startsWith('zh')) ? cn : en;
     final uri = Uri.parse(url);
@@ -73,14 +74,23 @@ class _ReportServersPageState extends State<ReportServersPage> {
   }
 
   InputBorder focusedBorder() {
-    return OutlineInputBorder(borderSide: BorderSide(color: Theme.of(context).colorScheme.primary, width: 2));
+    return OutlineInputBorder(
+      borderSide: BorderSide(
+        color: Theme.of(context).colorScheme.primary,
+        width: 2,
+      ),
+    );
   }
 
-  InputDecoration _inputDecoration({String? hint, String? helper}) => InputDecoration(
+  InputDecoration _inputDecoration({String? hint, String? helper}) =>
+      InputDecoration(
         hintText: hint,
         helperText: helper,
         hintStyle: TextStyle(color: Colors.grey.shade500, fontSize: 14),
-        contentPadding: const EdgeInsets.symmetric(horizontal: 10, vertical: 12),
+        contentPadding: const EdgeInsets.symmetric(
+          horizontal: 10,
+          vertical: 12,
+        ),
         errorStyle: const TextStyle(height: 0, fontSize: 0),
         focusedBorder: focusedBorder(),
         isDense: true,
@@ -88,13 +98,16 @@ class _ReportServersPageState extends State<ReportServersPage> {
       );
 
   Widget _buildLabel(String label, Widget field, {bool expanded = true}) => Row(
-        crossAxisAlignment: CrossAxisAlignment.center,
-        children: [
-          SizedBox(width: AppLocalizations.of(context)!.localeName == 'en' ? 108 : 88, child: Text(label)),
-          const SizedBox(width: 12),
-          expanded ? Expanded(child: field) : field,
-        ],
-      );
+    crossAxisAlignment: CrossAxisAlignment.center,
+    children: [
+      SizedBox(
+        width: AppLocalizations.of(context)!.localeName == 'en' ? 108 : 88,
+        child: Text(label),
+      ),
+      const SizedBox(width: 12),
+      expanded ? Expanded(child: field) : field,
+    ],
+  );
 
   Widget _buildDialogSection({required Widget child}) {
     final scheme = Theme.of(context).colorScheme;
@@ -102,7 +115,9 @@ class _ReportServersPageState extends State<ReportServersPage> {
       padding: const EdgeInsets.all(14),
       decoration: BoxDecoration(
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: scheme.outlineVariant.withValues(alpha: 0.35)),
+        border: Border.all(
+          color: scheme.outlineVariant.withValues(alpha: 0.35),
+        ),
       ),
       child: child,
     );
@@ -123,18 +138,28 @@ class _ReportServersPageState extends State<ReportServersPage> {
         context: context,
         builder: (ctx) {
           return AlertDialog(
-            insetPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 24),
+            insetPadding: const EdgeInsets.symmetric(
+              horizontal: 20,
+              vertical: 24,
+            ),
             titlePadding: const EdgeInsets.fromLTRB(24, 22, 24, 0),
             contentPadding: const EdgeInsets.fromLTRB(24, 16, 24, 12),
             actionsPadding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
-            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(18)),
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(18),
+            ),
             title: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               mainAxisSize: MainAxisSize.min,
               children: [
                 Text(
-                  initial == null ? localizations.addReportServer : localizations.editReportServer,
-                  style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
+                  initial == null
+                      ? localizations.addReportServer
+                      : localizations.editReportServer,
+                  style: const TextStyle(
+                    fontSize: 16,
+                    fontWeight: FontWeight.w600,
+                  ),
                 ),
               ],
             ),
@@ -155,7 +180,9 @@ class _ReportServersPageState extends State<ReportServersPage> {
                                 '${localizations.name}: ',
                                 TextField(
                                   controller: nameCtrl,
-                                  decoration: _inputDecoration(hint: localizations.pleaseEnter),
+                                  decoration: _inputDecoration(
+                                    hint: localizations.pleaseEnter,
+                                  ),
                                 ),
                               ),
                               const SizedBox(height: 12),
@@ -164,8 +191,11 @@ class _ReportServersPageState extends State<ReportServersPage> {
                                 TextFormField(
                                   controller: matchUrlCtrl,
                                   keyboardType: TextInputType.url,
-                                  validator: (val) => val?.isNotEmpty == true ? null : '',
-                                  decoration: _inputDecoration(hint: 'https://example.com/api/*'),
+                                  validator: (val) =>
+                                      val?.isNotEmpty == true ? null : '',
+                                  decoration: _inputDecoration(
+                                    hint: 'https://example.com/api/*',
+                                  ),
                                 ),
                               ),
                               const SizedBox(height: 12),
@@ -174,8 +204,11 @@ class _ReportServersPageState extends State<ReportServersPage> {
                                 TextFormField(
                                   controller: serverUrlCtrl,
                                   keyboardType: TextInputType.url,
-                                  validator: (val) => val?.isNotEmpty == true ? null : '',
-                                  decoration: _inputDecoration(hint: 'http://example.com/report'),
+                                  validator: (val) =>
+                                      val?.isNotEmpty == true ? null : '',
+                                  decoration: _inputDecoration(
+                                    hint: 'http://example.com/report',
+                                  ),
                                 ),
                               ),
                             ],
@@ -196,8 +229,16 @@ class _ReportServersPageState extends State<ReportServersPage> {
                                     decoration: _inputDecoration(),
                                     isDense: true,
                                     items: [
-                                      DropdownMenuItem(value: 'none', child: Text(localizations.compressionNone)),
-                                      const DropdownMenuItem(value: 'gzip', child: Text('GZIP')),
+                                      DropdownMenuItem(
+                                        value: 'none',
+                                        child: Text(
+                                          localizations.compressionNone,
+                                        ),
+                                      ),
+                                      const DropdownMenuItem(
+                                        value: 'gzip',
+                                        child: Text('GZIP'),
+                                      ),
                                     ],
                                     onChanged: (v) => compression = v ?? 'none',
                                   ),
@@ -208,7 +249,11 @@ class _ReportServersPageState extends State<ReportServersPage> {
                                 '${localizations.enable}: ',
                                 Align(
                                   alignment: Alignment.centerLeft,
-                                  child: SwitchWidget(value: enabled, scale: 0.83, onChanged: (v) => enabled = v),
+                                  child: SwitchWidget(
+                                    value: enabled,
+                                    scale: 0.83,
+                                    onChanged: (v) => enabled = v,
+                                  ),
                                 ),
                               ),
                               const SizedBox(height: 12),
@@ -216,8 +261,11 @@ class _ReportServersPageState extends State<ReportServersPage> {
                                 '${localizations.splitReport}: ',
                                 Align(
                                   alignment: Alignment.centerLeft,
-                                  child:
-                                      SwitchWidget(value: splitReport, scale: 0.83, onChanged: (v) => splitReport = v),
+                                  child: SwitchWidget(
+                                    value: splitReport,
+                                    scale: 0.83,
+                                    onChanged: (v) => splitReport = v,
+                                  ),
                                 ),
                               ),
                             ],
@@ -237,14 +285,18 @@ class _ReportServersPageState extends State<ReportServersPage> {
               FilledButton(
                 onPressed: () {
                   if (!(formKey.currentState as FormState).validate()) {
-                    FlutterToastr.show("${localizations.serverUrl} ${localizations.cannotBeEmpty}", context,
-                        position: FlutterToastr.top);
+                    FlutterToastr.show(
+                      "${localizations.serverUrl} ${localizations.cannotBeEmpty}",
+                      context,
+                      position: FlutterToastr.top,
+                    );
                     return;
                   }
 
                   final matchUrl = matchUrlCtrl.text.trim();
                   var serverUrl = serverUrlCtrl.text.trim();
-                  if (!serverUrl.startsWith('http://') && !serverUrl.startsWith('https://')) {
+                  if (!serverUrl.startsWith('http://') &&
+                      !serverUrl.startsWith('https://')) {
                     serverUrl = 'http://$serverUrl';
                   }
 
@@ -293,12 +345,15 @@ class _ReportServersPageState extends State<ReportServersPage> {
   }
 
   Future<void> _confirmDelete(int index) async {
-    showConfirmDialog(context, onConfirm: () async {
-      final manager = await ReportServerManager.instance;
-      await manager.removeAt(index);
+    showConfirmDialog(
+      context,
+      onConfirm: () async {
+        final manager = await ReportServerManager.instance;
+        await manager.removeAt(index);
 
-      await _load();
-    });
+        await _load();
+      },
+    );
   }
 
   @override
@@ -331,93 +386,139 @@ class _ReportServersPageState extends State<ReportServersPage> {
       body: _loading
           ? const Center(child: CircularProgressIndicator())
           : _servers.isEmpty
-              ? Center(child: Text(localizations.emptyData))
-              : Padding(
-                  padding: const EdgeInsets.all(8.0),
-                  child: SingleChildScrollView(
-                    scrollDirection: Axis.vertical,
-                    child: SingleChildScrollView(
-                      scrollDirection: Axis.horizontal,
-                      child: DataTable(
-                        headingRowHeight: 38,
-                        dataRowMinHeight: 40,
-                        dataRowMaxHeight: 48,
-                        horizontalMargin: 12,
-                        showBottomBorder: true,
-                        dividerThickness: 0.26,
-                        columnSpacing: 8,
-                        columns: [
-                          DataColumn(label: Center(child: Text(localizations.name))),
-                          DataColumn(label: Center(child: Text(localizations.enable))),
-                          DataColumn(label: Center(child: Text('${localizations.match} URL'))),
-                          DataColumn(label: Center(child: Text(localizations.serverUrl))),
-                          DataColumn(label: Center(child: Text(localizations.action))),
-                        ],
-                        rows: [
-                          for (final entry in _servers.asMap().entries)
-                            DataRow(cells: [
-                              DataCell(
-                                  SizedBox(
-                                      width: 65,
-                                      child: Text(
-                                        entry.value.name.isEmpty ? '-' : entry.value.name,
-                                        maxLines: 1,
-                                        overflow: TextOverflow.fade,
-                                      )),
-                                  onTap: () => _editServerDialog(entry.key)),
-                              DataCell(Center(
-                                  child: SizedBox(
-                                      width: 45,
-                                      child: SwitchWidget(
-                                        value: entry.value.enabled,
-                                        scale: 0.73,
-                                        onChanged: (v) async {
-                                          final manager = await ReportServerManager.instance;
-                                          await manager.toggleEnabled(entry.key, v);
-                                          setState(() => _servers[entry.key] = entry.value.copyWith(enabled: v));
-                                        },
-                                      )))),
-                              DataCell(
-                                  SizedBox(
-                                    width: 155,
-                                    child: Tooltip(
-                                      message: entry.value.matchUrl,
-                                      child: Text(entry.value.matchUrl, overflow: TextOverflow.ellipsis, maxLines: 1),
-                                    ),
+          ? Center(child: Text(localizations.emptyData))
+          : Padding(
+              padding: const EdgeInsets.all(8.0),
+              child: SingleChildScrollView(
+                scrollDirection: Axis.vertical,
+                child: SingleChildScrollView(
+                  scrollDirection: Axis.horizontal,
+                  child: DataTable(
+                    headingRowHeight: 38,
+                    dataRowMinHeight: 40,
+                    dataRowMaxHeight: 48,
+                    horizontalMargin: 12,
+                    showBottomBorder: true,
+                    dividerThickness: 0.26,
+                    columnSpacing: 8,
+                    columns: [
+                      DataColumn(
+                        label: Center(child: Text(localizations.name)),
+                      ),
+                      DataColumn(
+                        label: Center(child: Text(localizations.enable)),
+                      ),
+                      DataColumn(
+                        label: Center(
+                          child: Text('${localizations.match} URL'),
+                        ),
+                      ),
+                      DataColumn(
+                        label: Center(child: Text(localizations.serverUrl)),
+                      ),
+                      DataColumn(
+                        label: Center(child: Text(localizations.action)),
+                      ),
+                    ],
+                    rows: [
+                      for (final entry in _servers.asMap().entries)
+                        DataRow(
+                          cells: [
+                            DataCell(
+                              SizedBox(
+                                width: 65,
+                                child: Text(
+                                  entry.value.name.isEmpty
+                                      ? '-'
+                                      : entry.value.name,
+                                  maxLines: 1,
+                                  overflow: TextOverflow.fade,
+                                ),
+                              ),
+                              onTap: () => _editServerDialog(entry.key),
+                            ),
+                            DataCell(
+                              Center(
+                                child: SizedBox(
+                                  width: 45,
+                                  child: SwitchWidget(
+                                    value: entry.value.enabled,
+                                    scale: 0.73,
+                                    onChanged: (v) async {
+                                      final manager =
+                                          await ReportServerManager.instance;
+                                      await manager.toggleEnabled(entry.key, v);
+                                      setState(
+                                        () => _servers[entry.key] = entry.value
+                                            .copyWith(enabled: v),
+                                      );
+                                    },
                                   ),
-                                  onTap: () => _editServerDialog(entry.key)),
-                              DataCell(
-                                  SizedBox(
-                                    width: 155,
-                                    child: Tooltip(
-                                      message: entry.value.serverUrl,
-                                      child: Text(entry.value.serverUrl, overflow: TextOverflow.ellipsis, maxLines: 1),
-                                    ),
+                                ),
+                              ),
+                            ),
+                            DataCell(
+                              SizedBox(
+                                width: 155,
+                                child: Tooltip(
+                                  message: entry.value.matchUrl,
+                                  child: Text(
+                                    entry.value.matchUrl,
+                                    overflow: TextOverflow.ellipsis,
+                                    maxLines: 1,
                                   ),
-                                  onTap: () => _editServerDialog(entry.key)),
-                              DataCell(Center(
+                                ),
+                              ),
+                              onTap: () => _editServerDialog(entry.key),
+                            ),
+                            DataCell(
+                              SizedBox(
+                                width: 155,
+                                child: Tooltip(
+                                  message: entry.value.serverUrl,
+                                  child: Text(
+                                    entry.value.serverUrl,
+                                    overflow: TextOverflow.ellipsis,
+                                    maxLines: 1,
+                                  ),
+                                ),
+                              ),
+                              onTap: () => _editServerDialog(entry.key),
+                            ),
+                            DataCell(
+                              Center(
                                 child: Row(
                                   mainAxisSize: MainAxisSize.min,
                                   children: [
                                     IconButton(
                                       tooltip: localizations.edit,
-                                      onPressed: () => _editServerDialog(entry.key),
-                                      icon: const Icon(Icons.edit_outlined, size: 18),
+                                      onPressed: () =>
+                                          _editServerDialog(entry.key),
+                                      icon: const Icon(
+                                        Icons.edit_outlined,
+                                        size: 18,
+                                      ),
                                     ),
                                     IconButton(
                                       tooltip: localizations.delete,
-                                      onPressed: () => _confirmDelete(entry.key),
-                                      icon: const Icon(Icons.delete_outline, size: 18),
+                                      onPressed: () =>
+                                          _confirmDelete(entry.key),
+                                      icon: const Icon(
+                                        Icons.delete_outline,
+                                        size: 18,
+                                      ),
                                     ),
                                   ],
                                 ),
-                              )),
-                            ])
-                        ],
-                      ),
-                    ),
+                              ),
+                            ),
+                          ],
+                        ),
+                    ],
                   ),
                 ),
+              ),
+            ),
     );
   }
 }

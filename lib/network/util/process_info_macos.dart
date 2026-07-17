@@ -48,10 +48,12 @@ import 'package:ffi/ffi.dart';
 typedef _ProcListPidsC = Int32 Function(Uint32, Uint32, Pointer<Void>, Int32);
 typedef _ProcListPidsDart = int Function(int, int, Pointer<Void>, int);
 
-typedef _ProcPidInfoC = Int32 Function(Int32, Int32, Uint64, Pointer<Void>, Int32);
+typedef _ProcPidInfoC =
+    Int32 Function(Int32, Int32, Uint64, Pointer<Void>, Int32);
 typedef _ProcPidInfoDart = int Function(int, int, int, Pointer<Void>, int);
 
-typedef _ProcPidFdInfoC = Int32 Function(Int32, Int32, Int32, Pointer<Void>, Int32);
+typedef _ProcPidFdInfoC =
+    Int32 Function(Int32, Int32, Int32, Pointer<Void>, Int32);
 typedef _ProcPidFdInfoDart = int Function(int, int, int, Pointer<Void>, int);
 
 typedef _ProcPidPathC = Int32 Function(Int32, Pointer<Void>, Uint32);
@@ -75,17 +77,24 @@ class MacosProcessInfo {
   static const int _kOffProcFdType = 4; // uint32
 
   // socket_fdinfo field offsets
-  static const int _kOffSoiKind = 256; // int32, value == _kSockInfoTcp means TCP
-  static const int _kOffInsiFPort = 264; // int32 (htons(uint16) in low 16 bits); 0 for LISTEN sockets
-  static const int _kOffInsiLPort = 268; // int32 (htons(uint16) in low 16 bits, network byte order)
+  static const int _kOffSoiKind =
+      256; // int32, value == _kSockInfoTcp means TCP
+  static const int _kOffInsiFPort =
+      264; // int32 (htons(uint16) in low 16 bits); 0 for LISTEN sockets
+  static const int _kOffInsiLPort =
+      268; // int32 (htons(uint16) in low 16 bits, network byte order)
 
   // libproc symbols live in libSystem which is already linked into every
   // macOS process, so DynamicLibrary.process() finds them.
   static final DynamicLibrary _libproc = DynamicLibrary.process();
-  static late final _procListPids = _libproc.lookupFunction<_ProcListPidsC, _ProcListPidsDart>('proc_listpids');
-  static late final _procPidInfo = _libproc.lookupFunction<_ProcPidInfoC, _ProcPidInfoDart>('proc_pidinfo');
-  static late final _procPidFdInfo = _libproc.lookupFunction<_ProcPidFdInfoC, _ProcPidFdInfoDart>('proc_pidfdinfo');
-  static late final _procPidPath = _libproc.lookupFunction<_ProcPidPathC, _ProcPidPathDart>('proc_pidpath');
+  static late final _procListPids = _libproc
+      .lookupFunction<_ProcListPidsC, _ProcListPidsDart>('proc_listpids');
+  static late final _procPidInfo = _libproc
+      .lookupFunction<_ProcPidInfoC, _ProcPidInfoDart>('proc_pidinfo');
+  static late final _procPidFdInfo = _libproc
+      .lookupFunction<_ProcPidFdInfoC, _ProcPidFdInfoDart>('proc_pidfdinfo');
+  static late final _procPidPath = _libproc
+      .lookupFunction<_ProcPidPathC, _ProcPidPathDart>('proc_pidpath');
 
   /// Returns the PID that owns a TCP socket whose local port equals
   /// [localPort], or null if no such socket is found or the lookup fails.
@@ -99,7 +108,10 @@ class MacosProcessInfo {
     // int32 field. All shipping macOS hardware (x86_64 / arm64) is
     // little-endian; this assert exists to fail loudly rather than return
     // wrong port values if that ever changes. Stripped in release builds.
-    assert(Endian.host == Endian.little, 'libproc parsing requires little-endian host');
+    assert(
+      Endian.host == Endian.little,
+      'libproc parsing requires little-endian host',
+    );
 
     final pidBufSize = _procListPids(_kProcAllPids, 0, nullptr, 0);
     if (pidBufSize <= 0) return null;
@@ -118,7 +130,9 @@ class MacosProcessInfo {
       sockBuf = calloc<Uint8>(_kSizeofSocketFdInfo);
       // Reuse the same ByteData view across all fds; the underlying native
       // buffer is overwritten in place by each proc_pidfdinfo call.
-      final sockView = ByteData.sublistView(sockBuf.asTypedList(_kSizeofSocketFdInfo));
+      final sockView = ByteData.sublistView(
+        sockBuf.asTypedList(_kSizeofSocketFdInfo),
+      );
       final actual = _procListPids(_kProcAllPids, 0, pidBuf.cast(), pidBufSize);
       if (actual <= 0) return null;
 
@@ -133,7 +147,13 @@ class MacosProcessInfo {
 
         final fdBuf = calloc<Uint8>(fdSize);
         try {
-          final fdActual = _procPidInfo(pid, _kProcPidListFds, 0, fdBuf.cast(), fdSize);
+          final fdActual = _procPidInfo(
+            pid,
+            _kProcPidListFds,
+            0,
+            fdBuf.cast(),
+            fdSize,
+          );
           if (fdActual <= 0) continue;
 
           final fdView = ByteData.sublistView(fdBuf.asTypedList(fdActual));
@@ -141,12 +161,21 @@ class MacosProcessInfo {
 
           for (int j = 0; j < fdCount; j++) {
             final entryOff = j * _kSizeofProcFdInfo;
-            final fdType = fdView.getUint32(entryOff + _kOffProcFdType, Endian.host);
+            final fdType = fdView.getUint32(
+              entryOff + _kOffProcFdType,
+              Endian.host,
+            );
             if (fdType != _kProxFdTypeSocket) continue;
 
             final fd = fdView.getInt32(entryOff + _kOffProcFd, Endian.host);
 
-            final n = _procPidFdInfo(pid, fd, _kProcPidFdSocketInfo, sockBuf.cast(), _kSizeofSocketFdInfo);
+            final n = _procPidFdInfo(
+              pid,
+              fd,
+              _kProcPidFdSocketInfo,
+              sockBuf.cast(),
+              _kSizeofSocketFdInfo,
+            );
             if (n < _kSizeofSocketFdInfo) {
               consecutiveLayoutMismatch++;
               continue;

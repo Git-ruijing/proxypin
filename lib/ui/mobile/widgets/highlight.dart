@@ -42,37 +42,52 @@ class _KeywordHighlightState extends State<KeywordHighlight> {
 
     return Scaffold(
       appBar: AppBar(
-        title: Text(localizations.keyword + localizations.highlight,
-            style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w500)),
+        title: Text(
+          localizations.keyword + localizations.highlight,
+          style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w500),
+        ),
         actions: [
           SwitchWidget(
-              scale: 0.7, value: KeywordHighlights.enabled, onChanged: (val) => KeywordHighlights.enabled = val),
-          const SizedBox(width: 10)
+            scale: 0.7,
+            value: KeywordHighlights.enabled,
+            onChanged: (val) => KeywordHighlights.enabled = val,
+          ),
+          const SizedBox(width: 10),
         ],
       ),
       body: DefaultTabController(
         length: colors.length,
         child: Scaffold(
-          appBar: TabBar(tabs: colors.entries.map((e) => Tab(text: e.value)).toList()),
+          appBar: TabBar(
+            tabs: colors.entries.map((e) => Tab(text: e.value)).toList(),
+          ),
           body: TabBarView(
-              children: colors.entries
-                  .map((e) => KeepAliveWrapper(
-                      child: Padding(
-                          padding: const EdgeInsets.symmetric(vertical: 25, horizontal: 15),
-                          child: TextFormField(
-                            minLines: 2,
-                            maxLines: 2,
-                            initialValue: KeywordHighlights.keywords[e.key],
-                            onChanged: (value) {
-                              if (value.isEmpty) {
-                                KeywordHighlights.keywords.remove(e.key);
-                              } else {
-                                KeywordHighlights.keywords[e.key] = value;
-                              }
-                            },
-                            decoration: decoration(localizations.keyword),
-                          ))))
-                  .toList()),
+            children: colors.entries
+                .map(
+                  (e) => KeepAliveWrapper(
+                    child: Padding(
+                      padding: const EdgeInsets.symmetric(
+                        vertical: 25,
+                        horizontal: 15,
+                      ),
+                      child: TextFormField(
+                        minLines: 2,
+                        maxLines: 2,
+                        initialValue: KeywordHighlights.keywords[e.key],
+                        onChanged: (value) {
+                          if (value.isEmpty) {
+                            KeywordHighlights.keywords.remove(e.key);
+                          } else {
+                            KeywordHighlights.keywords[e.key] = value;
+                          }
+                        },
+                        decoration: decoration(localizations.keyword),
+                      ),
+                    ),
+                  ),
+                )
+                .toList(),
+          ),
         ),
       ),
     );

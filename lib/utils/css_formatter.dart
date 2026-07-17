@@ -140,7 +140,10 @@ class _CssFormatter {
 
   void _skipWs() {
     while (_i < _src.length &&
-        (_src[_i] == ' ' || _src[_i] == '\t' || _src[_i] == '\n' || _src[_i] == '\r')) {
+        (_src[_i] == ' ' ||
+            _src[_i] == '\t' ||
+            _src[_i] == '\n' ||
+            _src[_i] == '\r')) {
       _i++;
     }
   }
@@ -154,4 +157,3 @@ class _CssFormatter {
     return idx < _src.length ? _src[idx] : null;
   }
 }
-

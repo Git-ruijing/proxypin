@@ -9,7 +9,8 @@ class KeywordHighlights {
   static bool initialized = false;
   static const String storeKey = "highlightKeywords";
 
-  static final ValueNotifier _keywordsController = ValueNotifier<Map<Color, String>>({});
+  static final ValueNotifier _keywordsController =
+      ValueNotifier<Map<Color, String>>({});
 
   static Map<Color, String> get keywords => _keywordsController.value;
 
@@ -59,7 +60,9 @@ class KeywordHighlights {
 
   static Future<void> saveKeywords(Map<Color, String> keywords) async {
     SharedPreferences prefs = await SharedPreferences.getInstance();
-    var map = keywords.map((key, value) => MapEntry(ColorMapping.getColorName(key), value));
+    var map = keywords.map(
+      (key, value) => MapEntry(ColorMapping.getColorName(key), value),
+    );
     prefs.setString(storeKey, jsonEncode(map));
     _keywordsController.value = keywords;
   }

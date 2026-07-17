@@ -36,30 +36,47 @@ void main() async {
 /// 进程信息工具类 用于获取进程信息
 ///@author wanghongen
 class ProcessInfoUtils {
-  static final processInfoCache = ExpiringCache<String, ProcessInfo>(const Duration(minutes: 5));
+  static final processInfoCache = ExpiringCache<String, ProcessInfo>(
+    const Duration(minutes: 5),
+  );
 
   // (host:port) -> pid short cache. Keeps the FFI / Process.run lookup off
   // the request hot path for the typical HTTP keep-alive case where many
   // requests share a single client TCP connection (and thus a single
   // remote socket address). Greatly reduces how often the synchronous
   // libproc scan runs on the main isolate.
-  static final _pidCache = ExpiringCache<String, int>(const Duration(seconds: 15));
+  static final _pidCache = ExpiringCache<String, int>(
+    const Duration(seconds: 15),
+  );
 
   // Negative cache for ports whose owner can't be resolved (e.g. the client
   // process has already exited by the time we scan). Without this, every
   // short-lived connection forces a full PID-list rescan on every request.
   // Short TTL so a real owner that appears soon after is not masked.
-  static final _pidNotFoundCache = ExpiringCache<String, bool>(const Duration(seconds: 5));
+  static final _pidNotFoundCache = ExpiringCache<String, bool>(
+    const Duration(seconds: 5),
+  );
 
-  static Future<ProcessInfo?> getProcessByPort(InetSocketAddress socketAddress, String cacheKeyPre) async {
+  static Future<ProcessInfo?> getProcessByPort(
+    InetSocketAddress socketAddress,
+    String cacheKeyPre,
+  ) async {
     try {
       if (Platform.isAndroid) {
-        var app = await ProcessInfoPlugin.getProcessByPort(socketAddress.host, socketAddress.port);
+        var app = await ProcessInfoPlugin.getProcessByPort(
+          socketAddress.host,
+          socketAddress.port,
+        );
         if (app != null) {
           return app;
         }
         if (socketAddress.host == '127.0.0.1') {
-          return ProcessInfo('com.network.proxy', "ProxyPin", '', os: Platform.operatingSystem);
+          return ProcessInfo(
+            'com.network.proxy',
+            "ProxyPin",
+            '',
+            os: Platform.operatingSystem,
+          );
         }
         return null;
       }
@@ -94,14 +111,19 @@ class ProcessInfoUtils {
   // 获取进程 ID
   static Future<int?> _getPid(InetSocketAddress socketAddress) async {
     if (Platform.isWindows) {
-      var result = await Process.run('cmd', ['/c', 'netstat -ano | findstr :${socketAddress.port}']);
+      var result = await Process.run('cmd', [
+        '/c',
+        'netstat -ano | findstr :${socketAddress.port}',
+      ]);
       var lines = LineSplitter.split(result.stdout);
       for (var line in lines) {
         var parts = line.trim().split(RegExp(r'\s+'));
         if (parts.length < 5) {
           continue;
         }
-        if (parts[1].trim().contains("${socketAddress.host}:${socketAddress.port}")) {
+        if (parts[1].trim().contains(
+          "${socketAddress.host}:${socketAddress.port}",
+        )) {
           return int.tryParse(parts[4]);
         }
       }
@@ -122,11 +144,19 @@ class ProcessInfoUtils {
   static Future<ProcessInfo?> getProcess(int pid) async {
     if (Platform.isWindows) {
       // 获取应用路径
-      var result = await Process.run('cmd', ['/c', 'wmic process where processid=$pid get ExecutablePath']);
+      var result = await Process.run('cmd', [
+        '/c',
+        'wmic process where processid=$pid get ExecutablePath',
+      ]);
       var output = result.stdout.toString();
       var path = output.split('\n')[1].trim();
       String name = path.substring(path.lastIndexOf('\\') + 1);
-      return ProcessInfo(name, name.split(".")[0], path, os: Platform.operatingSystem);
+      return ProcessInfo(
+        name,
+        name.split(".")[0],
+        path,
+        os: Platform.operatingSystem,
+      );
     }
 
     if (Platform.isMacOS) {
@@ -157,7 +187,9 @@ class ProcessInfoUtils {
 }
 
 class ProcessInfo {
-  static final _iconCache = ExpiringCache<String, Uint8List?>(const Duration(minutes: 5));
+  static final _iconCache = ExpiringCache<String, Uint8List?>(
+    const Duration(minutes: 5),
+  );
 
   final String id; //应用包名
   final String name; //应用名称
@@ -168,7 +200,15 @@ class ProcessInfo {
   String? remoteHost;
   int? remotePost;
 
-  ProcessInfo(this.id, this.name, this.path, {required this.os, this.icon, this.remoteHost, this.remotePost});
+  ProcessInfo(
+    this.id,
+    this.name,
+    this.path, {
+    required this.os,
+    this.icon,
+    this.remoteHost,
+    this.remotePost,
+  });
 
   factory ProcessInfo.fromJson(Map<String, dynamic> json) {
     return ProcessInfo(json['id'], json['name'], json['path'], os: json['os']);
@@ -211,7 +251,10 @@ class ProcessInfo {
     var xml = await File('$path/Contents/Info.plist').readAsString();
     var key = "<key>CFBundleIconFile</key>";
     var indexOf = xml.indexOf(key);
-    var iconName = xml.substring(indexOf + key.length, xml.indexOf("</string>", indexOf));
+    var iconName = xml.substring(
+      indexOf + key.length,
+      xml.indexOf("</string>", indexOf),
+    );
     iconName = iconName.trim().replaceAll("<string>", "");
     var icon = iconName.endsWith(".icns") ? iconName : "$iconName.icns";
     String iconPath = "$path/Contents/Resources/$icon";

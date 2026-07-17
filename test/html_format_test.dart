@@ -36,7 +36,10 @@ void main() {
 
   test('xhtml content type maps to html', () {
     final response = HttpResponse(HttpStatus.ok);
-    response.headers.set('content-type', 'application/xhtml+xml; charset=utf-8');
+    response.headers.set(
+      'content-type',
+      'application/xhtml+xml; charset=utf-8',
+    );
 
     expect(response.contentType, ContentType.html);
   });

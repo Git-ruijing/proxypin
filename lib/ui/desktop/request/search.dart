@@ -54,7 +54,7 @@ class SearchState extends State<Search> {
             color: Theme.of(context).shadowColor.withValues(alpha: 0.05),
             blurRadius: 6,
             offset: const Offset(0, 1),
-          )
+          ),
         ],
       ),
       child: TextField(
@@ -68,7 +68,11 @@ class SearchState extends State<Search> {
             Future.delayed(const Duration(milliseconds: 500), () {
               changing = false;
               if (!searched) {
-                searchModel.searchOptions = {Option.url, Option.method, Option.responseContentType};
+                searchModel.searchOptions = {
+                  Option.url,
+                  Option.method,
+                  Option.responseContentType,
+                };
               }
               widget.onSearch?.call(searchModel);
             });
@@ -77,19 +81,31 @@ class SearchState extends State<Search> {
         decoration: InputDecoration(
           contentPadding: const EdgeInsets.all(0),
           enabledBorder: OutlineInputBorder(
-              borderSide: BorderSide(color: Colors.grey.shade400, width: 0.5), borderRadius: BorderRadius.circular(15)),
+            borderSide: BorderSide(color: Colors.grey.shade400, width: 0.5),
+            borderRadius: BorderRadius.circular(15),
+          ),
           border: OutlineInputBorder(
-              borderSide: BorderSide(color: Colors.grey.shade400, width: 0.5), borderRadius: BorderRadius.circular(15)),
+            borderSide: BorderSide(color: Colors.grey.shade400, width: 0.5),
+            borderRadius: BorderRadius.circular(15),
+          ),
           prefixIcon: InkWell(
-              child: Icon(Icons.search, color: searched ? Colors.green : Theme.of(context).colorScheme.primary),
-              onTapDown: (details) {
-                searchDialog(details);
-              }),
+            child: Icon(
+              Icons.search,
+              color: searched
+                  ? Colors.green
+                  : Theme.of(context).colorScheme.primary,
+            ),
+            onTapDown: (details) {
+              searchDialog(details);
+            },
+          ),
           hintText: 'Search',
-          suffixIcon: ContentTypeSelect(onSelected: (contentType) {
-            searchModel.responseContentType = contentType;
-            widget.onSearch?.call(searchModel);
-          }),
+          suffixIcon: ContentTypeSelect(
+            onSelected: (contentType) {
+              searchModel.responseContentType = contentType;
+              widget.onSearch?.call(searchModel);
+            },
+          ),
         ),
       ),
     );
@@ -106,27 +122,39 @@ class SearchState extends State<Search> {
       height -= 30;
     }
     showMenu(
-        context: context,
-        position: RelativeRect.fromLTRB(65, height, 65, height),
-        constraints: const BoxConstraints(minWidth: 260, maxWidth: 330),
-        items: [
-          PopupMenuItem(
-              padding: const EdgeInsets.only(left: 15, right: 15, top: 10, bottom: 5),
-              enabled: false,
-              child: DefaultTextStyle.merge(
-                  style: Theme.of(context).textTheme.bodyMedium?.copyWith(fontSize: 14),
-                  child: SizedBox(
-                      child: SearchConditions(
-                          searchModel: searchModel,
-                          onSearch: (val) {
-                            setState(() {
-                              searchModel = val;
-                              searched = searchModel.isNotEmpty;
-                              keywordController.text = searchModel.keyword ?? '';
-                              widget.onSearch?.call(searchModel);
-                            });
-                          }))))
-        ]);
+      context: context,
+      position: RelativeRect.fromLTRB(65, height, 65, height),
+      constraints: const BoxConstraints(minWidth: 260, maxWidth: 330),
+      items: [
+        PopupMenuItem(
+          padding: const EdgeInsets.only(
+            left: 15,
+            right: 15,
+            top: 10,
+            bottom: 5,
+          ),
+          enabled: false,
+          child: DefaultTextStyle.merge(
+            style: Theme.of(
+              context,
+            ).textTheme.bodyMedium?.copyWith(fontSize: 14),
+            child: SizedBox(
+              child: SearchConditions(
+                searchModel: searchModel,
+                onSearch: (val) {
+                  setState(() {
+                    searchModel = val;
+                    searched = searchModel.isNotEmpty;
+                    keywordController.text = searchModel.keyword ?? '';
+                    widget.onSearch?.call(searchModel);
+                  });
+                },
+              ),
+            ),
+          ),
+        ),
+      ],
+    );
   }
 }
 
@@ -155,17 +183,35 @@ class ContentTypeState extends State<ContentTypeSelect> {
   @override
   Widget build(BuildContext context) {
     value ??= localizations.all;
-    types ??= ["JSON", "IMAGE", "HTML", "XML", "JS", "CSS", "TEXT",  localizations.all];
+    types ??= [
+      "JSON",
+      "IMAGE",
+      "HTML",
+      "XML",
+      "JS",
+      "CSS",
+      "TEXT",
+      localizations.all,
+    ];
 
     return PopupMenuButton(
       initialValue: value,
-      offset: Offset(-10, (types!.length - types!.indexOf(value!)) * -30.0 - 10),
+      offset: Offset(
+        -10,
+        (types!.length - types!.indexOf(value!)) * -30.0 - 10,
+      ),
       tooltip: localizations.responseType,
       constraints: const BoxConstraints(maxWidth: 75),
-      child: Wrap(runAlignment: WrapAlignment.center, children: [
-        Text(value!, style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w500)),
-        const Icon(Icons.arrow_drop_up, size: 20)
-      ]),
+      child: Wrap(
+        runAlignment: WrapAlignment.center,
+        children: [
+          Text(
+            value!,
+            style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w500),
+          ),
+          const Icon(Icons.arrow_drop_up, size: 20),
+        ],
+      ),
       onSelected: (String value) {
         if (this.value == value) {
           return;
@@ -173,7 +219,9 @@ class ContentTypeState extends State<ContentTypeSelect> {
         setState(() {
           this.value = value;
         });
-        widget.onSelected(value == localizations.all ? null : ContentType.valueOf(value));
+        widget.onSelected(
+          value == localizations.all ? null : ContentType.valueOf(value),
+        );
       },
       itemBuilder: (BuildContext context) {
         return types!.map(item).toList();

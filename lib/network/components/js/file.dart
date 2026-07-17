@@ -88,7 +88,8 @@ class FileBridge {
 
   ///register file operation
   static void registerFile(JavascriptRuntime flutterJs) {
-    var channels = JavascriptRuntime.channelFunctionsRegistered[flutterJs.getEngineInstanceId()];
+    var channels = JavascriptRuntime
+        .channelFunctionsRegistered[flutterJs.getEngineInstanceId()];
     if (channels != null && channels.containsKey('file.readAsString')) {
       return;
     }
@@ -122,7 +123,9 @@ class FileBridge {
       var path = args['path'];
       var content = args['content'];
       var append = args['append'] ?? false;
-      await File(path).writeAsString(content, mode: append ? FileMode.append : FileMode.write);
+      await File(
+        path,
+      ).writeAsString(content, mode: append ? FileMode.append : FileMode.write);
     });
 
     flutterJs.onMessage('file.writeAsStringSync', (args) {
@@ -130,7 +133,10 @@ class FileBridge {
       var content = args['content'];
       var append = args['append'] ?? false;
 
-      File(path).writeAsStringSync(content, mode: append ? FileMode.append : FileMode.write);
+      File(path).writeAsStringSync(
+        content,
+        mode: append ? FileMode.append : FileMode.write,
+      );
     });
 
     flutterJs.onMessage('file.writeAsBytes', (args) async {
@@ -138,7 +144,9 @@ class FileBridge {
       var bytes = List<int>.from(args['bytes']);
       var append = args['append'] ?? false;
 
-      await File(path).writeAsBytes(bytes, mode: append ? FileMode.append : FileMode.write);
+      await File(
+        path,
+      ).writeAsBytes(bytes, mode: append ? FileMode.append : FileMode.write);
     });
 
     flutterJs.onMessage('file.writeAsBytesSync', (args) {
@@ -146,7 +154,10 @@ class FileBridge {
       var bytes = List<int>.from(args['bytes']);
       var append = args['append'] ?? false;
 
-      File(path).writeAsBytesSync(bytes, mode: append ? FileMode.append : FileMode.write);
+      File(path).writeAsBytesSync(
+        bytes,
+        mode: append ? FileMode.append : FileMode.write,
+      );
     });
 
     flutterJs.onMessage('file.length', (path) {

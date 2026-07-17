@@ -63,7 +63,9 @@ class Pkcs12 {
   }) {
     Uint8List? pwFormatted;
     if (password != null) {
-      pwFormatted = formatPkcs12Password(Uint8List.fromList(password.codeUnits));
+      pwFormatted = formatPkcs12Password(
+        Uint8List.fromList(password.codeUnits),
+      );
     }
 
     // GENERATE SALT
@@ -77,7 +79,11 @@ class Pkcs12 {
     localKeyId ??= _generateLocalKeyId();
 
     // CREATE SAFEBAGS WITH PEMS WRAPPED IN CERTBAG
-    var safeBags = _generateSafeBagsForCerts(certificates, localKeyId, friendlyName: friendlyName);
+    var safeBags = _generateSafeBagsForCerts(
+      certificates,
+      localKeyId,
+      friendlyName: friendlyName,
+    );
     var safeContentsCert = ASN1SafeContents(safeBags);
 
     // CREATE CONTENT INFO
@@ -87,9 +93,7 @@ class Pkcs12 {
       var params = ASN1Sequence(
         elements: [
           ASN1OctetString(octets: certSalt),
-          ASN1Integer(
-            BigInt.from(macIter),
-          ),
+          ASN1Integer(BigInt.from(macIter)),
         ],
       );
       var contentEncryptionAlgorithm = ASN1AlgorithmIdentifier(
@@ -106,22 +110,25 @@ class Pkcs12 {
         'SHA-1',
       );
 
-      var encryptedContentInfo = ASN1EncryptedContentInfo.forData(contentEncryptionAlgorithm, encryptedContent);
+      var encryptedContentInfo = ASN1EncryptedContentInfo.forData(
+        contentEncryptionAlgorithm,
+        encryptedContent,
+      );
 
       var encryptedData = ASN1EncryptedData(encryptedContentInfo);
       contentInfoCert = ASN1ContentInfo.forEncryptedData(encryptedData);
     } else {
       contentInfoCert = ASN1ContentInfo.forData(
-        ASN1OctetString(
-          octets: safeContentsCert.encode(),
-        ),
+        ASN1OctetString(octets: safeContentsCert.encode()),
       );
     }
     if (keyPbe != 'NONE' && pwFormatted != null) {
-      var params = ASN1Sequence(elements: [
-        ASN1OctetString(octets: keySalt),
-        ASN1Integer(BigInt.from(macIter)),
-      ]);
+      var params = ASN1Sequence(
+        elements: [
+          ASN1OctetString(octets: keySalt),
+          ASN1Integer(BigInt.from(macIter)),
+        ],
+      );
       var contentEncryptionAlgorithm = ASN1AlgorithmIdentifier(
         _oiFromAlgorithm(keyPbe),
         parameters: params,
@@ -138,16 +145,19 @@ class Pkcs12 {
 
       // CREATE SAFEBAG FOR PRIVATEKEY WRAPPED IN KEYBAG
       var safeBagsKey = _generateSafeBagsForShroudedKey(
-        ASN1Sequence(elements: [contentEncryptionAlgorithm, ASN1OctetString(octets: encryptedContent)]),
+        ASN1Sequence(
+          elements: [
+            contentEncryptionAlgorithm,
+            ASN1OctetString(octets: encryptedContent),
+          ],
+        ),
         localKeyId,
         friendlyName: friendlyName,
       );
 
       var safeContentsKey = ASN1SafeContents(safeBagsKey);
       contentInfoKey = ASN1ContentInfo.forData(
-        ASN1OctetString(
-          octets: safeContentsKey.encode(),
-        ),
+        ASN1OctetString(octets: safeContentsKey.encode()),
       );
     } else {
       // CREATE SAFEBAG FOR PRIVATEKEY WRAPPED IN KEYBAG
@@ -160,9 +170,7 @@ class Pkcs12 {
       var safeContentsKey = ASN1SafeContents(safeBagsKey);
 
       contentInfoKey = ASN1ContentInfo.forData(
-        ASN1OctetString(
-          octets: safeContentsKey.encode(),
-        ),
+        ASN1OctetString(octets: safeContentsKey.encode()),
       );
     }
 
@@ -170,18 +178,16 @@ class Pkcs12 {
     var authSafe = ASN1AuthenticatedSafe([contentInfoCert, contentInfoKey]);
 
     // WRAP AUTHENTICATED SAFE WITHIN A CONTENTINFO
-    var T = ASN1ContentInfo.forData(
-      ASN1OctetString(
-        octets: authSafe.encode(),
-      ),
-    );
+    var T = ASN1ContentInfo.forData(ASN1OctetString(octets: authSafe.encode()));
 
     // GENERATE HMAC IF PASSWORD IS GIVEN
     ASN1MacData? macData;
     if (password != null) {
       var bytesForHmac = authSafe.encode();
 
-      var pwFormatted = formatPkcs12Password(Uint8List.fromList(password.codeUnits));
+      var pwFormatted = formatPkcs12Password(
+        Uint8List.fromList(password.codeUnits),
+      );
 
       var generator = PKCS12ParametersGenerator(Digest(digestAlgorithm));
       generator.init(pwFormatted, salt, macIter);
@@ -189,21 +195,12 @@ class Pkcs12 {
       var key = generator.generateDerivedMacParameters(20);
       var m = _generateHmac(bytesForHmac, key.key, digestAlgorithm);
       macData = ASN1MacData(
-        ASN1DigestInfo(
-          m,
-          _algorithmIdentifierFromDigest(
-            digestAlgorithm,
-          ),
-        ),
+        ASN1DigestInfo(m, _algorithmIdentifierFromDigest(digestAlgorithm)),
         salt,
         BigInt.from(2048),
       );
     }
-    var pfx = ASN1Pfx(
-      ASN1Integer(BigInt.from(3)),
-      T,
-      macData: macData,
-    );
+    var pfx = ASN1Pfx(ASN1Integer(BigInt.from(3)), T, macData: macData);
     var bytes = pfx.encode();
     return bytes;
   }
@@ -216,7 +213,11 @@ class Pkcs12 {
     return CryptoUtils.getSecureRandom().nextBytes(8);
   }
 
-  static Uint8List _generateHmac(Uint8List bytesForHmac, Uint8List key, String digestAlgorithm) {
+  static Uint8List _generateHmac(
+    Uint8List bytesForHmac,
+    Uint8List key,
+    String digestAlgorithm,
+  ) {
     final hmac = Mac('$digestAlgorithm/HMAC')..init(KeyParameter(key));
     var m = hmac.process(bytesForHmac);
     return m;
@@ -241,7 +242,11 @@ class Pkcs12 {
     }
   }
 
-  static _generateSafeBagsForCerts(List<String> certificates, Uint8List localKeyId, {String? friendlyName}) {
+  static _generateSafeBagsForCerts(
+    List<String> certificates,
+    Uint8List localKeyId, {
+    String? friendlyName,
+  }) {
     var certBags = <ASN1CertBag>[];
     var safeBags = <ASN1SafeBag>[];
 
@@ -254,18 +259,19 @@ class Pkcs12 {
       if (friendlyName != null) {
         asn1Set.add(ASN1Pkcs12Attribute.friendlyName(friendlyName));
       }
-      safeBags.add(
-        ASN1SafeBag.forCertBag(
-          certBag,
-          bagAttributes: asn1Set,
-        ),
-      );
+      safeBags.add(ASN1SafeBag.forCertBag(certBag, bagAttributes: asn1Set));
     }
     return safeBags;
   }
 
-  static List<ASN1SafeBag> _generateSafeBagsForKey(String privateKey, Uint8List localKeyId, {String? friendlyName}) {
-    late ASN1PrivateKeyInfo privateKeyInfo = _getPrivateKeyInfoFromPem(privateKey);
+  static List<ASN1SafeBag> _generateSafeBagsForKey(
+    String privateKey,
+    Uint8List localKeyId, {
+    String? friendlyName,
+  }) {
+    late ASN1PrivateKeyInfo privateKeyInfo = _getPrivateKeyInfoFromPem(
+      privateKey,
+    );
 
     var safeBagsKey = <ASN1SafeBag>[];
     var asn1Set = ASN1Set(elements: []);
@@ -274,15 +280,16 @@ class Pkcs12 {
       asn1Set.add(ASN1Pkcs12Attribute.friendlyName(friendlyName));
     }
     safeBagsKey.add(
-      ASN1SafeBag.forKeyBag(
-        ASN1KeyBag(privateKeyInfo),
-        bagAttributes: asn1Set,
-      ),
+      ASN1SafeBag.forKeyBag(ASN1KeyBag(privateKeyInfo), bagAttributes: asn1Set),
     );
     return safeBagsKey;
   }
 
-  static _generateSafeBagsForShroudedKey(ASN1Object bagValue, Uint8List localKeyId, {String? friendlyName}) {
+  static _generateSafeBagsForShroudedKey(
+    ASN1Object bagValue,
+    Uint8List localKeyId, {
+    String? friendlyName,
+  }) {
     var safeBagsKey = <ASN1SafeBag>[];
     var asn1Set = ASN1Set(elements: []);
     asn1Set.add(ASN1Pkcs12Attribute.localKeyID(localKeyId));
@@ -290,10 +297,7 @@ class Pkcs12 {
       asn1Set.add(ASN1Pkcs12Attribute.friendlyName(friendlyName));
     }
     safeBagsKey.add(
-      ASN1SafeBag.forPkcs8ShroudedKeyBag(
-        bagValue,
-        bagAttributes: asn1Set,
-      ),
+      ASN1SafeBag.forPkcs8ShroudedKeyBag(bagValue, bagAttributes: asn1Set),
     );
     return safeBagsKey;
   }
@@ -314,15 +318,25 @@ class Pkcs12 {
     return privateKeyInfo;
   }
 
-  static Uint8List _encryptRc2(Uint8List bytesToEncrypt, ParametersWithIV generateDerivedParametersWithIV) {
+  static Uint8List _encryptRc2(
+    Uint8List bytesToEncrypt,
+    ParametersWithIV generateDerivedParametersWithIV,
+  ) {
     return _processRc2(bytesToEncrypt, generateDerivedParametersWithIV, true);
   }
 
-  static Uint8List _decryptRc2(Uint8List bytesToDecrypt, ParametersWithIV generateDerivedParametersWithIV) {
+  static Uint8List _decryptRc2(
+    Uint8List bytesToDecrypt,
+    ParametersWithIV generateDerivedParametersWithIV,
+  ) {
     return _processRc2(bytesToDecrypt, generateDerivedParametersWithIV, false);
   }
 
-  static Uint8List _processRc2(Uint8List bytes, ParametersWithIV generateDerivedParametersWithIV, bool encrypt) {
+  static Uint8List _processRc2(
+    Uint8List bytes,
+    ParametersWithIV generateDerivedParametersWithIV,
+    bool encrypt,
+  ) {
     var engine = CBCBlockCipher(RC2Engine());
     engine.reset();
     engine.init(encrypt, generateDerivedParametersWithIV);
@@ -337,15 +351,25 @@ class Pkcs12 {
     return encryptedContent;
   }
 
-  static Uint8List _encrypt3des(Uint8List bytesToEncrypt, ParametersWithIV generateDerivedParametersWithIV) {
+  static Uint8List _encrypt3des(
+    Uint8List bytesToEncrypt,
+    ParametersWithIV generateDerivedParametersWithIV,
+  ) {
     return _process3des(bytesToEncrypt, generateDerivedParametersWithIV, true);
   }
 
-  static Uint8List _decrypt3des(Uint8List bytesToDecrypt, ParametersWithIV generateDerivedParametersWithIV) {
+  static Uint8List _decrypt3des(
+    Uint8List bytesToDecrypt,
+    ParametersWithIV generateDerivedParametersWithIV,
+  ) {
     return _process3des(bytesToDecrypt, generateDerivedParametersWithIV, false);
   }
 
-  static Uint8List _process3des(Uint8List bytes, ParametersWithIV generateDerivedParametersWithIV, bool encrypt) {
+  static Uint8List _process3des(
+    Uint8List bytes,
+    ParametersWithIV generateDerivedParametersWithIV,
+    bool encrypt,
+  ) {
     var engine = CBCBlockCipher(DESedeEngine());
     engine.reset();
     engine.init(encrypt, generateDerivedParametersWithIV);
@@ -369,15 +393,25 @@ class Pkcs12 {
     }
   }
 
-  static Uint8List _encryptRc4(Uint8List bytesToEncrypt, KeyParameter generateDerivedParameters) {
+  static Uint8List _encryptRc4(
+    Uint8List bytesToEncrypt,
+    KeyParameter generateDerivedParameters,
+  ) {
     return _processRc4(bytesToEncrypt, generateDerivedParameters, true);
   }
 
-  static Uint8List _decryptRc4(Uint8List bytesToDecrypt, KeyParameter generateDerivedParameters) {
+  static Uint8List _decryptRc4(
+    Uint8List bytesToDecrypt,
+    KeyParameter generateDerivedParameters,
+  ) {
     return _processRc4(bytesToDecrypt, generateDerivedParameters, false);
   }
 
-  static Uint8List _processRc4(Uint8List bytesToEncrypt, KeyParameter generateDerivedParameters, bool encrypt) {
+  static Uint8List _processRc4(
+    Uint8List bytesToEncrypt,
+    KeyParameter generateDerivedParameters,
+    bool encrypt,
+  ) {
     var engine = RC4Engine();
     engine.init(true, generateDerivedParameters);
     engine.reset();
@@ -388,20 +422,34 @@ class Pkcs12 {
   }
 
   static Uint8List _encrypt(
-      Uint8List encode, String algorithm, Uint8List pwFormatted, Uint8List salt, int macIter, String digetAlgorithm) {
-    var pkcs12ParameterGenerator = PKCS12ParametersGenerator(Digest(digetAlgorithm));
+    Uint8List encode,
+    String algorithm,
+    Uint8List pwFormatted,
+    Uint8List salt,
+    int macIter,
+    String digetAlgorithm,
+  ) {
+    var pkcs12ParameterGenerator = PKCS12ParametersGenerator(
+      Digest(digetAlgorithm),
+    );
     pkcs12ParameterGenerator.init(pwFormatted, salt, macIter);
 
     switch (algorithm) {
       case 'PBE-SHA1-RC2-40':
         return _encryptRc2(
           encode,
-          pkcs12ParameterGenerator.generateDerivedParametersWithIV(5, RC2Engine.BLOCK_SIZE),
+          pkcs12ParameterGenerator.generateDerivedParametersWithIV(
+            5,
+            RC2Engine.BLOCK_SIZE,
+          ),
         );
       case 'PBE-SHA1-RC2-128':
         return _encryptRc2(
           encode,
-          pkcs12ParameterGenerator.generateDerivedParametersWithIV(16, RC2Engine.BLOCK_SIZE),
+          pkcs12ParameterGenerator.generateDerivedParametersWithIV(
+            16,
+            RC2Engine.BLOCK_SIZE,
+          ),
         );
       case 'PBE-SHA1-RC4-40':
         return _encryptRc4(
@@ -434,21 +482,35 @@ class Pkcs12 {
     }
   }
 
-  static Uint8List _decrypt(Uint8List toDecrypt, String algorithm, Uint8List pwFormatted, Uint8List salt, int macIter,
-      String digetAlgorithm) {
-    var pkcs12ParameterGenerator = PKCS12ParametersGenerator(Digest(digetAlgorithm));
+  static Uint8List _decrypt(
+    Uint8List toDecrypt,
+    String algorithm,
+    Uint8List pwFormatted,
+    Uint8List salt,
+    int macIter,
+    String digetAlgorithm,
+  ) {
+    var pkcs12ParameterGenerator = PKCS12ParametersGenerator(
+      Digest(digetAlgorithm),
+    );
     pkcs12ParameterGenerator.init(pwFormatted, salt, macIter);
 
     switch (algorithm) {
       case 'PBE-SHA1-RC2-40':
         return _decryptRc2(
           toDecrypt,
-          pkcs12ParameterGenerator.generateDerivedParametersWithIV(5, RC2Engine.BLOCK_SIZE),
+          pkcs12ParameterGenerator.generateDerivedParametersWithIV(
+            5,
+            RC2Engine.BLOCK_SIZE,
+          ),
         );
       case 'PBE-SHA1-RC2-128':
         return _decryptRc2(
           toDecrypt,
-          pkcs12ParameterGenerator.generateDerivedParametersWithIV(16, RC2Engine.BLOCK_SIZE),
+          pkcs12ParameterGenerator.generateDerivedParametersWithIV(
+            16,
+            RC2Engine.BLOCK_SIZE,
+          ),
         );
       case 'PBE-SHA1-RC4-40':
         return _decryptRc4(
@@ -481,7 +543,9 @@ class Pkcs12 {
     }
   }
 
-  static ASN1AlgorithmIdentifier _algorithmIdentifierFromDigest(String digestAlgorithm) {
+  static ASN1AlgorithmIdentifier _algorithmIdentifierFromDigest(
+    String digestAlgorithm,
+  ) {
     switch (digestAlgorithm) {
       case 'SHA-1':
         return ASN1AlgorithmIdentifier.fromIdentifier('1.3.14.3.2.26');
@@ -548,13 +612,12 @@ class Pkcs12 {
   }
 
   ///解析pkcs12文件
-  static List<String> parsePkcs12(
-    Uint8List pkcs12, {
-    String? password,
-  }) {
+  static List<String> parsePkcs12(Uint8List pkcs12, {String? password}) {
     Uint8List? pwFormatted;
     if (password != null) {
-      pwFormatted = formatPkcs12Password(Uint8List.fromList(password.codeUnits));
+      pwFormatted = formatPkcs12Password(
+        Uint8List.fromList(password.codeUnits),
+      );
     }
 
     var pems = <String>[];
@@ -605,14 +668,20 @@ class Pkcs12 {
         var contentInfo = ASN1ContentInfo.fromSequence(e);
         switch (contentInfo.contentType.objectIdentifierAsString) {
           case '1.2.840.113549.1.7.6': // encryptedData
-            var encryptedData = ASN1EncryptedData.fromSequence(contentInfo.content as ASN1Sequence);
+            var encryptedData = ASN1EncryptedData.fromSequence(
+              contentInfo.content as ASN1Sequence,
+            );
             var encryptedContentInfo = encryptedData.encryptedContentInfo;
 
-            var seq = (contentInfo.content as ASN1Sequence).elements!.elementAt(1) as ASN1Sequence;
+            var seq =
+                (contentInfo.content as ASN1Sequence).elements!.elementAt(1)
+                    as ASN1Sequence;
             // var startIndex = seq.elements!.elementAt(0).encodedBytes!.lengthInBytes;
             // startIndex += (seq.elements!.elementAt(1).encodedBytes!.lengthInBytes);
             // var encrypted = DerValue.fromBytes(seq.valueBytes!.sublist(startIndex));
-            var encrypted = DerValue.fromBytes(seq.elements!.elementAt(2).encodedBytes!);
+            var encrypted = DerValue.fromBytes(
+              seq.elements!.elementAt(2).encodedBytes!,
+            );
 
             int newTag = DerValue.tagOctetString;
             if (encrypted.isConstructed()) {
@@ -622,25 +691,40 @@ class Pkcs12 {
             var rawData = encrypted.getOctetString();
 
             // DECRYPT
-            var contentEncryptionAlgorithm = encryptedContentInfo.contentEncryptionAlgorithm;
-            var decryptedContent = _decryptData(rawData, contentEncryptionAlgorithm, pwFormatted!);
+            var contentEncryptionAlgorithm =
+                encryptedContentInfo.contentEncryptionAlgorithm;
+            var decryptedContent = _decryptData(
+              rawData,
+              contentEncryptionAlgorithm,
+              pwFormatted!,
+            );
 
             var contentType = encryptedContentInfo.contentType;
 
             switch (contentType.objectIdentifierAsString) {
               case '1.2.840.113549.1.7.1': // CERTIFICATES
-                loadSafeContents(DerInputStream.fromBytes(decryptedContent), pems, pwFormatted);
+                loadSafeContents(
+                  DerInputStream.fromBytes(decryptedContent),
+                  pems,
+                  pwFormatted,
+                );
                 break;
             }
 
             break;
           case '1.2.840.113549.1.7.1': // data (PKCS #7)
-            if (contentInfo.content!.isConstructed == true && contentInfo.content is ASN1OctetString) {
+            if (contentInfo.content!.isConstructed == true &&
+                contentInfo.content is ASN1OctetString) {
               var content = contentInfo.content as ASN1OctetString;
-              loadSafeContents(DerInputStream.fromBytes(content.octets!), pems, pwFormatted);
+              loadSafeContents(
+                DerInputStream.fromBytes(content.octets!),
+                pems,
+                pwFormatted,
+              );
             } else {
-              var safeContents =
-                  ASN1SafeContents.fromSequence(ASN1Sequence.fromBytes(contentInfo.content!.valueBytes!));
+              var safeContents = ASN1SafeContents.fromSequence(
+                ASN1Sequence.fromBytes(contentInfo.content!.valueBytes!),
+              );
               for (var element in safeContents.safeBags) {
                 var bagValueSeq = element.bagValue as ASN1Sequence;
                 _parseSafaBag(element.bagId, bagValueSeq, pems, pwFormatted);
@@ -653,7 +737,11 @@ class Pkcs12 {
     return pems;
   }
 
-  static void loadSafeContents(DerInputStream stream, List<String> pems, Uint8List? pwFormatted) {
+  static void loadSafeContents(
+    DerInputStream stream,
+    List<String> pems,
+    Uint8List? pwFormatted,
+  ) {
     List<DerValue> safeBags = stream.getSequence(2);
     int count = safeBags.length;
 
@@ -669,31 +757,49 @@ class Pkcs12 {
   }
 
   static void _parseSafaBag(
-      ASN1ObjectIdentifier bagId, ASN1Sequence bagValueSeq, List<String> pems, Uint8List? pwFormatted) {
+    ASN1ObjectIdentifier bagId,
+    ASN1Sequence bagValueSeq,
+    List<String> pems,
+    Uint8List? pwFormatted,
+  ) {
     //private key
     if (bagId.objectIdentifierAsString == "1.2.840.113549.1.12.10.1.2") {
-      var contentEncryptionAlgorithm =
-          ASN1AlgorithmIdentifier.fromSequence(bagValueSeq.elements!.elementAt(0) as ASN1Sequence);
+      var contentEncryptionAlgorithm = ASN1AlgorithmIdentifier.fromSequence(
+        bagValueSeq.elements!.elementAt(0) as ASN1Sequence,
+      );
 
       // DECRYPT
-      var decryptedContent =
-          _decryptData(bagValueSeq.elements!.elementAt(1).valueBytes!, contentEncryptionAlgorithm, pwFormatted!);
+      var decryptedContent = _decryptData(
+        bagValueSeq.elements!.elementAt(1).valueBytes!,
+        contentEncryptionAlgorithm,
+        pwFormatted!,
+      );
       var s = ASN1Sequence.fromBytes(decryptedContent);
 
       //private key
       pems.insert(
         0,
-        X509Utils.encodeASN1ObjectToPem(s, CryptoUtils.BEGIN_PRIVATE_KEY, CryptoUtils.END_PRIVATE_KEY),
+        X509Utils.encodeASN1ObjectToPem(
+          s,
+          CryptoUtils.BEGIN_PRIVATE_KEY,
+          CryptoUtils.END_PRIVATE_KEY,
+        ),
       );
       return;
     }
 
     //certificate
     if (bagId.objectIdentifierAsString == "1.2.840.113549.1.12.10.1.3") {
-      var octet = ASN1OctetString.fromBytes(bagValueSeq.elements!.elementAt(1).valueBytes!);
+      var octet = ASN1OctetString.fromBytes(
+        bagValueSeq.elements!.elementAt(1).valueBytes!,
+      );
       var x509Seq = ASN1Sequence.fromBytes(octet.valueBytes!);
 
-      var cer = X509Utils.encodeASN1ObjectToPem(x509Seq, X509Utils.BEGIN_CERT, X509Utils.END_CERT);
+      var cer = X509Utils.encodeASN1ObjectToPem(
+        x509Seq,
+        X509Utils.BEGIN_CERT,
+        X509Utils.END_CERT,
+      );
       pems.add(cer);
       return;
     }
@@ -706,7 +812,11 @@ class Pkcs12 {
         case "1.2.840.113549.1.1.1": // rsaEncryption
           pems.insert(
             0,
-            X509Utils.encodeASN1ObjectToPem(bagValueSeq, CryptoUtils.BEGIN_PRIVATE_KEY, CryptoUtils.END_PRIVATE_KEY),
+            X509Utils.encodeASN1ObjectToPem(
+              bagValueSeq,
+              CryptoUtils.BEGIN_PRIVATE_KEY,
+              CryptoUtils.END_PRIVATE_KEY,
+            ),
           );
           break;
       }
@@ -716,14 +826,32 @@ class Pkcs12 {
   }
 
   static Uint8List _decryptData(
-      Uint8List data, ASN1AlgorithmIdentifier contentEncryptionAlgorithm, Uint8List pwFormatted) {
-// GET ALGORITHM
-    var encryptionAlgorithm = _algorithmFromOi(contentEncryptionAlgorithm.algorithm.objectIdentifierAsString!);
-// GET SALT AND MACITER AND DIGEST ALGORITHM
-    Uint8List salt = _getSaltFromAlgorithmParameters(contentEncryptionAlgorithm.parameters);
-    int macIter = _getMacIterFromAlgorithmParameters(contentEncryptionAlgorithm.parameters);
-    var digestAlgorithm = _getDigestAlgorithmFromEncryptionAlgorithm(encryptionAlgorithm);
-    return _decrypt(data, encryptionAlgorithm, pwFormatted, salt, macIter, digestAlgorithm);
+    Uint8List data,
+    ASN1AlgorithmIdentifier contentEncryptionAlgorithm,
+    Uint8List pwFormatted,
+  ) {
+    // GET ALGORITHM
+    var encryptionAlgorithm = _algorithmFromOi(
+      contentEncryptionAlgorithm.algorithm.objectIdentifierAsString!,
+    );
+    // GET SALT AND MACITER AND DIGEST ALGORITHM
+    Uint8List salt = _getSaltFromAlgorithmParameters(
+      contentEncryptionAlgorithm.parameters,
+    );
+    int macIter = _getMacIterFromAlgorithmParameters(
+      contentEncryptionAlgorithm.parameters,
+    );
+    var digestAlgorithm = _getDigestAlgorithmFromEncryptionAlgorithm(
+      encryptionAlgorithm,
+    );
+    return _decrypt(
+      data,
+      encryptionAlgorithm,
+      pwFormatted,
+      salt,
+      macIter,
+      digestAlgorithm,
+    );
   }
 
   static String _algorithmFromOi(String keyPbe) {

@@ -199,7 +199,10 @@ class WebSocketDecoder {
       logger.w("Payload data length exceeds available data, truncating.");
     }
 
-    var payloadData = data.sublist(payloadStart, payloadStart + payloadDataLength);
+    var payloadData = data.sublist(
+      payloadStart,
+      payloadStart + payloadDataLength,
+    );
 
     if (mask == 1) {
       payloadData = unmaskPayload(payloadData, maskingKey);
