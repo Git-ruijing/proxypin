@@ -35,17 +35,6 @@ jobs:
           restore-keys: |
             ${{ runner.os }}-gradle-
 
-        # 2. 缓存 NDK/CMake（NDK 工具链）
-      - name: Cache Android NDK and CMake
-        uses: actions/cache@v4
-        with:
-          path: |
-            /usr/local/lib/android/sdk/ndk/*
-            /usr/local/lib/android/sdk/cmake/*
-          key: ndk-cmake-${{ runner.os }}-${{ hashFiles('android/gradle.properties') }}
-          restore-keys: |
-            ndk-cmake-${{ runner.os }}-
-
 
       - name: Get dependencies
         run: flutter pub get
