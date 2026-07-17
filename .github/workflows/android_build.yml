@@ -64,7 +64,7 @@ jobs:
         run: flutter build apk --release --target-platform=android-arm64 --no-tree-shake-icons
 
       - name: Extract version for artifact name
-        run: echo "APP_VERSION=$(grep '^version: ' pubspec.yaml | sed 's/version: //' | cut -d'+' -f1)" >> $GITHUB_ENV
+        run: echo "APP_VERSION=$(grep -oP 'version: \K[^+]*' pubspec.yaml)" >> $GITHUB_ENV
 
       - name: Upload APK artifact
         uses: actions/upload-artifact@v4
