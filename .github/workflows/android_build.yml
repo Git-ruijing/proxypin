@@ -10,10 +10,10 @@ jobs:
 
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
 
       - name: Setup Java
-        uses: actions/setup-java@v4
+        uses: actions/setup-java@v5
         with:
           distribution: 'temurin'
           java-version: '17'
@@ -26,7 +26,7 @@ jobs:
           cache: true
 
       - name: Cache Gradle dependencies
-        uses: actions/cache@v4
+        uses: actions/cache@v5
         with:
           path: |
             ~/.gradle/caches
@@ -54,7 +54,7 @@ jobs:
         run: echo "app_version=$(grep '^version:' pubspec.yaml | awk '{print $2}' | awk -F+ '{print $1}')" >> $GITHUB_OUTPUT
 
       - name: Upload APK artifact
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v5
         with:
           name: proxypin-android-v${{ steps.version.outputs.app_version }}
-          path: build/app/outputs/flutter-apk/proxypin-*.apk
+          path: build/app/outputs/flutter-apk/*.apk

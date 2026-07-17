@@ -104,12 +104,7 @@ flutter {
 android.applicationVariants.all { variant ->
     if (variant.buildType.name == 'release') {
         variant.outputs.all { output ->
-            def apkName = "proxypin-v${flutterVersionName}.apk"
-            try {
-                output.outputFileName = apkName
-            } catch (Exception e) {
-                output.outputFile = new File(output.outputFile.parent, apkName)
-            }
+            output.outputFileName = "proxypin-v${flutterVersionName}.apk"
         }
     }
 }
